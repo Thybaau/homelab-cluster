@@ -1,0 +1,7 @@
+---
+# Default variables for gitops_tools role
+kubectl_version: stable
+helm_version: v3
+kubeconfig_path: /home/k3s/.kube/config
+kubectl_bin_path: /usr/local/bin/kubectl
+helm_bin_path: /usr/local/bin/helm

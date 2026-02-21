@@ -1,0 +1,129 @@
+---
+# Tasks for gitops_tools role
+
+# ===== kubectl Installation =====
+
+- name: Check if kubectl is already installed
+  stat:
+    path: "{{ kubectl_bin_path }}"
+  register: kubectl_exists
+
+- name: Get latest kubectl version
+  shell: curl -L -s https://dl.k8s.io/release/stable.txt
+  register: kubectl_version_output
+  when: not kubectl_exists.stat.exists
+  changed_when: false
+
+- name: Download kubectl binary
+  get_url:
+    url: "https://dl.k8s.io/release/{{ kubectl_version_output.stdout }}/bin/linux/amd64/kubectl"
+    dest: "{{ kubectl_bin_path }}"
+    mode: '0755'
+  when: not kubectl_exists.stat.exists
+
+- name: Verify kubectl installation
+  command: "{{ kubectl_bin_path }} version --client"
+  register: kubectl_verify
+  changed_when: false
+  failed_when: kubectl_verify.rc != 0
+
+# ===== kubectl Configuration =====
+
+- name: Create .kube directory for k3s user
+  file:
+    path: /home/k3s/.kube
+    state: directory
+    owner: k3s
+    group: k3s
+    mode: '0755'
+
+- name: Configure kubectl on master (symlink to k3s.yaml)
+  file:
+    src: /etc/rancher/k3s/k3s.yaml
+    dest: "{{ kubeconfig_path }}"
+    state: link
+    owner: k3s
+    group: k3s
+  when: "'k3s_master' in group_names"
+
+- name: Copy kubeconfig from master to workers
+  block:
+    - name: Fetch kubeconfig from master
+      slurp:
+        src: /etc/rancher/k3s/k3s.yaml
+      register: master_kubeconfig
+      delegate_to: "{{ groups['k3s_master'][0] }}"
+      run_once: true
+
+    - name: Write kubeconfig on worker
+      copy:
+        content: "{{ master_kubeconfig.content | b64decode }}"
+        dest: "{{ kubeconfig_path }}"
+        owner: k3s
+        group: k3s
+        mode: '0600'
+  when: "'k3s_workers' in group_names"
+
+- name: Set kubeconfig permissions
+  file:
+    path: "{{ kubeconfig_path }}"
+    mode: '0600'
+    owner: k3s
+    group: k3s
+
+# ===== Helm Installation =====
+
+- name: Check if helm is already installed
+  stat:
+    path: "{{ helm_bin_path }}"
+  register: helm_exists
+
+- name: Download helm installation script
+  get_url:
+    url: https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+    dest: /tmp/get-helm-3.sh
+    mode: '0755'
+  when: not helm_exists.stat.exists
+
+- name: Install helm
+  shell: /tmp/get-helm-3.sh
+  environment:
+    HELM_INSTALL_DIR: /usr/local/bin
+  when: not helm_exists.stat.exists
+  changed_when: true
+
+- name: Remove helm installation script
+  file:
+    path: /tmp/get-helm-3.sh
+    state: absent
+  when: not helm_exists.stat.exists
+
+- name: Verify helm installation
+  command: "{{ helm_bin_path }} version"
+  register: helm_verify
+  changed_when: false
+  failed_when: helm_verify.rc != 0
+
+# ===== kubectl Verification =====
+
+- name: Test kubectl connectivity to cluster
+  command: "{{ kubectl_bin_path }} get nodes"
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+  become: true
+  become_user: k3s
+  register: kubectl_test
+  retries: 5
+  delay: 10
+  until: kubectl_test.rc == 0
+  failed_when: kubectl_test.rc != 0
+
+- name: Display kubectl test result
+  debug:
+    msg: "kubectl successfully connected to cluster on {{ inventory_hostname }}"
+  when: kubectl_test.rc == 0
+
+- name: Display error if kubectl cannot communicate with cluster
+  fail:
+    msg: "kubectl failed to communicate with cluster on {{ inventory_hostname }}. Error: {{ kubectl_test.stderr }}"
+  when: kubectl_test.rc != 0
