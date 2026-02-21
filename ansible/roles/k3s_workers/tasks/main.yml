@@ -3,7 +3,7 @@
 
 - name: Check if k3s-agent is already installed
   systemd:
-    name: k3s-agent
+    name: "{{ k3s_agent_service_name }}"
   register: k3s_agent_status
   failed_when: false
   changed_when: false
@@ -26,14 +26,14 @@
 
 - name: Download k3s installation script
   get_url:
-    url: https://get.k3s.io
+    url: "{{ k3s_install_script_url }}"
     dest: /tmp/k3s-install.sh
     mode: '0755'
   when: not k3s_agent_installed
 
 - name: Install k3s in agent mode
   shell: |
-    K3S_URL="{{ k3s_master_url }}" \
+    K3S_URL="{{ k3s_server_url }}" \
     K3S_TOKEN="{{ hostvars['k3s-master']['k3s_token'] }}" \
     /tmp/k3s-install.sh agent --node-ip={{ ansible_host }}
   args:
@@ -50,7 +50,7 @@
 
 - name: Ensure k3s-agent service is started and enabled
   systemd:
-    name: k3s-agent
+    name: "{{ k3s_agent_service_name }}"
     state: started
     enabled: yes
     daemon_reload: yes
@@ -61,7 +61,7 @@
 
 - name: Wait for k3s-agent to be fully active
   systemd:
-    name: k3s-agent
+    name: "{{ k3s_agent_service_name }}"
   register: k3s_agent_active
   until: k3s_agent_active.status.ActiveState == "active"
   retries: "{{ (service_start_timeout / 5) | int }}"

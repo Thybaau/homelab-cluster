@@ -5,18 +5,12 @@
 k3s_install_script_url: https://get.k3s.io
 
 # Master Configuration
-k3s_master_bind_address: "{{ k3s_master_ip }}"
-k3s_master_advertise_address: "{{ k3s_master_ip }}"
-k3s_master_node_ip: "{{ k3s_master_ip }}"
+k3s_server_bind_address: "{{ k3s_master_ip }}"
+k3s_server_advertise_address: "{{ k3s_master_ip }}"
+k3s_server_node_ip: "{{ k3s_master_ip }}"
 
 # Worker Configuration
 k3s_server_url: "https://{{ k3s_master_ip }}:{{ k3s_api_port }}"
-
-# Firewall Ports
-k3s_firewall_ports:
-  - 6443/tcp   # Kubernetes API Server
-  - 10250/tcp  # Kubelet metrics
-  - 8472/udp   # Flannel VXLAN
 
 # kubectl Configuration
 kubectl_download_url: "https://dl.k8s.io/release"
@@ -26,7 +20,11 @@ kubectl_install_path: /usr/local/bin/kubectl
 helm_install_script_url: https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
 helm_install_path: /usr/local/bin/helm
 
-# Kubeconfig
-kubeconfig_file: "{{ k3s_config_dir }}/k3s.yaml"
+# Kubeconfig Paths
+k3s_kubeconfig_file: "{{ k3s_config_dir }}/k3s.yaml"
 kubeconfig_user_dir: /home/{{ ansible_user }}/.kube
 kubeconfig_user_file: "{{ kubeconfig_user_dir }}/config"
+
+# Service Names
+k3s_service_name: k3s
+k3s_agent_service_name: k3s-agent

@@ -1,26 +1,4 @@
 ---
 # Default variables for prepare_nodes role
-
-# Required packages for k3s
-required_packages:
-  - curl
-  - ca-certificates
-  - apt-transport-https
-  - software-properties-common
-
-# Kernel modules to load
-kernel_modules:
-  - br_netfilter
-  - overlay
-
-# Sysctl configuration for Kubernetes
-sysctl_config:
-  net.ipv4.ip_forward: 1
-  net.bridge.bridge-nf-call-iptables: 1
-  net.bridge.bridge-nf-call-ip6tables: 1
-
-# Firewall ports to open
-firewall_ports:
-  - 6443   # Kubernetes API
-  - 10250  # Kubelet
-  - 8472   # Flannel VXLAN
+# All variables are now centralized in group_vars/all.yml
+# This file is kept for role structure consistency

@@ -1,14 +1,4 @@
 ---
 # Default variables for k3s_workers role
-
-# K3s version
-k3s_version: "{{ k3s_version }}"
-
-# Master configuration
-k3s_master_url: "{{ k3s_server_url }}"
-k3s_master_ip: "{{ k3s_master_ip }}"
-k3s_api_port: "{{ k3s_api_port }}"
-
-# Timeouts
-service_start_timeout: "{{ service_start_timeout }}"
-master_connectivity_timeout: 300
+# All variables are centralized in group_vars/
+# This file is kept for role structure consistency

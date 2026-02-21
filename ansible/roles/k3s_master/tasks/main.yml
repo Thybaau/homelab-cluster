@@ -67,7 +67,7 @@
     name: "{{ k3s_service_name }}"
   register: k3s_service_check
   until: k3s_service_check.status.ActiveState == "active"
-  retries: "{{ (k3s_service_wait_timeout | int / 5) | int }}"
+  retries: "{{ (service_start_timeout | int / 5) | int }}"
   delay: 5
   failed_when: k3s_service_check.status.ActiveState != "active"
 

@@ -5,24 +5,24 @@
 
 - name: Check if kubectl is already installed
   stat:
-    path: "{{ kubectl_bin_path }}"
+    path: "{{ kubectl_install_path }}"
   register: kubectl_exists
 
 - name: Get latest kubectl version
-  shell: curl -L -s https://dl.k8s.io/release/stable.txt
+  shell: curl -L -s {{ kubectl_download_url }}/stable.txt
   register: kubectl_version_output
   when: not kubectl_exists.stat.exists
   changed_when: false
 
 - name: Download kubectl binary
   get_url:
-    url: "https://dl.k8s.io/release/{{ kubectl_version_output.stdout }}/bin/linux/amd64/kubectl"
-    dest: "{{ kubectl_bin_path }}"
+    url: "{{ kubectl_download_url }}/{{ kubectl_version_output.stdout }}/bin/linux/amd64/kubectl"
+    dest: "{{ kubectl_install_path }}"
     mode: '0755'
   when: not kubectl_exists.stat.exists
 
 - name: Verify kubectl installation
-  command: "{{ kubectl_bin_path }} version --client"
+  command: "{{ kubectl_install_path }} version --client"
   register: kubectl_verify
   changed_when: false
   failed_when: kubectl_verify.rc != 0
@@ -31,7 +31,7 @@
 
 - name: Create .kube directory for k3s user
   file:
-    path: /home/k3s/.kube
+    path: "{{ kubeconfig_user_dir }}"
     state: directory
     owner: k3s
     group: k3s
@@ -39,8 +39,8 @@
 
 - name: Configure kubectl on master (symlink to k3s.yaml)
   file:
-    src: /etc/rancher/k3s/k3s.yaml
-    dest: "{{ kubeconfig_path }}"
+    src: "{{ k3s_kubeconfig_file }}"
+    dest: "{{ kubeconfig_user_file }}"
     state: link
     owner: k3s
     group: k3s
@@ -50,7 +50,7 @@
   block:
     - name: Fetch kubeconfig from master
       slurp:
-        src: /etc/rancher/k3s/k3s.yaml
+        src: "{{ k3s_kubeconfig_file }}"
       register: master_kubeconfig
       delegate_to: "{{ groups['k3s_master'][0] }}"
       run_once: true
@@ -58,7 +58,7 @@
     - name: Write kubeconfig on worker
       copy:
         content: "{{ master_kubeconfig.content | b64decode }}"
-        dest: "{{ kubeconfig_path }}"
+        dest: "{{ kubeconfig_user_file }}"
         owner: k3s
         group: k3s
         mode: '0600'
@@ -66,7 +66,7 @@
 
 - name: Set kubeconfig permissions
   file:
-    path: "{{ kubeconfig_path }}"
+    path: "{{ kubeconfig_user_file }}"
     mode: '0600'
     owner: k3s
     group: k3s
@@ -75,12 +75,12 @@
 
 - name: Check if helm is already installed
   stat:
-    path: "{{ helm_bin_path }}"
+    path: "{{ helm_install_path }}"
   register: helm_exists
 
 - name: Download helm installation script
   get_url:
-    url: https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+    url: "{{ helm_install_script_url }}"
     dest: /tmp/get-helm-3.sh
     mode: '0755'
   when: not helm_exists.stat.exists
@@ -99,7 +99,7 @@
   when: not helm_exists.stat.exists
 
 - name: Verify helm installation
-  command: "{{ helm_bin_path }} version"
+  command: "{{ helm_install_path }} version"
   register: helm_verify
   changed_when: false
   failed_when: helm_verify.rc != 0
@@ -107,9 +107,9 @@
 # ===== kubectl Verification =====
 
 - name: Test kubectl connectivity to cluster
-  command: "{{ kubectl_bin_path }} get nodes"
+  command: "{{ kubectl_install_path }} get nodes"
   environment:
-    KUBECONFIG: "{{ kubeconfig_path }}"
+    KUBECONFIG: "{{ kubeconfig_user_file }}"
   become: true
   become_user: k3s
   register: kubectl_test
