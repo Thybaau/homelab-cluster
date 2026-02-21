@@ -1,0 +1,72 @@
+---
+# Tasks for k3s_workers role
+
+- name: Check if k3s-agent is already installed
+  systemd:
+    name: k3s-agent
+  register: k3s_agent_status
+  failed_when: false
+  changed_when: false
+
+- name: Set k3s-agent installation status
+  set_fact:
+    k3s_agent_installed: "{{ k3s_agent_status.status.ActiveState == 'active' if k3s_agent_status.status is defined else false }}"
+
+- name: Display k3s-agent installation status
+  debug:
+    msg: "k3s-agent is {{ 'already installed' if k3s_agent_installed else 'not installed' }}"
+
+- name: Verify connectivity to k3s master
+  wait_for:
+    host: "{{ k3s_master_ip }}"
+    port: "{{ k3s_api_port }}"
+    timeout: "{{ master_connectivity_timeout }}"
+    msg: "Unable to connect to k3s master at {{ k3s_master_ip }}:{{ k3s_api_port }}. Please ensure the master is running and accessible."
+  when: not k3s_agent_installed
+
+- name: Download k3s installation script
+  get_url:
+    url: https://get.k3s.io
+    dest: /tmp/k3s-install.sh
+    mode: '0755'
+  when: not k3s_agent_installed
+
+- name: Install k3s in agent mode
+  shell: |
+    K3S_URL="{{ k3s_master_url }}" \
+    K3S_TOKEN="{{ hostvars['k3s-master']['k3s_token'] }}" \
+    /tmp/k3s-install.sh agent --node-ip={{ ansible_host }}
+  args:
+    creates: /usr/local/bin/k3s
+  register: k3s_agent_install
+  when: not k3s_agent_installed
+  failed_when: k3s_agent_install.rc != 0
+  notify: restart k3s-agent
+
+- name: Display installation result
+  debug:
+    msg: "k3s-agent installation {{ 'completed successfully' if k3s_agent_install.changed else 'skipped (already installed)' }}"
+  when: k3s_agent_install is defined
+
+- name: Ensure k3s-agent service is started and enabled
+  systemd:
+    name: k3s-agent
+    state: started
+    enabled: yes
+    daemon_reload: yes
+  register: k3s_agent_service
+  retries: 3
+  delay: 10
+  until: k3s_agent_service is succeeded
+
+- name: Wait for k3s-agent to be fully active
+  systemd:
+    name: k3s-agent
+  register: k3s_agent_active
+  until: k3s_agent_active.status.ActiveState == "active"
+  retries: "{{ (service_start_timeout / 5) | int }}"
+  delay: 5
+
+- name: Display k3s-agent service status
+  debug:
+    msg: "k3s-agent service is {{ k3s_agent_active.status.ActiveState }}"
