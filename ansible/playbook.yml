@@ -1,0 +1,163 @@
+---
+# ============================================================================
+# k3s Cluster Deployment Playbook
+# ============================================================================
+# This playbook deploys a complete k3s cluster with:
+# - System preparation on all nodes
+# - k3s master installation
+# - k3s worker nodes joining the cluster
+# - GitOps tools (kubectl, helm) on all nodes
+# - Cluster verification and validation
+# ============================================================================
+
+- name: Prepare all nodes for k3s
+  hosts: k3s_cluster
+  become: true
+  gather_facts: true
+  any_errors_fatal: true
+  
+  pre_tasks:
+    - name: Verify connectivity to all nodes
+      ping:
+      register: ping_result
+      failed_when: false
+    
+    - name: Fail if node is unreachable
+      fail:
+        msg: "ERREUR: Impossible de se connecter au nœud {{ inventory_hostname }}. Vérifiez la connectivité SSH."
+      when: ping_result.failed | default(false)
+    
+    - name: Display node information
+      debug:
+        msg: "Préparation du nœud {{ inventory_hostname }} ({{ ansible_host }})"
+  
+  roles:
+    - role: prepare_nodes
+      tags: [prepare, prepare_nodes]
+  
+  post_tasks:
+    - name: Display preparation completion
+      debug:
+        msg: "✓ Nœud {{ inventory_hostname }} préparé avec succès"
+
+- name: Install k3s on master node
+  hosts: k3s_master
+  become: true
+  gather_facts: true
+  any_errors_fatal: true
+  
+  pre_tasks:
+    - name: Display master installation start
+      debug:
+        msg: "Installation de k3s en mode server sur {{ inventory_hostname }} ({{ ansible_host }})"
+  
+  roles:
+    - role: k3s_master
+      tags: [master, k3s_master, install]
+  
+  post_tasks:
+    - name: Display master installation completion
+      debug:
+        msg: "✓ k3s master installé avec succès sur {{ inventory_hostname }}"
+    
+    - name: Verify k3s token was retrieved
+      fail:
+        msg: "ERREUR: Le token k3s n'a pas été récupéré depuis le master. L'installation des workers ne peut pas continuer."
+      when: k3s_token is not defined or k3s_token == ""
+
+- name: Install k3s on worker nodes
+  hosts: k3s_workers
+  become: true
+  gather_facts: true
+  any_errors_fatal: true
+  serial: 1
+  
+  pre_tasks:
+    - name: Display worker installation start
+      debug:
+        msg: "Installation de k3s en mode agent sur {{ inventory_hostname }} ({{ ansible_host }})"
+    
+    - name: Verify master token is available
+      fail:
+        msg: "ERREUR: Le token du master n'est pas disponible. Vérifiez que le play k3s_master s'est exécuté avec succès."
+      when: hostvars[groups['k3s_master'][0]]['k3s_token'] is not defined
+    
+    - name: Verify master is reachable
+      wait_for:
+        host: "{{ hostvars[groups['k3s_master'][0]]['ansible_host'] }}"
+        port: 6443
+        timeout: 30
+        state: started
+      delegate_to: localhost
+      become: false
+      register: master_reachable
+      failed_when: false
+    
+    - name: Fail if master is not reachable
+      fail:
+        msg: "ERREUR: Le master k3s ({{ hostvars[groups['k3s_master'][0]]['ansible_host'] }}:6443) n'est pas accessible. Vérifiez que le master est démarré."
+      when: master_reachable.failed | default(false)
+  
+  roles:
+    - role: k3s_workers
+      tags: [workers, k3s_workers, install]
+  
+  post_tasks:
+    - name: Display worker installation completion
+      debug:
+        msg: "✓ k3s agent installé avec succès sur {{ inventory_hostname }}"
+
+- name: Install GitOps tools on all nodes
+  hosts: k3s_cluster
+  become: true
+  gather_facts: true
+  any_errors_fatal: false
+  
+  pre_tasks:
+    - name: Display GitOps tools installation start
+      debug:
+        msg: "Installation de kubectl et helm sur {{ inventory_hostname }}"
+  
+  roles:
+    - role: gitops_tools
+      tags: [gitops, gitops_tools, tools]
+  
+  post_tasks:
+    - name: Display GitOps tools installation completion
+      debug:
+        msg: "✓ Outils GitOps installés avec succès sur {{ inventory_hostname }}"
+
+- name: Verify cluster status
+  hosts: k3s_master
+  become: true
+  gather_facts: true
+  any_errors_fatal: true
+  
+  pre_tasks:
+    - name: Display verification start
+      debug:
+        msg: "Vérification du statut du cluster k3s"
+    
+    - name: Wait for cluster to stabilize
+      pause:
+        seconds: 10
+        prompt: "Attente de la stabilisation du cluster..."
+  
+  roles:
+    - role: verify_cluster
+      tags: [verify, verify_cluster, validation]
+  
+  post_tasks:
+    - name: Display deployment success
+      debug:
+        msg: |
+          ╔════════════════════════════════════════════════════════════════╗
+          ║          Déploiement k3s terminé avec succès ✓                ║
+          ╚════════════════════════════════════════════════════════════════╝
+          
+          Le cluster k3s est opérationnel et prêt à l'emploi.
+          
+          Pour utiliser le cluster:
+            export KUBECONFIG={{ kubeconfig_local_path | default('~/.kube/k3s-config') }}
+            kubectl get nodes
+            kubectl get pods -A
