@@ -1,0 +1,6 @@
+---
+# Defaults for verify_cluster role
+# Most variables are centralized in group_vars/all.yml
+
+# Expected node count (dynamically calculated from inventory)
+expected_node_count: "{{ groups['k3s_cluster'] | length }}"
