@@ -1,0 +1,19 @@
+---
+# Default variables for k3s_master role
+
+# k3s installation
+k3s_install_script_url: https://get.k3s.io
+k3s_install_timeout: 300
+
+# k3s configuration
+k3s_server_bind_address: "{{ k3s_master_ip }}"
+k3s_server_advertise_address: "{{ k3s_master_ip }}"
+k3s_server_node_ip: "{{ k3s_master_ip }}"
+
+# Paths
+k3s_kubeconfig_file: /etc/rancher/k3s/k3s.yaml
+k3s_token_file: /var/lib/rancher/k3s/server/node-token
+
+# Service configuration
+k3s_service_name: k3s
+k3s_service_wait_timeout: "{{ service_start_timeout }}"

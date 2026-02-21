@@ -1,0 +1,187 @@
+---
+# Main tasks for k3s_master role
+
+- name: Check if k3s is already installed
+  ansible.builtin.systemd:
+    name: "{{ k3s_service_name }}"
+  register: k3s_service_status
+  failed_when: false
+  changed_when: false
+
+- name: Set k3s installation status fact
+  ansible.builtin.set_fact:
+    k3s_already_installed: "{{ k3s_service_status.status is defined and k3s_service_status.status.ActiveState == 'active' }}"
+
+- name: Download k3s installation script
+  ansible.builtin.get_url:
+    url: "{{ k3s_install_script_url }}"
+    dest: /tmp/k3s-install.sh
+    mode: '0755'
+  when: not k3s_already_installed
+  register: k3s_script_download
+  failed_when: k3s_script_download.failed
+  retries: 3
+  delay: 5
+
+- name: Install k3s in server mode
+  ansible.builtin.shell: |
+    /tmp/k3s-install.sh server \
+      --bind-address={{ k3s_server_bind_address }} \
+      --advertise-address={{ k3s_server_advertise_address }} \
+      --node-ip={{ k3s_server_node_ip }}
+  environment:
+    INSTALL_K3S_VERSION: "{{ k3s_version }}"
+  when: not k3s_already_installed
+  register: k3s_install_result
+  failed_when: k3s_install_result.rc != 0
+  async: "{{ k3s_install_timeout }}"
+  poll: 10
+
+- name: Display installation error if failed
+  ansible.builtin.fail:
+    msg: |
+      k3s installation failed on {{ inventory_hostname }}
+      Return code: {{ k3s_install_result.rc }}
+      Error output: {{ k3s_install_result.stderr | default('No error output available') }}
+  when: 
+    - not k3s_already_installed
+    - k3s_install_result.failed is defined
+    - k3s_install_result.failed
+
+- name: Clean up installation script
+  ansible.builtin.file:
+    path: /tmp/k3s-install.sh
+    state: absent
+  when: not k3s_already_installed
+
+- name: Ensure k3s service is started and enabled
+  ansible.builtin.systemd:
+    name: "{{ k3s_service_name }}"
+    state: started
+    enabled: yes
+    daemon_reload: yes
+  register: k3s_service_start
+
+- name: Wait for k3s service to be active
+  ansible.builtin.systemd:
+    name: "{{ k3s_service_name }}"
+  register: k3s_service_check
+  until: k3s_service_check.status.ActiveState == "active"
+  retries: "{{ (k3s_service_wait_timeout | int / 5) | int }}"
+  delay: 5
+  failed_when: k3s_service_check.status.ActiveState != "active"
+
+- name: Display service status on failure
+  ansible.builtin.command: journalctl -u k3s -n 50 --no-pager
+  register: k3s_service_logs
+  when: k3s_service_check.failed is defined and k3s_service_check.failed
+  changed_when: false
+
+- name: Fail with service logs if service not active
+  ansible.builtin.fail:
+    msg: |
+      k3s service failed to start on {{ inventory_hostname }}
+      Service logs:
+      {{ k3s_service_logs.stdout | default('Unable to retrieve logs') }}
+  when: k3s_service_check.failed is defined and k3s_service_check.failed
+
+- name: Wait for k3s token file to be created
+  ansible.builtin.wait_for:
+    path: "{{ k3s_token_file }}"
+    state: present
+    timeout: 60
+  register: token_file_wait
+
+- name: Check if k3s token file exists
+  ansible.builtin.stat:
+    path: "{{ k3s_token_file }}"
+  register: k3s_token_stat
+  failed_when: not k3s_token_stat.stat.exists
+
+- name: Fail if token file does not exist
+  ansible.builtin.fail:
+    msg: |
+      k3s token file not found at {{ k3s_token_file }} on {{ inventory_hostname }}
+      This indicates k3s master installation may have failed.
+      Please check k3s service status and logs.
+  when: not k3s_token_stat.stat.exists
+
+- name: Read k3s token from master
+  ansible.builtin.slurp:
+    src: "{{ k3s_token_file }}"
+  register: k3s_token_content
+  no_log: true
+  failed_when: k3s_token_content.failed is defined and k3s_token_content.failed
+
+- name: Set k3s token as fact
+  ansible.builtin.set_fact:
+    k3s_token: "{{ k3s_token_content.content | b64decode | trim }}"
+  no_log: true
+
+- name: Verify token is not empty
+  ansible.builtin.fail:
+    msg: "k3s token is empty or invalid"
+  when: k3s_token | length == 0
+  no_log: true
+
+- name: Wait for kubeconfig file to be created
+  ansible.builtin.wait_for:
+    path: "{{ k3s_kubeconfig_file }}"
+    state: present
+    timeout: 60
+  register: kubeconfig_file_wait
+
+- name: Check if kubeconfig file exists
+  ansible.builtin.stat:
+    path: "{{ k3s_kubeconfig_file }}"
+  register: k3s_kubeconfig_stat
+  failed_when: not k3s_kubeconfig_stat.stat.exists
+
+- name: Fail if kubeconfig file does not exist
+  ansible.builtin.fail:
+    msg: |
+      kubeconfig file not found at {{ k3s_kubeconfig_file }} on {{ inventory_hostname }}
+      This indicates k3s master installation may have failed.
+      Please check k3s service status and logs.
+  when: not k3s_kubeconfig_stat.stat.exists
+
+- name: Read kubeconfig from master
+  ansible.builtin.slurp:
+    src: "{{ k3s_kubeconfig_file }}"
+  register: k3s_kubeconfig_content
+  failed_when: k3s_kubeconfig_content.failed is defined and k3s_kubeconfig_content.failed
+
+- name: Decode kubeconfig content
+  ansible.builtin.set_fact:
+    k3s_kubeconfig_raw: "{{ k3s_kubeconfig_content.content | b64decode }}"
+
+- name: Replace localhost IP with master IP in kubeconfig
+  ansible.builtin.set_fact:
+    k3s_kubeconfig_modified: "{{ k3s_kubeconfig_raw | regex_replace('127\\.0\\.0\\.1', k3s_master_ip) }}"
+
+- name: Create local .kube directory on control machine
+  ansible.builtin.file:
+    path: "{{ kubeconfig_local_path | dirname }}"
+    state: directory
+    mode: '0700'
+  delegate_to: localhost
+  become: false
+  run_once: true
+
+- name: Copy modified kubeconfig to control machine
+  ansible.builtin.copy:
+    content: "{{ k3s_kubeconfig_modified }}"
+    dest: "{{ kubeconfig_local_path }}"
+    mode: "{{ kubeconfig_permissions }}"
+  delegate_to: localhost
+  become: false
+  run_once: true
+
+- name: Display kubeconfig location
+  ansible.builtin.debug:
+    msg: |
+      ✓ Kubeconfig successfully retrieved and saved to: {{ kubeconfig_local_path }}
+      To use the cluster, run:
+        export KUBECONFIG={{ kubeconfig_local_path }}
+        kubectl get nodes
+  run_once: true

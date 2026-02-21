@@ -1,0 +1,88 @@
+---
+# Main tasks for prepare_nodes role
+# This role prepares Ubuntu 24.04 nodes for k3s installation
+
+- name: Update APT cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+  register: apt_update
+  retries: 3
+  delay: 5
+  until: apt_update is success
+
+- name: Upgrade system packages
+  apt:
+    upgrade: dist
+    autoremove: yes
+    autoclean: yes
+  register: apt_upgrade
+  retries: 3
+  delay: 5
+  until: apt_upgrade is success
+
+- name: Install required dependencies for k3s
+  apt:
+    name: "{{ required_packages }}"
+    state: present
+    update_cache: no
+  register: pkg_install
+  retries: 3
+  delay: 5
+  until: pkg_install is success
+
+- name: Load kernel modules
+  modprobe:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ kernel_modules }}"
+
+- name: Ensure kernel modules load on boot
+  lineinfile:
+    path: /etc/modules-load.d/k3s.conf
+    line: "{{ item }}"
+    create: yes
+    mode: '0644'
+  loop: "{{ kernel_modules }}"
+
+- name: Configure sysctl parameters for Kubernetes
+  sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    state: present
+    sysctl_set: yes
+    reload: yes
+  loop: "{{ sysctl_config | dict2items }}"
+
+- name: Disable swap immediately
+  command: swapoff -a
+  when: ansible_swaptotal_mb > 0
+  changed_when: false
+
+- name: Disable swap permanently in /etc/fstab
+  lineinfile:
+    path: /etc/fstab
+    regexp: '^([^#].*\s+swap\s+.*)$'
+    line: '# \1'
+    backrefs: yes
+    state: present
+  register: fstab_swap
+
+- name: Check if UFW is installed
+  command: which ufw
+  register: ufw_check
+  failed_when: false
+  changed_when: false
+
+- name: Enable UFW if installed
+  ufw:
+    state: enabled
+  when: ufw_check.rc == 0
+
+- name: Configure UFW firewall rules for k3s
+  ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: tcp
+  loop: "{{ firewall_ports }}"
+  when: ufw_check.rc == 0
