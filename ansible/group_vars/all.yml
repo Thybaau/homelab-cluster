@@ -46,10 +46,17 @@ sysctl_config:
   net.bridge.bridge-nf-call-ip6tables: 1
 
 # Firewall Ports
-firewall_ports:
+firewall_ports_tcp:
   - 6443   # Kubernetes API
   - 10250  # Kubelet
   - 8472   # Flannel VXLAN
+  - 22     # SSH
+  - 80     # HTTP
+  - 443    # HTTPS
+
+firewall_ports_udp:
+  - 8472   # Flannel VXLAN
+  - 51820  # Wireguard (for later)
 
 # Reports
 cluster_report_path: /tmp/cluster_status.txt

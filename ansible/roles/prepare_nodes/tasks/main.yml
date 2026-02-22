@@ -74,15 +74,30 @@
   failed_when: false
   changed_when: false
 
-- name: Enable UFW if installed
+- name: Allow SSH
   ufw:
-    state: enabled
+    rule: allow
+    port: '22'
+    proto: tcp
   when: ufw_check.rc == 0
 
-- name: Configure UFW firewall rules for k3s
+- name: Allow UFW K3s TCP Ports
   ufw:
     rule: allow
     port: "{{ item }}"
     proto: tcp
-  loop: "{{ firewall_ports }}"
+  loop: "{{ firewall_ports_tcp }}"
+  when: ufw_check.rc == 0
+
+- name: Allow UFW K3s UDP Ports
+  ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: udp
+  loop: "{{ firewall_ports_udp }}"
+  when: ufw_check.rc == 0
+
+- name: Enable UFW if installed
+  ufw:
+    state: enabled
   when: ufw_check.rc == 0
