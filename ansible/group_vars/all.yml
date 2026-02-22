@@ -53,6 +53,7 @@ firewall_ports_tcp:
   - 22     # SSH
   - 80     # HTTP
   - 443    # HTTPS
+  - "30000:32767" #NodePort range
 
 firewall_ports_udp:
   - 8472   # Flannel VXLAN

@@ -74,6 +74,15 @@
   failed_when: false
   changed_when: false
 
+- name: Set UFW default policies
+  ufw:
+    direction: "{{ item.direction }}"
+    policy: "{{ item.policy }}"
+  loop:
+    - { direction: 'outgoing', policy: 'allow' }
+    - { direction: 'incoming', policy: 'deny' }
+  when: ufw_check.rc == 0
+
 - name: Allow SSH
   ufw:
     rule: allow
