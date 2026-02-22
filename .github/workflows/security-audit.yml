@@ -1,0 +1,242 @@
+name: Security Audit
+
+on:
+    push:
+        branches:
+            - main
+            - develop
+    pull_request:
+        branches:
+            - main
+            - develop
+    workflow_dispatch:
+    schedule:
+        # Audit hebdomadaire le lundi à 2h du matin
+        - cron: "0 2 * * 1"
+
+jobs:
+    security-audit:
+        name: Scan Repository for Hardcoded Secrets
+        runs-on: self-hosted
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Create report directory
+              run: mkdir -p reports
+
+            - name: Initialize audit report
+              run: |
+                  REPORT_FILE="reports/security-audit-report.txt"
+                  echo "=== Audit de Sécurité du Repository ===" > "${REPORT_FILE}"
+                  echo "Date: $(date)" >> "${REPORT_FILE}"
+                  echo "Commit: ${{ github.sha }}" >> "${REPORT_FILE}"
+                  echo "Branch: ${{ github.ref_name }}" >> "${REPORT_FILE}"
+                  echo "" >> "${REPORT_FILE}"
+                  echo "REPORT_FILE=${REPORT_FILE}" >> $GITHUB_ENV
+
+            - name: Scan for hardcoded passwords
+              id: scan_passwords
+              continue-on-error: true
+              run: |
+                  echo "Scanning for hardcoded passwords..."
+                  VIOLATIONS=$(grep -rn -E 'password:\s*["\047][^"\047{]+["\047]' . \
+                    --exclude-dir=".git" --exclude-dir=".github" --exclude-dir="output" --exclude-dir="reports" \
+                    --include="*.yml" --include="*.yaml" --include="*.ini" --include="*.sh" --include="*.py" --include="*.tf" || true)
+
+                  if [ -n "${VIOLATIONS}" ]; then
+                    echo "found=true" >> $GITHUB_OUTPUT
+                    echo "" >> "${REPORT_FILE}"
+                    echo "VIOLATION: Hardcoded Passwords" >> "${REPORT_FILE}"
+                    echo "${VIOLATIONS}" >> "${REPORT_FILE}"
+                  fi
+
+            - name: Scan for hardcoded tokens
+              id: scan_tokens
+              continue-on-error: true
+              run: |
+                  echo "Scanning for hardcoded tokens..."
+                  VIOLATIONS=$(grep -rn -E 'token:\s*["\047][^"\047{]+["\047]' . \
+                    --exclude-dir=".git" --exclude-dir=".github" --exclude-dir="output" --exclude-dir="reports" \
+                    --include="*.yml" --include="*.yaml" --include="*.ini" --include="*.sh" --include="*.py" --include="*.tf" || true)
+
+                  if [ -n "${VIOLATIONS}" ]; then
+                    echo "found=true" >> $GITHUB_OUTPUT
+                    echo "" >> "${REPORT_FILE}"
+                    echo "VIOLATION: Hardcoded Tokens" >> "${REPORT_FILE}"
+                    echo "${VIOLATIONS}" >> "${REPORT_FILE}"
+                  fi
+
+            - name: Scan for API keys
+              id: scan_api_keys
+              continue-on-error: true
+              run: |
+                  echo "Scanning for API keys..."
+                  VIOLATIONS=$(grep -rn -E 'api[_-]?key:\s*["\047][^"\047{]+["\047]' . \
+                    --exclude-dir=".git" --exclude-dir=".github" --exclude-dir="output" --exclude-dir="reports" \
+                    --include="*.yml" --include="*.yaml" --include="*.ini" --include="*.sh" --include="*.py" --include="*.tf" || true)
+
+                  if [ -n "${VIOLATIONS}" ]; then
+                    echo "found=true" >> $GITHUB_OUTPUT
+                    echo "" >> "${REPORT_FILE}"
+                    echo "VIOLATION: Hardcoded API Keys" >> "${REPORT_FILE}"
+                    echo "${VIOLATIONS}" >> "${REPORT_FILE}"
+                  fi
+
+            - name: Scan for private keys
+              id: scan_private_keys
+              continue-on-error: true
+              run: |
+                  echo "Scanning for private keys..."
+                  VIOLATIONS=$(grep -rn -E 'BEGIN.*PRIVATE KEY' . \
+                    --exclude-dir=".git" --exclude-dir=".github" --exclude-dir="output" --exclude-dir="reports" || true)
+
+                  if [ -n "${VIOLATIONS}" ]; then
+                    echo "found=true" >> $GITHUB_OUTPUT
+                    echo "" >> "${REPORT_FILE}"
+                    echo "VIOLATION: Private Keys in Code" >> "${REPORT_FILE}"
+                    echo "${VIOLATIONS}" >> "${REPORT_FILE}"
+                  fi
+
+            - name: Scan for AWS credentials
+              id: scan_aws
+              continue-on-error: true
+              run: |
+                  echo "Scanning for AWS credentials..."
+                  VIOLATIONS=$(grep -rn -E '(AWS|aws)[_-]?(ACCESS|SECRET)[_-]?KEY[_-]?ID?:\s*["\047]?[A-Z0-9]{20,}["\047]?' . \
+                    --exclude-dir=".git" --exclude-dir=".github" --exclude-dir="output" --exclude-dir="reports" \
+                    --include="*.yml" --include="*.yaml" --include="*.ini" --include="*.sh" --include="*.py" --include="*.tf" || true)
+
+                  if [ -n "${VIOLATIONS}" ]; then
+                    echo "found=true" >> $GITHUB_OUTPUT
+                    echo "" >> "${REPORT_FILE}"
+                    echo "VIOLATION: AWS Credentials" >> "${REPORT_FILE}"
+                    echo "${VIOLATIONS}" >> "${REPORT_FILE}"
+                  fi
+
+            - name: Scan for SSH passwords
+              id: scan_ssh_pass
+              continue-on-error: true
+              run: |
+                  echo "Scanning for SSH passwords..."
+                  VIOLATIONS=$(grep -rn -E 'ansible_ssh_pass:\s*["\047][^"\047{]+["\047]' . \
+                    --exclude-dir=".git" --exclude-dir=".github" --exclude-dir="output" --exclude-dir="reports" \
+                    --include="*.yml" --include="*.yaml" --include="*.ini" || true)
+
+                  if [ -n "${VIOLATIONS}" ]; then
+                    echo "found=true" >> $GITHUB_OUTPUT
+                    echo "" >> "${REPORT_FILE}"
+                    echo "VIOLATION: Hardcoded SSH Passwords" >> "${REPORT_FILE}"
+                    echo "${VIOLATIONS}" >> "${REPORT_FILE}"
+                  fi
+
+            - name: Scan for sudo passwords
+              id: scan_become_pass
+              continue-on-error: true
+              run: |
+                  echo "Scanning for sudo passwords..."
+                  VIOLATIONS=$(grep -rn -E 'ansible_become_pass:\s*["\047][^"\047{]+["\047]' . \
+                    --exclude-dir=".git" --exclude-dir=".github" --exclude-dir="output" --exclude-dir="reports" \
+                    --include="*.yml" --include="*.yaml" --include="*.ini" || true)
+
+                  if [ -n "${VIOLATIONS}" ]; then
+                    echo "found=true" >> $GITHUB_OUTPUT
+                    echo "" >> "${REPORT_FILE}"
+                    echo "VIOLATION: Hardcoded Sudo Passwords" >> "${REPORT_FILE}"
+                    echo "${VIOLATIONS}" >> "${REPORT_FILE}"
+                  fi
+
+            - name: Check Ansible Vault usage
+              run: |
+                  echo "" >> "${REPORT_FILE}"
+                  echo "=== Vérification Ansible Vault ===" >> "${REPORT_FILE}"
+                  echo "" >> "${REPORT_FILE}"
+
+                  VAULT_FILES=$(find . -type f \( -name "*.yml" -o -name "*.yaml" \) \
+                    -not -path "./.git/*" -not -path "./.github/*" -not -path "./output/*" -not -path "./reports/*" \
+                    -exec grep -l "\$ANSIBLE_VAULT" {} \; || true)
+
+                  if [ -n "${VAULT_FILES}" ]; then
+                    echo "✓ Fichiers chiffrés avec Ansible Vault détectés:" >> "${REPORT_FILE}"
+                    echo "${VAULT_FILES}" >> "${REPORT_FILE}"
+                  else
+                    echo "⚠ Aucun fichier chiffré avec Ansible Vault détecté." >> "${REPORT_FILE}"
+                    echo "Recommandation: Utiliser Ansible Vault pour les données sensibles." >> "${REPORT_FILE}"
+                  fi
+
+            - name: Check variable usage
+              run: |
+                  echo "" >> "${REPORT_FILE}"
+                  echo "=== Vérification des Variables ===" >> "${REPORT_FILE}"
+                  echo "" >> "${REPORT_FILE}"
+
+                  VAR_USAGE=$(grep -rn "{{.*}}" . \
+                    --exclude-dir=".git" --exclude-dir=".github" --exclude-dir="output" --exclude-dir="reports" \
+                    --include="*.yml" --include="*.yaml" \
+                    | grep -E "(password|token|key|secret)" || true)
+
+                  if [ -n "${VAR_USAGE}" ]; then
+                    echo "✓ Utilisation de variables pour credentials (BONNE PRATIQUE):" >> "${REPORT_FILE}"
+                    echo "${VAR_USAGE}" | head -10 >> "${REPORT_FILE}"
+                    COUNT=$(echo "${VAR_USAGE}" | wc -l)
+                    if [ ${COUNT} -gt 10 ]; then
+                      echo "... (${COUNT} occurrences au total)" >> "${REPORT_FILE}"
+                    fi
+                  else
+                    echo "⚠ Aucune variable détectée pour les credentials." >> "${REPORT_FILE}"
+                  fi
+
+            - name: Generate summary
+              id: summary
+              run: |
+                  echo "" >> "${REPORT_FILE}"
+                  echo "=== RÉSUMÉ ===" >> "${REPORT_FILE}"
+                  echo "" >> "${REPORT_FILE}"
+
+                  VIOLATIONS_FOUND=false
+
+                  if [ "${{ steps.scan_passwords.outputs.found }}" == "true" ] || \
+                     [ "${{ steps.scan_tokens.outputs.found }}" == "true" ] || \
+                     [ "${{ steps.scan_api_keys.outputs.found }}" == "true" ] || \
+                     [ "${{ steps.scan_private_keys.outputs.found }}" == "true" ] || \
+                     [ "${{ steps.scan_aws.outputs.found }}" == "true" ] || \
+                     [ "${{ steps.scan_ssh_pass.outputs.found }}" == "true" ] || \
+                     [ "${{ steps.scan_become_pass.outputs.found }}" == "true" ]; then
+                    VIOLATIONS_FOUND=true
+                  fi
+
+                  if [ "${VIOLATIONS_FOUND}" == "true" ]; then
+                    echo "violations=true" >> $GITHUB_OUTPUT
+                    echo "✗ AUDIT ÉCHOUÉ: Des secrets en dur ont été détectés." >> "${REPORT_FILE}"
+                    echo "✗ Veuillez corriger les violations listées ci-dessus." >> "${REPORT_FILE}"
+                  else
+                    echo "violations=false" >> $GITHUB_OUTPUT
+                    echo "✓ AUDIT RÉUSSI: Aucun secret en dur détecté." >> "${REPORT_FILE}"
+                    echo "✓ Le code respecte les bonnes pratiques de sécurité." >> "${REPORT_FILE}"
+                  fi
+
+            - name: Display audit results
+              run: |
+                  echo "=== Résultats de l'Audit de Sécurité ==="
+                  cat "${REPORT_FILE}"
+
+            - name: Upload audit report
+              uses: actions/upload-artifact@v4
+              if: always()
+              with:
+                  name: security-audit-report-${{ github.run_number }}
+                  path: reports/security-audit-report.txt
+                  retention-days: 90
+
+            - name: Fail if violations found
+              if: steps.summary.outputs.violations == 'true'
+              run: |
+                  echo "::error::Security audit failed - hardcoded secrets detected"
+                  echo "::error::Download the audit report artifact for details"
+                  exit 1
+
+            - name: Success message
+              if: steps.summary.outputs.violations == 'false'
+              run: |
+                  echo "::notice::✓ Security audit passed - no hardcoded secrets detected"

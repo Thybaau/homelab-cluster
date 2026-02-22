@@ -12,14 +12,26 @@ k3s-*.txt
 # Security audit reports
 reports/
 security-audit-report.txt
+security-audit-report-*.txt
 
 # Ansible vault password files
 .vault_pass
 vault_pass.txt
+.vault_password
 
 # Local configuration
 ansible/group_vars/vault.yml
 ansible/host_vars/*/vault.yml
+ansible/inventory.local.ini
+
+# Ansible temporary files
+ansible/*.retry
+ansible/.ansible/
+
+# Python virtual environments
+.venv/
+venv/
+ansible-venv/
 
 # IDE and editor files
 .vscode/
@@ -32,3 +44,11 @@ ansible/host_vars/*/vault.yml
 # OS files
 .DS_Store
 Thumbs.db
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+venv/
+env/

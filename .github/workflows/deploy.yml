@@ -1,0 +1,139 @@
+name: Deploy k3s Cluster
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        default: "production"
+        type: choice
+        options:
+          - production
+          - staging
+  push:
+    branches:
+      - main
+    paths:
+      - "ansible/**"
+      - ".github/workflows/deploy.yml"
+
+jobs:
+  deploy:
+    name: Deploy k3s with Ansible
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python environment
+        run: |
+          # Utiliser Python3 déjà installé sur le runner
+          python3 -m venv .venv
+          source .venv/bin/activate
+          pip install --upgrade pip
+          pip install -r requirements-python.txt
+          ansible --version
+          echo "VIRTUAL_ENV=${GITHUB_WORKSPACE}/.venv" >> $GITHUB_ENV
+          echo "${GITHUB_WORKSPACE}/.venv/bin" >> $GITHUB_PATH
+
+      - name: Install Ansible collections
+        run: |
+          source .venv/bin/activate
+          ansible-galaxy collection install -r requirements.txt
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.K3S_SSH_PRIVATE_KEY }}" > ~/.ssh/k3s_deploy_key
+          chmod 600 ~/.ssh/k3s_deploy_key
+
+          # Add SSH config for k3s hosts
+          cat >> ~/.ssh/config <<EOF
+          Host 192.168.1.* k3s-*
+            User k3s
+            IdentityFile ~/.ssh/k3s_deploy_key
+            StrictHostKeyChecking no
+            UserKnownHostsFile /dev/null
+          EOF
+          chmod 600 ~/.ssh/config
+
+          echo "✓ SSH key configured"
+
+      - name: Test SSH connectivity
+        run: |
+          source .venv/bin/activate
+          echo "Testing SSH connectivity to k3s nodes..."
+          ansible k3s_cluster -i ansible/inventory.ini -m ping
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
+
+      - name: Run Ansible playbook
+        run: |
+          source .venv/bin/activate
+          set -e
+          echo "Starting Ansible playbook execution..."
+          if ! ansible-playbook -i ansible/inventory.ini ansible/playbook.yml; then
+            echo "::error::Ansible playbook execution failed"
+            echo "Check the logs above for detailed error messages"
+            exit 1
+          fi
+          echo "✓ Ansible playbook completed successfully"
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
+
+      - name: Verify cluster status
+        run: |
+          source .venv/bin/activate
+          echo "╔════════════════════════════════════════════════════════════════╗"
+          echo "║                    Statut du cluster k3s                       ║"
+          echo "╚════════════════════════════════════════════════════════════════╝"
+          echo ""
+          echo "📊 Vérification des nœuds..."
+          ansible k3s_master -i ansible/inventory.ini \
+            -m shell \
+            -a "kubectl get nodes -o wide" \
+            -b
+          echo ""
+          echo "🔧 Vérification des pods système..."
+          ansible k3s_master -i ansible/inventory.ini \
+            -m shell \
+            -a "kubectl get pods -A" \
+            -b
+          echo ""
+          echo "✓ Vérification terminée"
+
+      - name: Display kubeconfig instructions
+        run: |
+          echo ""
+          echo "╔════════════════════════════════════════════════════════════════╗"
+          echo "║          Déploiement k3s terminé avec succès ✓                ║"
+          echo "╚════════════════════════════════════════════════════════════════╝"
+          echo ""
+          echo "📥 Pour récupérer le kubeconfig depuis votre machine locale:"
+          echo ""
+          echo "   ssh k3s@192.168.1.102 \"sudo cat /etc/rancher/k3s/k3s.yaml\" | \\"
+          echo "     sed 's/127.0.0.1/192.168.1.102/g' > ~/.kube/k3s-config"
+          echo "   chmod 600 ~/.kube/k3s-config"
+          echo ""
+          echo "📥 Pour récupérer le token (si besoin d'ajouter des workers):"
+          echo ""
+          echo "   ssh k3s@192.168.1.102 \"sudo cat /var/lib/rancher/k3s/server/node-token\""
+          echo ""
+          echo "🚀 Pour utiliser le cluster:"
+          echo ""
+          echo "   export KUBECONFIG=~/.kube/k3s-config"
+          echo "   kubectl get nodes"
+          echo "   kubectl get pods -A"
+          echo ""
+          echo "💡 Astuce: Ajoutez 'export KUBECONFIG=~/.kube/k3s-config' à votre ~/.bashrc"
+          echo ""
+
+      - name: Cleanup SSH key and virtual env
+        if: always()
+        run: |
+          rm -f ~/.ssh/k3s_deploy_key
+          rm -rf .venv
+          echo "✓ SSH key and virtual environment cleaned up"

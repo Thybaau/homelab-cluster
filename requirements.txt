@@ -1,0 +1,23 @@
+# Ansible Requirements for k3s Cluster Deployment
+# Install with: ansible-galaxy collection install -r requirements.txt
+
+---
+collections:
+  # Core Ansible collections
+  - name: ansible.posix
+    version: ">=1.5.0"
+    source: https://galaxy.ansible.com
+
+  - name: community.general
+    version: ">=7.0.0"
+    source: https://galaxy.ansible.com
+
+  # Kubernetes management
+  - name: kubernetes.core
+    version: ">=2.4.0"
+    source: https://galaxy.ansible.com
+
+  # Additional useful collections
+  - name: ansible.utils
+    version: ">=2.10.0"
+    source: https://galaxy.ansible.com
