@@ -46,22 +46,20 @@
     group: k3s
   when: "'k3s_master' in group_names"
 
-- name: Copy kubeconfig from master to workers
-  block:
-    - name: Fetch kubeconfig from master
-      slurp:
-        src: "{{ k3s_kubeconfig_file }}"
-      register: master_kubeconfig
-      delegate_to: "{{ groups['k3s_master'][0] }}"
-      run_once: true
+- name: Fetch kubeconfig from master
+  slurp:
+    src: "{{ k3s_kubeconfig_file }}"
+  register: master_kubeconfig_raw
+  delegate_to: "{{ groups['k3s_master'][0] }}"
+  when: "'k3s_workers' in group_names"
 
-    - name: Write kubeconfig on worker
-      copy:
-        content: "{{ master_kubeconfig.content | b64decode }}"
-        dest: "{{ kubeconfig_user_file }}"
-        owner: k3s
-        group: k3s
-        mode: '0600'
+- name: Write kubeconfig on worker
+  copy:
+    content: "{{ master_kubeconfig_raw.content | b64decode }}"
+    dest: "{{ kubeconfig_user_file }}"
+    owner: k3s
+    group: k3s
+    mode: '0600'
   when: "'k3s_workers' in group_names"
 
 - name: Set kubeconfig permissions
