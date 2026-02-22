@@ -24,6 +24,7 @@
   delay: 5
 
 - name: Install k3s in server mode
+  become: true
   ansible.builtin.shell: |
     /tmp/k3s-install.sh server \
       --bind-address={{ k3s_server_bind_address }} \
@@ -34,8 +35,8 @@
   when: not k3s_already_installed
   register: k3s_install_result
   failed_when: k3s_install_result.rc != 0
-  async: "{{ k3s_install_timeout }}"
-  poll: 10
+  # async: "{{ k3s_install_timeout }}"
+  # poll: 10
 
 - name: Display installation error if failed
   ansible.builtin.fail:
