@@ -28,3 +28,10 @@ kubeconfig_user_file: "{{ kubeconfig_user_dir }}/config"
 # Service Names
 k3s_service_name: k3s
 k3s_agent_service_name: k3s-agent
+
+# Helmfile Configuration
+helmfile_manifest_dir: /home/k3s
+helmfile_manifest_path: "{{ helmfile_manifest_dir }}/helmfile.yaml"
+
+# Verification Configuration
+verification_timeout: 300
