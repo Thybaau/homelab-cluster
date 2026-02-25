@@ -1,0 +1,121 @@
+---
+# Tasks for verifying infrastructure deployment
+
+- name: Wait for ArgoCD namespace to exist
+  command: "{{ kubectl_install_path }} get namespace argocd"
+  environment:
+    KUBECONFIG: "{{ k3s_kubeconfig_file }}"
+  register: argocd_namespace
+  retries: 10
+  delay: 5
+  until: argocd_namespace.rc == 0
+  changed_when: false
+  failed_when: false
+
+- name: Wait for ArgoCD server deployment
+  command: >
+    {{ kubectl_install_path }} wait deployment/argocd-server
+    --for=condition=Available
+    --timeout={{ verification_timeout }}s
+    --namespace=argocd
+  environment:
+    KUBECONFIG: "{{ k3s_kubeconfig_file }}"
+  register: argocd_server_ready
+  retries: 3
+  delay: 10
+  until: argocd_server_ready.rc == 0
+  failed_when: false
+
+- name: Wait for ArgoCD repo server deployment
+  command: >
+    {{ kubectl_install_path }} wait deployment/argocd-repo-server
+    --for=condition=Available
+    --timeout={{ verification_timeout }}s
+    --namespace=argocd
+  environment:
+    KUBECONFIG: "{{ k3s_kubeconfig_file }}"
+  register: argocd_repo_ready
+  retries: 3
+  delay: 10
+  until: argocd_repo_ready.rc == 0
+  failed_when: false
+
+- name: Wait for ArgoCD application controller statefulset
+  command: >
+    {{ kubectl_install_path }} wait statefulset/argocd-application-controller
+    --for=jsonpath='{.status.readyReplicas}'=1
+    --timeout={{ verification_timeout }}s
+    --namespace=argocd
+  environment:
+    KUBECONFIG: "{{ k3s_kubeconfig_file }}"
+  register: argocd_controller_ready
+  retries: 3
+  delay: 10
+  until: argocd_controller_ready.rc == 0
+  failed_when: false
+
+- name: Get ArgoCD pod status
+  command: >
+    {{ kubectl_install_path }} get pods
+    --namespace=argocd
+    --output=wide
+  environment:
+    KUBECONFIG: "{{ k3s_kubeconfig_file }}"
+  register: argocd_pods
+  changed_when: false
+
+- name: Display ArgoCD pod status
+  debug:
+    var: argocd_pods.stdout_lines
+
+- name: Get ArgoCD server service details
+  command: >
+    {{ kubectl_install_path }} get service argocd-server
+    --namespace=argocd
+    --output=wide
+  environment:
+    KUBECONFIG: "{{ k3s_kubeconfig_file }}"
+  register: argocd_service
+  changed_when: false
+
+- name: Display ArgoCD access information
+  debug:
+    msg: |
+      ========================================
+      ArgoCD est déployé et prêt !
+      ========================================
+      URL d'accès : https://{{ k3s_master_ip }}:{{ argocd_service.stdout | regex_search(':\\d+') | regex_replace(':', '') }}
+      Nom d'utilisateur : admin
+      
+      Pour récupérer le mot de passe admin :
+      kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+      
+      Détails du service :
+      {{ argocd_service.stdout }}
+      ========================================
+  when: argocd_server_ready.rc == 0
+
+- name: Handle verification failure
+  block:
+    - name: Get pod events on failure
+      command: >
+        {{ kubectl_install_path }} get events
+        --namespace=argocd
+        --sort-by='.lastTimestamp'
+      environment:
+        KUBECONFIG: "{{ k3s_kubeconfig_file }}"
+      register: argocd_events
+      
+    - name: Display events for debugging
+      debug:
+        var: argocd_events.stdout_lines
+        
+    - name: Fail with detailed error
+      fail:
+        msg: |
+          La vérification d'ArgoCD a échoué après {{ verification_timeout }}s
+          Consultez le statut des pods et les événements ci-dessus pour plus de détails
+  when: >
+    argocd_server_ready.rc != 0 or 
+    argocd_repo_ready.rc != 0 or 
+    argocd_controller_ready.rc != 0

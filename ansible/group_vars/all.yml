@@ -5,6 +5,7 @@
 k3s_version: v1.34.4+k3s1
 kubectl_version: stable
 helm_version: v3
+helmfile_version: v0.163.1
 
 # Network Configuration
 k3s_master_ip: 192.168.1.102
@@ -58,6 +59,13 @@ firewall_ports_tcp:
 firewall_ports_udp:
   - 8472   # Flannel VXLAN
   - 51820  # Wireguard (for later)
+
+# Helmfile Configuration
+# Download URL for Helmfile binary (note: downloads tar.gz, needs extraction)
+helmfile_download_url: "https://github.com/helmfile/helmfile/releases/download/{{ helmfile_version }}/helmfile_{{ helmfile_version | regex_replace('^v', '') }}_linux_amd64.tar.gz"
+# SHA256 checksum from official release
+helmfile_checksum: "sha256:a8f9351cbca8f1181e8787350160d4a87c362274ed26286579031815408bb5cb"
+helmfile_install_path: /usr/local/bin/helmfile
 
 # Reports
 cluster_report_path: /tmp/cluster_status.txt

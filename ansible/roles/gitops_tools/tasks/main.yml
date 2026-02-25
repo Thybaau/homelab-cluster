@@ -102,6 +102,34 @@
   changed_when: false
   failed_when: helm_verify.rc != 0
 
+# ===== Helmfile Installation (Master Only) =====
+
+- name: Install Helmfile on master node
+  include_tasks: install_helmfile.yml
+  when: "'k3s_master' in group_names"
+  tags:
+    - gitops
+    - helmfile
+
+# ===== Helmfile Deployment (Master Only) =====
+
+- name: Deploy infrastructure with Helmfile
+  include_tasks: deploy_helmfile.yml
+  when: "'k3s_master' in group_names"
+  tags:
+    - gitops
+    - helmfile
+
+# ===== Infrastructure Verification (Master Only) =====
+
+- name: Verify infrastructure deployment
+  include_tasks: verify_infrastructure.yml
+  when: "'k3s_master' in group_names"
+  tags:
+    - gitops
+    - helmfile
+    - verify
+
 # ===== kubectl Verification =====
 
 - name: Test kubectl connectivity to cluster

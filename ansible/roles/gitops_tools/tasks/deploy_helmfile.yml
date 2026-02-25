@@ -1,0 +1,66 @@
+---
+# Tasks for deploying infrastructure with Helmfile
+
+- name: Create helmfile directory on master
+  file:
+    path: "{{ helmfile_manifest_dir }}"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0755'
+
+- name: Copy helmfile.yaml to master node
+  copy:
+    src: "{{ playbook_dir }}/../helmfile.yaml"
+    dest: "{{ helmfile_manifest_path }}"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0644'
+  register: helmfile_copy
+
+- name: Validate helmfile manifest syntax
+  command: "{{ helmfile_install_path }} lint"
+  args:
+    chdir: "{{ helmfile_manifest_dir }}"
+  environment:
+    KUBECONFIG: "{{ k3s_kubeconfig_file }}"
+  register: helmfile_lint
+  changed_when: false
+  failed_when: helmfile_lint.rc != 0
+
+- name: Display helmfile diff (preview changes)
+  command: "{{ helmfile_install_path }} diff --suppress-secrets"
+  args:
+    chdir: "{{ helmfile_manifest_dir }}"
+  environment:
+    KUBECONFIG: "{{ k3s_kubeconfig_file }}"
+  register: helmfile_diff
+  changed_when: false
+  failed_when: false
+  when: helmfile_copy is changed
+
+- name: Display helmfile diff output
+  debug:
+    var: helmfile_diff.stdout_lines
+  when: helmfile_copy is changed and helmfile_diff.rc == 0
+
+- name: Deploy infrastructure with helmfile sync
+  command: "{{ helmfile_install_path }} sync"
+  args:
+    chdir: "{{ helmfile_manifest_dir }}"
+  environment:
+    KUBECONFIG: "{{ k3s_kubeconfig_file }}"
+  register: helmfile_sync
+  failed_when: helmfile_sync.rc != 0
+  changed_when: "'Succeeded' in helmfile_sync.stdout"
+
+- name: Display helmfile sync output
+  debug:
+    var: helmfile_sync.stdout_lines
+
+- name: Handle helmfile sync failure
+  fail:
+    msg: |
+      Helmfile sync a échoué avec le code de sortie {{ helmfile_sync.rc }}
+      STDERR: {{ helmfile_sync.stderr }}
+  when: helmfile_sync.rc != 0

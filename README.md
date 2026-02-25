@@ -9,6 +9,7 @@ Déploiement automatisé d'un cluster k3s sur des VMs Ubuntu 24.04 hébergées s
 - [Structure du Projet](#structure-du-projet)
 - [Installation](#installation)
 - [Utilisation](#utilisation)
+- [Infrastructure avec Helmfile](#infrastructure-avec-helmfile)
 - [Workflows GitHub Actions](#workflows-github-actions)
 - [Sécurité](#sécurité)
 - [Dépannage](#dépannage)
@@ -18,7 +19,8 @@ Déploiement automatisé d'un cluster k3s sur des VMs Ubuntu 24.04 hébergées s
 Ce projet automatise le déploiement d'un cluster k3s avec:
 - **1 nœud master** (k3s-master)
 - **N nœuds workers** (k3s-worker-01+)
-- **Outils GitOps** (kubectl, helm) installés sur tous les nœuds
+- **Outils GitOps** (kubectl, helm, helmfile) installés sur le master
+- **Infrastructure automatisée** (ArgoCD) via Helmfile
 - **Workflows CI/CD** pour déploiement et audit de sécurité
 
 ### Architecture
@@ -200,6 +202,131 @@ kubectl version
 
 # Tester helm
 helm version
+```
+
+## 🚢 Infrastructure avec Helmfile
+
+Le système déploie automatiquement les composants d'infrastructure du cluster en utilisant Helmfile.
+
+### Composants Disponibles
+
+- **ArgoCD** (activé par défaut) : Déploiement continu GitOps
+- **Sealed Secrets** (désactivé) : Gestion des secrets chiffrés
+- **Cert-Manager** (désactivé) : Gestion des certificats TLS
+- **Prometheus** (désactivé) : Surveillance et alertes
+
+### Configuration
+
+Les composants sont définis dans `helmfile.yaml` à la racine du projet. Pour activer/désactiver un composant, modifier le champ `installed`:
+
+```yaml
+releases:
+  - name: argocd
+    namespace: argocd
+    chart: argo/argo-cd
+    version: 5.51.6
+    installed: true  # true = activé, false = désactivé
+```
+
+### Accès à ArgoCD
+
+Après le déploiement, ArgoCD est accessible via NodePort :
+
+```bash
+# Obtenir le port NodePort
+kubectl get service argocd-server -n argocd
+
+# Obtenir le mot de passe admin
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+
+# Accéder à l'interface web
+https://<master-ip>:<nodeport>
+```
+
+Identifiants par défaut :
+- Utilisateur : `admin`
+- Mot de passe : Voir commande ci-dessus
+
+### Ajouter un Composant
+
+1. Modifier `helmfile.yaml` à la racine du projet :
+```yaml
+releases:
+  - name: sealed-secrets
+    namespace: sealed-secrets
+    chart: sealed-secrets/sealed-secrets
+    version: 2.13.2
+    installed: true  # Activer le composant
+```
+
+2. Exécuter le playbook :
+```bash
+cd ansible
+ansible-playbook -i inventory.ini playbook.yml --tags gitops
+```
+
+3. Vérifier le déploiement :
+```bash
+kubectl get pods -n sealed-secrets
+```
+
+### Mise à Jour des Composants
+
+Pour mettre à jour la version d'un composant :
+
+1. Modifier la version dans `helmfile.yaml`
+2. Exécuter : `ansible-playbook -i inventory.ini playbook.yml --tags gitops`
+3. Helmfile détecte le changement et met à jour le composant
+
+### Gestion Manuelle
+
+Sur le nœud master, on peut gérer l'infrastructure manuellement :
+
+```bash
+# SSH vers le master
+ssh k3s@192.168.1.102
+
+# Afficher l'état des releases
+helmfile status
+
+# Afficher les différences
+helmfile diff
+
+# Synchroniser manuellement
+helmfile sync
+
+# Lister les releases
+helmfile list
+
+# Supprimer tous les composants
+helmfile destroy
+```
+
+### Dépannage Helmfile
+
+**Les pods ne démarrent pas** :
+```bash
+kubectl get events -n <namespace> --sort-by='.lastTimestamp'
+kubectl logs -n <namespace> <pod-name>
+```
+
+**Helmfile échoue** :
+```bash
+# Vérifier la syntaxe du manifest
+helmfile lint
+
+# Afficher les logs détaillés
+helmfile sync --debug
+```
+
+**Réinitialiser l'infrastructure** :
+```bash
+# Supprimer les namespaces
+kubectl delete namespace argocd sealed-secrets cert-manager monitoring
+
+# Re-déployer
+cd ansible
+ansible-playbook -i inventory.ini playbook.yml --tags gitops
 ```
 
 ## 🤖 Workflows GitHub Actions
