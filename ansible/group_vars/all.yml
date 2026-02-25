@@ -61,10 +61,9 @@ firewall_ports_udp:
   - 51820  # Wireguard (for later)
 
 # Helmfile Configuration
-# Download URL for Helmfile binary (note: downloads tar.gz, needs extraction)
 helmfile_download_url: "https://github.com/helmfile/helmfile/releases/download/{{ helmfile_version }}/helmfile_{{ helmfile_version | regex_replace('^v', '') }}_linux_amd64.tar.gz"
-# SHA256 checksum from official release
-helmfile_checksum: "sha256:a8f9351cbca8f1181e8787350160d4a87c362274ed26286579031815408bb5cb"
+# SHA256 checksum from official release (without 'sha256:' prefix for Ansible)
+helmfile_checksum: "a8f9351cbca8f1181e8787350160d4a87c362274ed26286579031815408bb5cb"
 helmfile_install_path: /usr/local/bin/helmfile
 
 # Reports

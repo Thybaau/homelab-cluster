@@ -20,28 +20,38 @@
 - name: Download helmfile binary
   get_url:
     url: "{{ helmfile_download_url }}"
-    dest: "/tmp/helmfile_{{ helmfile_version }}"
+    dest: "/tmp/helmfile_{{ helmfile_version }}.tar.gz"
     checksum: "sha256:{{ helmfile_checksum }}"
-    mode: '0755'
+    mode: '0644'
   when: helmfile_needs_install
   register: helmfile_download
   retries: 3
   delay: 10
   until: helmfile_download is succeeded
 
+- name: Extract helmfile binary from tar.gz
+  unarchive:
+    src: "/tmp/helmfile_{{ helmfile_version }}.tar.gz"
+    dest: "/tmp"
+    remote_src: true
+  when: helmfile_needs_install
+
 - name: Install helmfile to system path
   copy:
-    src: "/tmp/helmfile_{{ helmfile_version }}"
+    src: "/tmp/helmfile"
     dest: "{{ helmfile_install_path }}"
     mode: '0755'
     remote_src: true
   when: helmfile_needs_install
   become: true
 
-- name: Remove temporary helmfile download
+- name: Remove temporary helmfile files
   file:
-    path: "/tmp/helmfile_{{ helmfile_version }}"
+    path: "{{ item }}"
     state: absent
+  loop:
+    - "/tmp/helmfile_{{ helmfile_version }}.tar.gz"
+    - "/tmp/helmfile"
   when: helmfile_needs_install
 
 - name: Verify helmfile installation
