@@ -5,6 +5,8 @@ metadata:
   namespace: argocd
   labels:
     app.kubernetes.io/name: valhafin
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
