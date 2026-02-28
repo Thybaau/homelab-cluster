@@ -59,7 +59,7 @@ spec:
               command:
                 - /bin/sh
                 - -c
-                - pg_isready -U $POSTGRES_USER
+                - pg_isready -U $POSTGRES_USER -d $POSTGRES_DB
             initialDelaySeconds: {{ .Values.database.livenessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.database.livenessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.database.livenessProbe.timeoutSeconds }}
@@ -69,7 +69,7 @@ spec:
               command:
                 - /bin/sh
                 - -c
-                - pg_isready -U $POSTGRES_USER
+                - pg_isready -U $POSTGRES_USER -d $POSTGRES_DB
             initialDelaySeconds: {{ .Values.database.readinessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.database.readinessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.database.readinessProbe.timeoutSeconds }}
