@@ -1,0 +1,93 @@
+{{- if .Values.database.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "valhafin.fullname" . }}-database
+  labels:
+    {{- include "valhafin.database.labels" . | nindent 4 }}
+  annotations:
+    argocd.argoproj.io/sync-wave: {{ .Values.argocd.syncWave.database | quote }}
+spec:
+  serviceName: {{ include "valhafin.fullname" . }}-database
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "valhafin.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: database
+  updateStrategy:
+    type: {{ .Values.database.updateStrategy.type }}
+  template:
+    metadata:
+      labels:
+        {{- include "valhafin.database.labels" . | nindent 8 }}
+    spec:
+      {{- if .Values.database.nodeSelector }}
+      nodeSelector:
+        {{- toYaml .Values.database.nodeSelector | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: postgres
+          image: "{{ .Values.database.image.repository }}:{{ .Values.database.image.tag }}"
+          imagePullPolicy: {{ .Values.database.image.pullPolicy }}
+          ports:
+            - name: postgres
+              containerPort: 5432
+              protocol: TCP
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.sealedSecrets.database.name }}
+                  key: POSTGRES_DB
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.sealedSecrets.database.name }}
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.sealedSecrets.database.name }}
+                  key: POSTGRES_PASSWORD
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - pg_isready -U $(POSTGRES_USER)
+            initialDelaySeconds: {{ .Values.database.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.database.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.database.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.database.livenessProbe.failureThreshold }}
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - pg_isready -U $(POSTGRES_USER)
+            initialDelaySeconds: {{ .Values.database.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.database.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.database.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.database.readinessProbe.failureThreshold }}
+          resources:
+            {{- toYaml .Values.database.resources | nindent 12 }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+        labels:
+          {{- include "valhafin.database.labels" . | nindent 10 }}
+      spec:
+        accessModes:
+          - {{ .Values.database.persistence.accessMode }}
+        {{- if .Values.database.persistence.storageClass }}
+        storageClassName: {{ .Values.database.persistence.storageClass }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.database.persistence.size }}
+{{- end }}

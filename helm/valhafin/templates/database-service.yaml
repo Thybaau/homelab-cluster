@@ -1,0 +1,21 @@
+{{- if .Values.database.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "valhafin.fullname" . }}-database
+  labels:
+    {{- include "valhafin.database.labels" . | nindent 4 }}
+  annotations:
+    argocd.argoproj.io/sync-wave: {{ .Values.argocd.syncWave.database | quote }}
+spec:
+  type: {{ .Values.database.service.type }}
+  clusterIP: None
+  ports:
+    - port: {{ .Values.database.service.port }}
+      targetPort: postgres
+      protocol: TCP
+      name: postgres
+  selector:
+    {{- include "valhafin.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: database
+{{- end }}

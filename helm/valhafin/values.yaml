@@ -1,0 +1,239 @@
+# Configuration globale
+global:
+  namespace: valhafin
+
+# Configuration du backend
+backend:
+  enabled: true
+  replicaCount: 1  # Pour un usage personnel, 1 replica est suffisant. Augmenter pour la haute disponibilité.
+  
+  image:
+    repository: ghcr.io/thybaau/valhafin/backend
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  
+  service:
+    type: ClusterIP
+    port: 8080
+  
+  env:
+    PORT: "8080"
+    # DATABASE_URL est construit automatiquement depuis les secrets
+  
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: 8080
+    initialDelaySeconds: 10
+    periodSeconds: 30
+    timeoutSeconds: 5
+    failureThreshold: 3
+  
+  readinessProbe:
+    httpGet:
+      path: /health
+      port: 8080
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  
+  terminationGracePeriodSeconds: 30
+
+# Configuration du frontend
+frontend:
+  enabled: true
+  replicaCount: 1  # Pour un usage personnel, 1 replica est suffisant. Augmenter pour la haute disponibilité.
+  
+  image:
+    repository: ghcr.io/thybaau/valhafin/frontend
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  
+  service:
+    type: ClusterIP
+    port: 80
+  
+  env:
+    VITE_API_URL: "http://valhafin.local/api"
+  
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+  
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: 80
+    initialDelaySeconds: 5
+    periodSeconds: 30
+    timeoutSeconds: 5
+    failureThreshold: 3
+  
+  readinessProbe:
+    httpGet:
+      path: /health
+      port: 80
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  
+  terminationGracePeriodSeconds: 30
+
+# Configuration de la base de données
+database:
+  enabled: true
+  
+  image:
+    repository: postgres
+    tag: "15-alpine"
+    pullPolicy: IfNotPresent
+  
+  service:
+    type: ClusterIP
+    port: 5432
+  
+  persistence:
+    enabled: true
+    storageClass: ""  # Utilise la StorageClass par défaut du cluster
+    size: 10Gi
+    accessMode: ReadWriteOnce
+  
+  # Node affinity pour garantir l'accès aux données avec local-path storage
+  nodeSelector:
+    kubernetes.io/hostname: k3s-worker-01
+  
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+  
+  livenessProbe:
+    exec:
+      command:
+        - /bin/sh
+        - -c
+        - pg_isready -U $(POSTGRES_USER)
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  
+  readinessProbe:
+    exec:
+      command:
+        - /bin/sh
+        - -c
+        - pg_isready -U $(POSTGRES_USER)
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 5
+    failureThreshold: 3
+  
+  updateStrategy:
+    type: RollingUpdate
+
+# Configuration des Sealed Secrets
+sealedSecrets:
+  enabled: true
+
+  database:
+    name: valhafin-db-credentials
+    # Les valeurs encryptedData doivent être générées avec kubeseal
+    encryptedData:
+      POSTGRES_DB: "AgBhlVOHj8e8dYbPeC1f7wcGYeIhPv+udqCZJznqRHmTGRqp4HbitQYN3dq73581hfM0q47P5nNTedpdsFEn/GoDnc3cX6baeXr+2oVASflxgFEDJNpkWliHMBkiq4yjw2L/HHC66uutfd2JLl4YPEpcsP4tyAH5B8cESRtOIW4GgUF7juDq2zY5nQbBXUEdTtronKjIwLfJg1JgzKN7PNGHUlOuMugUTecmZaYQsj1BezvNGw0AAw/NHydrwDXp5xXUrbIVw0HUuxnWXyQt7PfYnAokunlZnJ8gfC9arWi7y8+FlS5R7QLu0B0+kQ8Ai3h63ovdsFIcxqnTOGAdNGhY337j12ReneU8S+4Z/JDRUfHncxgRQo82kcnQHU8SWCXQ7gugSQGwqscWcJ5emPBE8k3Y+t+sg8lTjrVsh8zS2kEbG4G9aldC5gDElZ8G2JK9L+WMI54sUvIEwLgHauhtGyWhaBom4XGWp+QQMlEmmPN8CGRJ7exEin4O9eoXodGtq+Okx0b++TeGUkvWEqBcEQKPC7nkjVMvE9s1rFRyD/6hdgmg5dDn4f8g/Xb83LLQ1N4X1pNsLge0jEWYo1hyfI5FOk+JJFwYzZoa5cfclxgWKJLT5WVzVMNP3dSLi2DXQ0XzHElZPuQ7TK4PrHySwu6inpibWd3n4f6NrVSR5+tnSSf/3IGc23fm8LNx7UcHe8DPzCGmIw=="
+      POSTGRES_USER: "AgA0P541RF5w7YEHdtPlVY3+mB1lDp/YcH82o9viugeAcKKPB9bC2GBzkmmX0NX3TVwwgrd+KyM3Z9UYUzLyyT2PqPnvLrCV+rDhIDThdOOmvCfP/y9fVV7MIfHx+hEfyCM9Ac2O7PCHxslGK3Sk4mve0A/3TNE+jgpR8M+c2EaJ86vDGBJTT78I42WCu5i16rZsTSh+HMxgsnCSvpuso3TkOpttq5G7MFwcn2BVM83A3wGiDDCZfTlEqArvjmxa2OUOCY7vAcesE1xDTMjW3ngDjxNzozim9nrgRcnPLrvm3M1fdrvoP9HPlFkNP5K5eV7IbLfu5m59dwa9CrjJjWG1ExTOdgm5/Nq3p6M2hFj4z2R3bxyDsJwBfOB7D1NBUD+1NE2p5Gf1DcKYBds6xDRWvqCEiEvOqnPs+WiL62JcpnlnyV2TKz6d+jnZ8UhZvnr9dOLKVJgaVlWWvdXKGlPepkqE/uDtW31UilxXxgOW/ZUabBNYWYefHNLjt0KFB4zJd7GhW/Zku65kGiTsvFU1fZApG1DMQwY9i4IKJNzJqhYC64F780TWZb3GYBggvt5qtYUA2RnqFGyDLXeHQgW78fuY7bd9tOZ2rBepiqXRhzQnpHv1H9ZaqsKunM7oL6m4xkP7f5pBzCqHBmcif1Jsbyr2d71yBn318YBkiL9aC+eg/+ISjjFWVIXGgFr8MiuN7xoFZArwT5gVx4g7VVOpO00AI/VbdqG0S8t9dDfl5rpNaLQZ1EcadiyJGg=="
+      POSTGRES_PASSWORD: "AgDgpj7HeSy8XAPgXakZ7SNVpKAVFA6wIxyV6UW76RjqnvDNHn4wUEYfMPuWvp5LnPu5ewfSV0NBap9NBbG0hhrdtcHVjyFN3C4QCvfqzduTjAB7A+2oJv2MnqN28Mv6lEmGqJkTuHrwEip0tLchLAuXd39CKC5faUeEtefCF1Ymk0+4BzrJXflngrz/iacm3WQW8gP5j3E3kVZSIOq682r9xov7jhHoNJhnTywmzDXrQa131moVzFCQj4fTsgpktxC4u6lvVh/YMTNL2fMo0Xu2cBkopumU1rm//2Km2yuIKYhaBdJhv1ygycxQIpj4F55CRt/HNhypah7zEG2K/PiddOD9AFNUt8xTHSFPO2VN2aGF83TzPO83WIb7TbFv5q4Gz/bolzLi+yELLSH7JRROt8DiYoHPFY0WUVIvW8kgJSJuDNzWAnZ9nAAHRpxhjvv/8OYBd2CgQtfuQUeThF8KjvdxrGjLcOchgDExU/L/aDB1K28hUgyaVGodR1xH8EU6p0uSIm1qdTg7BbmjdBpFm69x5j591CNPFLXsNWN6j9RIcI1sn9RnaTI3uZqpt2XJGThXtnLxvzopGBRF6yR1HVEcmfeUjIrYkF7aC0UDTUEcM/mQBAqTUh7HASax61H7RPGXJ15fCVG+x0mcXvz5EEq61MEQPAzsEGxI0GQbx/yTY2eNTLVSLNmWQQ2Ti0xFlofK+M4FVzL+6zop"
+
+  backend:
+    name: valhafin-backend-secrets
+    encryptedData:
+      ENCRYPTION_KEY: "AgDeSEm2oc3YGmE6pautzukAdTdaT8Z7tpjbjKWi5v5OvC1+qODqy1qmRSBO6pQh/2FMHfgtbVnRVz3JYjVLRkW6oVcgMt+DKMLzM26s02d+0MIWPJija3FqqttA8Dj5XguJjI4pwhxbtHAgvkPBoQvzkQn/QMOCeY7DoMr8Q0I+5aBFCJhg5lTN4I1hvH4LICT6psjJXl+3Nai5MEUYMN8k181s2TWfR+nvXjY1TJ8pxXKGPrU9da+Ci/AGPw5M7BypNFaPqBpPvPeEleo9oWKYnOogW0VraKyKlkCBYpNe7EfDQi84c/aLZ87NMezD1ATXQ8NL6LcHuj6MccqaxR0apI1eDPTbGTZKeL7hogQZXzvHmm8cpJIVgchNpL1EM3Jx3jTl28j+nViwzXcjGKkMoDe4tjHoKt/fvdn6qAGFNEiSqnBkI8El+jHW4CxA3dw1hPoQ7DEw+hYvvOdj9OJJMCUhhakeyXkEiaDMlJWRBeopKmoJ2EpxKxNihJk1wnV5UkWcKwfNPLoqGVHKGlA1i43TW+y8ytlXESsFa1PCKZ1kndblg1e+GGtUe0PmHVnDxR8nOXl6HcK3outtmGVKzQ1iMNhfi/rsmm3qv5F5oNgoByw6itspwm71aMMYBeRH2g2HuU5p7oLYLDM9u+5KHSjolRaYTZQlYAYdc8N46LkyqQ55bqzYSBtsC67aImqEgs2fZOt19/QMHiLHf1p3OY8z/NY0/pCK6JOM8D7FwntaC1DmkYyVY6m9qs3Ql0Lm1i619SDYiXvFq095PS1R"
+
+# Configuration de l'Ingress
+ingress:
+  enabled: true
+  className: traefik
+
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+
+  hosts:
+    - host: valhafin.local
+      paths:
+        - path: /api
+          pathType: Prefix
+          service: backend
+        - path: /
+          pathType: Prefix
+          service: frontend
+  
+  tls:
+    enabled: false
+    # Pour activer TLS dans le futur:
+    # - secretName: valhafin-tls
+    #   hosts:
+    #     - valhafin.local
+
+# Configuration des NetworkPolicies
+networkPolicy:
+  enabled: true
+  
+  database:
+    # Restreint l'accès à la database au backend uniquement
+    enabled: true
+    allowedPods:
+      - backend
+
+# Configuration du monitoring
+monitoring:
+  enabled: false
+  
+  serviceMonitor:
+    enabled: false
+    interval: 30s
+    scrapeTimeout: 10s
+  
+  prometheusAnnotations:
+    enabled: true
+
+# Labels et annotations personnalisés
+customLabels: {}
+customAnnotations: {}
+
+# Configuration ArgoCD
+argocd:
+  syncWave:
+    sealedSecrets: "-1"
+    database: "0"
+    backend: "1"
+    frontend: "2"
+    ingress: "3"

@@ -1,0 +1,16 @@
+apiVersion: v2
+name: valhafin
+description: Helm chart pour déployer l'application Valhafin (Backend Go, Frontend React, PostgreSQL)
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - valhafin
+  - finance
+  - postgresql
+  - go
+  - react
+home: https://github.com/thybaau/valhafin
+maintainers:
+  - name: Valhafin Team
+    email: contact@valhafin.local

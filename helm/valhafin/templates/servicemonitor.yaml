@@ -1,0 +1,18 @@
+{{- if and .Values.monitoring.enabled .Values.monitoring.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "valhafin.fullname" . }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "valhafin.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "valhafin.selectorLabels" . | nindent 6 }}
+  endpoints:
+    - port: http
+      interval: {{ .Values.monitoring.serviceMonitor.interval }}
+      scrapeTimeout: {{ .Values.monitoring.serviceMonitor.scrapeTimeout }}
+      path: /metrics
+{{- end }}

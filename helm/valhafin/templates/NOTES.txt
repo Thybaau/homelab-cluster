@@ -1,0 +1,135 @@
+✅ Valhafin a été déployé avec succès dans le namespace {{ .Values.global.namespace }} !
+
+📋 VÉRIFICATION DU DÉPLOIEMENT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Vérifier l'état des pods :
+   kubectl get pods -n {{ .Values.global.namespace }}
+
+   Attendez que tous les pods soient en état "Running" et "Ready".
+
+2. Vérifier les services :
+   kubectl get svc -n {{ .Values.global.namespace }}
+
+3. Vérifier les secrets :
+   kubectl get sealedsecrets,secrets -n {{ .Values.global.namespace }}
+
+   Note : Les SealedSecrets doivent être automatiquement déchiffrés en Secrets
+   par le Sealed Secrets Controller.
+
+🌐 ACCÈS À L'APPLICATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{{- if .Values.ingress.enabled }}
+{{- range .Values.ingress.hosts }}
+
+L'application est accessible via : http://{{ .host }}
+
+⚠️  Si vous utilisez un hostname local ({{ .host }}), ajoutez-le à votre fichier /etc/hosts :
+
+   # Pour un cluster local (minikube, kind, k3s)
+   <IP_DU_CLUSTER> {{ .host }}
+
+   Exemples :
+   - Minikube : $(minikube ip) {{ .host }}
+   - Kind : 127.0.0.1 {{ .host }}
+   - K3s : <IP_DU_NODE> {{ .host }}
+{{- end }}
+{{- else }}
+
+⚠️  L'Ingress est désactivé. Pour accéder à l'application, utilisez port-forward :
+
+   # Frontend
+   kubectl port-forward -n {{ .Values.global.namespace }} svc/{{ include "valhafin.fullname" . }}-frontend 8080:80
+
+   # Backend
+   kubectl port-forward -n {{ .Values.global.namespace }} svc/{{ include "valhafin.fullname" . }}-backend 8081:8080
+
+   Accédez ensuite à http://localhost:8080 pour le frontend.
+{{- end }}
+
+🔍 SURVEILLANCE ET LOGS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Consulter les logs du backend :
+   kubectl logs -n {{ .Values.global.namespace }} -l app.kubernetes.io/component=backend --tail=100 -f
+
+Consulter les logs du frontend :
+   kubectl logs -n {{ .Values.global.namespace }} -l app.kubernetes.io/component=frontend --tail=100 -f
+
+Consulter les logs de la base de données :
+   kubectl logs -n {{ .Values.global.namespace }} -l app.kubernetes.io/component=database --tail=100 -f
+
+Vérifier les événements du namespace :
+   kubectl get events -n {{ .Values.global.namespace }} --sort-by='.lastTimestamp'
+
+🔐 GESTION DES SECRETS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{{- if .Values.sealedSecrets.enabled }}
+
+Les secrets sont gérés via Sealed Secrets. Pour mettre à jour un secret :
+
+1. Créez un Secret local avec les nouvelles valeurs
+2. Chiffrez-le avec kubeseal :
+   kubectl create secret generic temp-secret \
+     --from-literal=KEY=VALUE \
+     --dry-run=client -o yaml | \
+   kubeseal -o yaml > sealed-secret.yaml
+
+3. Mettez à jour les valeurs encryptedData dans values.yaml
+4. Redéployez avec ArgoCD ou Helm
+
+Pour plus de détails, consultez : homelab-cluster/docs/valhafin-sealed-secrets.md
+{{- else }}
+
+⚠️  Les Sealed Secrets sont désactivés. Assurez-vous de gérer les secrets manuellement.
+{{- end }}
+
+💾 BASE DE DONNÉES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Se connecter à PostgreSQL :
+   kubectl exec -it -n {{ .Values.global.namespace }} {{ include "valhafin.fullname" . }}-database-0 -- \
+     psql -U $(kubectl get secret -n {{ .Values.global.namespace }} {{ .Values.sealedSecrets.database.name }} -o jsonpath='{.data.POSTGRES_USER}' | base64 -d) \
+          -d $(kubectl get secret -n {{ .Values.global.namespace }} {{ .Values.sealedSecrets.database.name }} -o jsonpath='{.data.POSTGRES_DB}' | base64 -d)
+
+Créer un backup :
+   kubectl exec -n {{ .Values.global.namespace }} {{ include "valhafin.fullname" . }}-database-0 -- \
+     pg_dump -U $(kubectl get secret -n {{ .Values.global.namespace }} {{ .Values.sealedSecrets.database.name }} -o jsonpath='{.data.POSTGRES_USER}' | base64 -d) \
+             $(kubectl get secret -n {{ .Values.global.namespace }} {{ .Values.sealedSecrets.database.name }} -o jsonpath='{.data.POSTGRES_DB}' | base64 -d) \
+     > valhafin-backup-$(date +%Y%m%d-%H%M%S).sql
+
+⚠️  IMPORTANT : PostgreSQL est configuré avec un nodeSelector ({{ .Values.database.nodeSelector }}).
+    Si ce node est indisponible, la base de données ne pourra pas démarrer.
+
+🔧 DÉPANNAGE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Si les pods ne démarrent pas :
+   kubectl describe pod -n {{ .Values.global.namespace }} <POD_NAME>
+
+Si les Secrets ne sont pas créés :
+   - Vérifiez que le Sealed Secrets Controller est installé :
+     kubectl get pods -n kube-system -l name=sealed-secrets-controller
+   - Vérifiez les logs du controller :
+     kubectl logs -n kube-system -l name=sealed-secrets-controller
+
+Si la base de données ne démarre pas :
+   - Vérifiez que le node {{ .Values.database.nodeSelector }} est disponible :
+     kubectl get nodes
+   - Vérifiez que le PVC est bound :
+     kubectl get pvc -n {{ .Values.global.namespace }}
+
+Si l'Ingress ne fonctionne pas :
+   - Vérifiez que Traefik est installé et fonctionne
+   - Vérifiez les logs de Traefik
+   - Vérifiez que le hostname est dans /etc/hosts ou résolu par DNS
+
+📚 DOCUMENTATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Pour plus d'informations, consultez :
+- README.md dans le chart Helm
+- homelab-cluster/docs/valhafin-sealed-secrets.md pour la gestion des secrets
+- Documentation ArgoCD pour l'intégration GitOps
+
+🎉 Profitez de Valhafin !
