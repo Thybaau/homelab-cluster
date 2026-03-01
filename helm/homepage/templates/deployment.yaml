@@ -66,6 +66,9 @@ spec:
         volumeMounts:
         - name: config
           mountPath: /app/config
+          readOnly: true
+        - name: logs
+          mountPath: /app/config/logs
       volumes:
       - name: config
         {{- if .Values.persistence.enabled }}
@@ -75,3 +78,5 @@ spec:
         configMap:
           name: {{ include "homepage.fullname" . }}-config
         {{- end }}
+      - name: logs
+        emptyDir: {}
