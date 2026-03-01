@@ -32,6 +32,22 @@ spec:
     spec:
       serviceAccountName: {{ include "homepage.serviceAccountName" . }}
       terminationGracePeriodSeconds: {{ .Values.app.terminationGracePeriodSeconds }}
+      {{- if not .Values.persistence.enabled }}
+      initContainers:
+      - name: config-setup
+        image: busybox:latest
+        command: ['sh', '-c']
+        args:
+          - |
+            echo "Copying configuration files..."
+            cp /tmp/config-template/* /app/config/ 2>/dev/null || true
+            echo "Configuration ready"
+        volumeMounts:
+        - name: config
+          mountPath: /app/config
+        - name: config-template
+          mountPath: /tmp/config-template
+      {{- end }}
       containers:
       - name: homepage
         image: "{{ .Values.app.image.repository }}:{{ .Values.app.image.tag }}"
@@ -66,17 +82,14 @@ spec:
         volumeMounts:
         - name: config
           mountPath: /app/config
-          readOnly: true
-        - name: logs
-          mountPath: /app/config/logs
       volumes:
       - name: config
         {{- if .Values.persistence.enabled }}
         persistentVolumeClaim:
           claimName: {{ include "homepage.fullname" . }}-config
         {{- else }}
+        emptyDir: {}
+      - name: config-template
         configMap:
           name: {{ include "homepage.fullname" . }}-config
         {{- end }}
-      - name: logs
-        emptyDir: {}
