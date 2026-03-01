@@ -28,16 +28,6 @@ releases:
           extraArgs:
             - --insecure
 
-  # Sealed Secrets - Encrypted secrets management
-  - name: sealed-secrets
-    namespace: sealed-secrets
-    chart: sealed-secrets/sealed-secrets
-    version: 2.13.2
-    installed: false
-    createNamespace: true
-    wait: true
-    timeout: 300
-
   # Cert-Manager - Certificate management
   - name: cert-manager
     namespace: cert-manager
