@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "homepage.fullname" . }}-config
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "homepage.labels" . | nindent 4 }}
+data:
+  settings.yaml: |
+    title: {{ .Values.config.settings.title }}
+    theme: {{ .Values.config.settings.theme }}
+    color: {{ .Values.config.settings.color }}
+    headerStyle: {{ .Values.config.settings.headerStyle }}
+    layout:
+      - Services:
+          style: row
+          columns: 3
+
+  services.yaml: |
+    - Infrastructure:
+        {{- if .Values.config.proxmox.enabled }}
+        - Proxmox:
+            icon: proxmox.png
+            href: {{ .Values.config.proxmox.url }}
+            description: Hyperviseur de virtualisation
+            widget:
+              type: proxmox
+              url: {{ .Values.config.proxmox.url }}
+              {{- if .Values.config.proxmox.username }}
+              username: {{`{{HOMEPAGE_VAR_PROXMOX_USER}}`}}
+              {{- end }}
+              {{- if .Values.config.proxmox.password }}
+              password: {{`{{HOMEPAGE_VAR_PROXMOX_PASS}}`}}
+              {{- end }}
+        {{- end }}
+    {{- if .Values.config.customServices }}
+    {{- toYaml .Values.config.customServices | nindent 4 }}
+    {{- end }}
+
+  widgets.yaml: |
+    - resources:
+        cpu: true
+        memory: true
+        disk: /
+    - datetime:
+        text_size: xl
+        format:
+          dateStyle: long
+          timeStyle: short
+    {{- if .Values.config.customWidgets }}
+    {{- toYaml .Values.config.customWidgets | nindent 4 }}
+    {{- end }}

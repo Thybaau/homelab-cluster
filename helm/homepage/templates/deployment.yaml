@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "homepage.fullname" . }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "homepage.labels" . | nindent 4 }}
+  {{- with .Values.customAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.app.replicaCount }}
+  strategy:
+    type: {{ .Values.app.strategy.type }}
+    {{- if eq .Values.app.strategy.type "RollingUpdate" }}
+    rollingUpdate:
+      maxUnavailable: {{ .Values.app.strategy.rollingUpdate.maxUnavailable }}
+      maxSurge: {{ .Values.app.strategy.rollingUpdate.maxSurge }}
+    {{- end }}
+  selector:
+    matchLabels:
+      {{- include "homepage.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "homepage.selectorLabels" . | nindent 8 }}
+      {{- with .Values.customAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      serviceAccountName: {{ include "homepage.serviceAccountName" . }}
+      terminationGracePeriodSeconds: {{ .Values.app.terminationGracePeriodSeconds }}
+      containers:
+      - name: homepage
+        image: "{{ .Values.app.image.repository }}:{{ .Values.app.image.tag }}"
+        imagePullPolicy: {{ .Values.app.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: 3000
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: {{ .Values.app.livenessProbe.httpGet.path }}
+            port: {{ .Values.app.livenessProbe.httpGet.port }}
+          initialDelaySeconds: {{ .Values.app.livenessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.app.livenessProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.app.livenessProbe.timeoutSeconds }}
+          failureThreshold: {{ .Values.app.livenessProbe.failureThreshold }}
+        readinessProbe:
+          httpGet:
+            path: {{ .Values.app.readinessProbe.httpGet.path }}
+            port: {{ .Values.app.readinessProbe.httpGet.port }}
+          initialDelaySeconds: {{ .Values.app.readinessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.app.readinessProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.app.readinessProbe.timeoutSeconds }}
+          failureThreshold: {{ .Values.app.readinessProbe.failureThreshold }}
+        resources:
+          requests:
+            cpu: {{ .Values.app.resources.requests.cpu }}
+            memory: {{ .Values.app.resources.requests.memory }}
+          limits:
+            cpu: {{ .Values.app.resources.limits.cpu }}
+            memory: {{ .Values.app.resources.limits.memory }}
+        volumeMounts:
+        - name: config
+          mountPath: /app/config
+      volumes:
+      - name: config
+        {{- if .Values.persistence.enabled }}
+        persistentVolumeClaim:
+          claimName: {{ include "homepage.fullname" . }}-config
+        {{- else }}
+        configMap:
+          name: {{ include "homepage.fullname" . }}-config
+        {{- end }}

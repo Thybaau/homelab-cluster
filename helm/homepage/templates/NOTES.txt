@@ -1,0 +1,72 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📍 ACCÈS À L'APPLICATION
+
+Le dashboard Homepage est accessible à l'adresse suivante :
+
+    🌐 http://homepage.local
+
+Note : Assurez-vous que "homepage.local" est configuré dans votre fichier /etc/hosts
+ou dans votre serveur DNS local pour pointer vers l'IP de votre cluster.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔧 CONFIGURATION DU WIDGET PROXMOX
+
+Pour activer le widget Proxmox et afficher les statistiques de votre hyperviseur :
+
+1. Créer un utilisateur API dans Proxmox (https://192.168.1.200:8006)
+   - Datacenter > Permissions > Users > Add
+   - Créez un token API pour cet utilisateur
+
+2. Configurer les credentials dans le ConfigMap :
+
+   kubectl edit configmap homepage-config -n {{ .Release.Namespace }}
+
+   Remplacez les placeholders dans services.yaml :
+   - {{`{{HOMEPAGE_VAR_PROXMOX_USER}}`}} par le nom d'utilisateur
+   - {{`{{HOMEPAGE_VAR_PROXMOX_PASS}}`}} par le token API
+
+3. Redémarrer le pod pour appliquer les changements :
+
+   kubectl rollout restart deployment/{{ include "homepage.fullname" . }} -n {{ .Release.Namespace }}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ VÉRIFIER LE STATUT DU DÉPLOIEMENT
+
+Pour vérifier que tous les composants sont opérationnels :
+
+    kubectl get all -n {{ .Release.Namespace }}
+
+Pour vérifier spécifiquement le statut du pod :
+
+    kubectl get pods -n {{ .Release.Namespace }} -l app.kubernetes.io/name={{ .Chart.Name }}
+
+Pour vérifier l'état de l'Ingress :
+
+    kubectl get ingress -n {{ .Release.Namespace }}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 ACCÉDER AUX LOGS
+
+Pour consulter les logs de l'application en temps réel :
+
+    kubectl logs -f deployment/{{ include "homepage.fullname" . }} -n {{ .Release.Namespace }}
+
+Pour consulter les logs des 100 dernières lignes :
+
+    kubectl logs --tail=100 deployment/{{ include "homepage.fullname" . }} -n {{ .Release.Namespace }}
+
+Pour consulter les événements du namespace :
+
+    kubectl get events -n {{ .Release.Namespace }} --sort-by='.lastTimestamp'
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📚 RESSOURCES UTILES
+
+Documentation Homepage : https://gethomepage.dev/
+Configuration des widgets : https://gethomepage.dev/en/widgets/
+Repository du projet : https://github.com/Thybaau/homelab-cluster

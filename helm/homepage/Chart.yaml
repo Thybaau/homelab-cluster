@@ -1,0 +1,15 @@
+apiVersion: v2
+name: homepage
+description: Helm chart pour déployer homepage.dev - Dashboard personnalisable pour homelab
+type: application
+version: 0.1.0
+appVersion: "latest"
+keywords:
+  - homepage
+  - dashboard
+  - homelab
+  - monitoring
+home: https://gethomepage.dev
+maintainers:
+  - name: Homelab Team
+    email: contact@homelab.local

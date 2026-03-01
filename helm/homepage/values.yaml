@@ -1,0 +1,122 @@
+# Configuration globale
+global:
+  namespace: homepage
+
+# Configuration de l'application
+app:
+  # Nombre de réplicas (1 pour usage homelab)
+  replicaCount: 1
+  
+  # Configuration de l'image Docker
+  image:
+    repository: ghcr.io/gethomepage/homepage
+    tag: latest
+    pullPolicy: IfNotPresent
+  
+  # Ressources allouées au pod
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  
+  # Probe de vivacité (redémarre le pod si échec)
+  livenessProbe:
+    httpGet:
+      path: /
+      port: 3000
+    initialDelaySeconds: 10
+    periodSeconds: 30
+    timeoutSeconds: 5
+    failureThreshold: 3
+  
+  # Probe de disponibilité (retire du service si échec)
+  readinessProbe:
+    httpGet:
+      path: /
+      port: 3000
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  
+  # Stratégie de mise à jour
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  
+  # Délai de grâce avant arrêt forcé
+  terminationGracePeriodSeconds: 30
+
+# Configuration du service
+service:
+  type: ClusterIP
+  port: 3000
+
+# Configuration de l'ingress
+ingress:
+  enabled: true
+  className: traefik
+  
+  # Annotations spécifiques à Traefik
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+  
+  # Hôtes et chemins
+  hosts:
+    - host: homepage.local
+      paths:
+        - path: /
+          pathType: Prefix
+  
+  # Configuration TLS (désactivée par défaut)
+  tls:
+    enabled: false
+
+# Configuration du ServiceAccount
+serviceAccount:
+  # Créer un ServiceAccount dédié pour les permissions RBAC
+  enabled: true
+  # Nom du ServiceAccount (si vide, utilise le nom du chart)
+  name: ""
+
+# Configuration de la persistence
+persistence:
+  # Désactivée par défaut (configuration via ConfigMap uniquement)
+  enabled: false
+  storageClass: ""
+  size: 1Gi
+  accessMode: ReadWriteOnce
+
+# Configuration Homepage
+config:
+  # Settings généraux de l'interface
+  settings:
+    title: "Homelab Dashboard"
+    theme: dark
+    color: slate
+    headerStyle: boxed
+  
+  # Widget Proxmox
+  proxmox:
+    enabled: true
+    url: "https://192.168.1.200:8006"
+    # Credentials à définir via variables d'environnement ou secrets
+    username: ""
+    password: ""
+  
+  # Services personnalisés (ajoutés à services.yaml)
+  customServices: []
+  
+  # Widgets personnalisés (ajoutés à widgets.yaml)
+  customWidgets: []
+
+# Labels personnalisés appliqués à toutes les ressources
+customLabels: {}
+
+# Annotations personnalisées appliquées à toutes les ressources
+customAnnotations: {}
