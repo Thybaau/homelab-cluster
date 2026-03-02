@@ -67,6 +67,13 @@ spec:
               name: homepage-proxmox
               key: PROXMOX_TOKEN
         {{- end }}
+        {{- if .Values.config.argocd.enabled }}
+        - name: HOMEPAGE_VAR_ARGOCD_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: homepage-argocd
+              key: ARGOCD_TOKEN
+        {{- end }}
         ports:
         - name: http
           containerPort: 3000

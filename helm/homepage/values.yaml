@@ -107,6 +107,12 @@ config:
     url: "https://192.168.1.200:8006"
     # Les credentials sont injectés via le SealedSecret homepage-proxmox
   
+  # Widget ArgoCD
+  argocd:
+    enabled: true
+    url: "http://192.168.1.102:30080"
+    # Le token est injecté via le SealedSecret homepage-argocd
+  
   # Services personnalisés (ajoutés à services.yaml)
   customServices: []
   

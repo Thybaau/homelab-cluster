@@ -29,6 +29,18 @@ data:
               username: {{`{{HOMEPAGE_VAR_PROXMOX_USER}}`}}
               password: {{`{{HOMEPAGE_VAR_PROXMOX_PASS}}`}}
         {{- end }}
+    - Developer:
+        {{- if .Values.config.argocd.enabled }}
+        - ArgoCD:
+            icon: argocd.png
+            href: {{ .Values.config.argocd.url }}
+            description: GitOps continuous delivery
+            widget:
+              type: argocd
+              url: {{ .Values.config.argocd.url }}
+              username: admin
+              password: {{`{{HOMEPAGE_VAR_ARGOCD_TOKEN}}`}}
+        {{- end }}
     {{- if .Values.config.customServices }}
     {{- toYaml .Values.config.customServices | nindent 4 }}
     {{- end }}
