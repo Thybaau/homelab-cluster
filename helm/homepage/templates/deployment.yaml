@@ -52,6 +52,9 @@ spec:
       - name: homepage
         image: "{{ .Values.app.image.repository }}:{{ .Values.app.image.tag }}"
         imagePullPolicy: {{ .Values.app.image.pullPolicy }}
+        env:
+        - name: HOMEPAGE_ALLOWED_HOSTS
+          value: "homepage.local,localhost"
         ports:
         - name: http
           containerPort: 3000
