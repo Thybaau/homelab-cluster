@@ -26,12 +26,8 @@ data:
             widget:
               type: proxmox
               url: {{ .Values.config.proxmox.url }}
-              {{- if .Values.config.proxmox.username }}
               username: {{`{{HOMEPAGE_VAR_PROXMOX_USER}}`}}
-              {{- end }}
-              {{- if .Values.config.proxmox.password }}
               password: {{`{{HOMEPAGE_VAR_PROXMOX_PASS}}`}}
-              {{- end }}
         {{- end }}
     {{- if .Values.config.customServices }}
     {{- toYaml .Values.config.customServices | nindent 4 }}

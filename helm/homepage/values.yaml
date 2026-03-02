@@ -105,9 +105,7 @@ config:
   proxmox:
     enabled: true
     url: "https://192.168.1.200:8006"
-    # Credentials à définir via variables d'environnement ou secrets
-    username: ""
-    password: ""
+    # Les credentials sont injectés via le SealedSecret homepage-proxmox
   
   # Services personnalisés (ajoutés à services.yaml)
   customServices: []

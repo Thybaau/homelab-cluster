@@ -55,6 +55,18 @@ spec:
         env:
         - name: HOMEPAGE_ALLOWED_HOSTS
           value: "homepage.local,localhost"
+        {{- if .Values.config.proxmox.enabled }}
+        - name: HOMEPAGE_VAR_PROXMOX_USER
+          valueFrom:
+            secretKeyRef:
+              name: homepage-proxmox
+              key: PROXMOX_USERNAME
+        - name: HOMEPAGE_VAR_PROXMOX_PASS
+          valueFrom:
+            secretKeyRef:
+              name: homepage-proxmox
+              key: PROXMOX_TOKEN
+        {{- end }}
         ports:
         - name: http
           containerPort: 3000
