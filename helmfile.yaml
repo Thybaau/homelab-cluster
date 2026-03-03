@@ -27,6 +27,15 @@ releases:
             type: NodePort
           extraArgs:
             - --insecure
+      - configs:
+          cm:
+            # Crée le compte 'homepage' avec autoristation de générer des API Keys
+            accounts.homepage: apiKey
+          rbac:
+            # Lecture seule (get) sur les applications
+            policy.csv: |
+              p, role:homepage-read-only, applications, get, */*, allow
+              g, homepage, role:homepage-read-only
 
   # Cert-Manager - Certificate management
   - name: cert-manager
