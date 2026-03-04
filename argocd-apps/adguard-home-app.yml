@@ -25,11 +25,11 @@ spec:
         config: |
           filtering:
             rewrites:
-              - domain: "adguard.local"
+              - domain: "adguard.home"
                 answer: "192.168.1.102"
-              - domain: "homepage.local"
+              - domain: "homepage.home"
                 answer: "192.168.1.102"
-              - domain: "valhafin.local"
+              - domain: "valhafin.home"
                 answer: "192.168.1.102"
 
         service:
@@ -59,7 +59,7 @@ spec:
           main:
             enabled: true
             hosts:
-              - host: adguard.local
+              - host: adguard.home
                 paths:
                   - path: /
                     pathType: Prefix
