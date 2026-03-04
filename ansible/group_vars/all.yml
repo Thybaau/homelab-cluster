@@ -55,10 +55,12 @@ firewall_ports_tcp:
   - 80     # HTTP
   - 443    # HTTPS
   - "30000:32767" #NodePort range
+  - 53     # DNS
 
 firewall_ports_udp:
   - 8472   # Flannel VXLAN
   - 51820  # Wireguard (for later)
+  - 53     # DNS
 
 # Helmfile Configuration
 helmfile_download_url: "https://github.com/helmfile/helmfile/releases/download/{{ helmfile_version }}/helmfile_{{ helmfile_version | regex_replace('^v', '') }}_linux_amd64.tar.gz"
