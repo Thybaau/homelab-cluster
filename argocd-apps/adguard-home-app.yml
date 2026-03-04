@@ -72,10 +72,12 @@ spec:
             enabled: true
             size: 1Gi
             storageClass: "local-path"
+            accessMode: ReadWriteOnce
           data:
             enabled: true
             size: 5Gi
             storageClass: "local-path"
+            accessMode: ReadWriteOnce
   destination:
     server: https://kubernetes.default.svc
     namespace: networking
