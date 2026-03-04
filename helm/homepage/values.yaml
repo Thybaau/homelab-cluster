@@ -68,7 +68,7 @@ ingress:
   
   # Hôtes et chemins
   hosts:
-    - host: homepage.local
+    - host: homepage.home
       paths:
         - path: /
           pathType: Prefix
