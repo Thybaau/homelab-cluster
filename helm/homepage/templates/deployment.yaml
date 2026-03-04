@@ -54,7 +54,7 @@ spec:
         imagePullPolicy: {{ .Values.app.image.pullPolicy }}
         env:
         - name: HOMEPAGE_ALLOWED_HOSTS
-          value: "homepage.local,localhost"
+          value: "{{ .Values.ingress.hosts | first | pluck "host" | first }},localhost"
         {{- if .Values.config.proxmox.enabled }}
         - name: HOMEPAGE_VAR_PROXMOX_USER
           valueFrom:
