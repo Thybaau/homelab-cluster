@@ -35,9 +35,6 @@ spec:
             - name: http
               containerPort: 80
               protocol: TCP
-          env:
-            - name: VITE_API_URL
-              value: {{ .Values.frontend.env.VITE_API_URL | quote }}
           livenessProbe:
             httpGet:
               path: {{ .Values.frontend.livenessProbe.httpGet.path }}

@@ -9,7 +9,7 @@ backend:
   
   image:
     repository: ghcr.io/thybaau/valhafin/backend
-    tag: "latest"
+    tag: "1.0.2"
     pullPolicy: IfNotPresent
   
   service:
@@ -61,15 +61,15 @@ frontend:
   
   image:
     repository: ghcr.io/thybaau/valhafin/frontend
-    tag: "latest"
+    tag: "1.0.2"
     pullPolicy: IfNotPresent
   
   service:
     type: ClusterIP
     port: 80
   
-  env:
-    VITE_API_URL: "http://valhafin.local/api"
+  # Note: Frontend uses relative URLs (/api) which are routed by Ingress
+  # No environment variables needed at runtime
   
   resources:
     requests:
