@@ -114,7 +114,12 @@ config:
     # Le token est injecté via le SealedSecret homepage-argocd
   
   # Services personnalisés (ajoutés à services.yaml)
-  customServices: []
+  customServices:
+    - Applications:
+        - Valhafin:
+            icon: mdi-finance
+            href: http://valhafin.home
+            description: Gestion comptes de finance
   
   # Widgets personnalisés (ajoutés à widgets.yaml)
   customWidgets: []
