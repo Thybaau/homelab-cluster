@@ -120,6 +120,18 @@ config:
             icon: mdi-finance
             href: http://valhafin.home
             description: Gestion comptes de finance
+    - Network:
+        - AdGuard Home:
+            icon: adguard-home.png
+            href: http://adguard.home
+            description: DNS et blocage de publicités
+            widget:
+              type: adguard
+              url: http://adguard.home
+        - Tailscale:
+            icon: tailscale.png
+            href: https://login.tailscale.com/admin/machines
+            description: VPN
   
   # Widgets personnalisés (ajoutés à widgets.yaml)
   customWidgets: []
