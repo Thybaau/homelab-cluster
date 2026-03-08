@@ -32,7 +32,7 @@ data:
     - Developer:
         {{- if .Values.config.argocd.enabled }}
         - ArgoCD:
-            icon: argocd.png
+            icon: argo-cd.png
             href: {{ .Values.config.argocd.url }}
             description: GitOps continuous delivery
             widget:
