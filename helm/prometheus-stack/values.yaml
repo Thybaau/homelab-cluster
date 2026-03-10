@@ -1,0 +1,2 @@
+# Values for prometheus-stack wrapper chart
+# This chart deploys the SealedSecret for Grafana admin password

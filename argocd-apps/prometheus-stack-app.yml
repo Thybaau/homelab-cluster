@@ -1,0 +1,89 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: monitoring-stack
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: monitoring-stack
+    app.kubernetes.io/component: monitoring
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    - repoURL: https://prometheus-community.github.io/helm-charts
+      targetRevision: 65.1.1
+      chart: kube-prometheus-stack
+      helm:
+        values: |
+          prometheus:
+            prometheusSpec:
+              retention: 7d
+              retentionSize: "8GB"
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 256Mi
+                limits:
+                  cpu: 300m
+                  memory: 768Mi
+              storageSpec:
+                volumeClaimTemplate:
+                  spec:
+                    accessModes: ["ReadWriteOnce"]
+                    resources:
+                      requests:
+                        storage: 10Gi
+          grafana:
+            enabled: true
+            admin:
+              existingSecret: grafana-admin-credentials
+              userKey: admin-user
+              passwordKey: admin-password
+            resources:
+              limits:
+                cpu: 150m
+                memory: 256Mi
+            persistence:
+              enabled: true
+              size: 2Gi
+            ingress:
+              enabled: true
+              ingressClassName: traefik
+              hosts:
+                - grafana.home
+              path: /
+          alertmanager:
+            enabled: true
+            alertmanagerSpec:
+              resources:
+                limits:
+                  memory: 64Mi
+              storage:
+                volumeClaimTemplate:
+                  spec:
+                    accessModes: ["ReadWriteOnce"]
+                    resources:
+                      requests:
+                        storage: 2Gi
+    - repoURL: https://github.com/Thybaau/homelab-cluster.git
+      targetRevision: HEAD
+      path: helm/prometheus-stack
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
