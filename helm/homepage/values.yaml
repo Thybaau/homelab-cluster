@@ -128,7 +128,7 @@ config:
             widget:
               type: grafana
               version: 2
-              url: http://grafana.home
+              url: http://monitoring-stack-grafana.monitoring.svc.cluster.local
               username: admin
               password: "{{HOMEPAGE_VAR_GRAFANA_PASSWORD}}"
     - Network:
