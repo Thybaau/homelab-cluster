@@ -74,6 +74,11 @@ spec:
               name: homepage-argocd
               key: ARGOCD_TOKEN
         {{- end }}
+        - name: HOMEPAGE_VAR_GRAFANA_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: homepage-grafana
+              key: GRAFANA_PASSWORD
         ports:
         - name: http
           containerPort: 3000
