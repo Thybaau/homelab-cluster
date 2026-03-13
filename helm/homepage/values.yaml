@@ -138,7 +138,7 @@ config:
             description: DNS et blocage de publicités
             widget:
               type: adguard
-              url: http://adguard.home
+              url: http://adguard-home.networking.svc.cluster.local:3000
         - Tailscale:
             icon: tailscale.png
             href: https://login.tailscale.com/admin/machines
