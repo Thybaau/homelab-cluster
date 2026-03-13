@@ -145,14 +145,17 @@ config:
             description: VPN
             widgets:
               - type: tailscale
+                label: Proxmox Server
                 deviceid: nvDedqhweU11CNTRL
                 key: "{{HOMEPAGE_VAR_TAILSCALE_KEY}}"
                 fields: ["address", "last_seen", "expires"]
               - type: tailscale
+                label: Macbook
                 deviceid: nAABgZk8me11CNTRL
                 key: "{{HOMEPAGE_VAR_TAILSCALE_KEY}}"
                 fields: ["address", "last_seen", "expires"]
               - type: tailscale
+                label: PC Gaming
                 deviceid: nouBQ4Qe3i11CNTRL
                 key: "{{HOMEPAGE_VAR_TAILSCALE_KEY}}"
                 fields: ["address", "last_seen", "expires"]
