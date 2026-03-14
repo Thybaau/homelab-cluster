@@ -48,13 +48,3 @@ releases:
     timeout: 300
     values:
       - installCRDs: true
-
-  # Prometheus - Monitoring and alerting
-  - name: prometheus
-    namespace: monitoring
-    chart: prometheus-community/kube-prometheus-stack
-    version: 25.8.0
-    installed: false
-    createNamespace: true
-    wait: true
-    timeout: 600
