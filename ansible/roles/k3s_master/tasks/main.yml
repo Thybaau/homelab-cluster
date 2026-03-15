@@ -86,6 +86,24 @@
       {{ k3s_service_logs.stdout | default('Unable to retrieve logs') }}
   when: k3s_service_check.failed is defined and k3s_service_check.failed
 
+- name: Deploy Traefik HelmChartConfig for MetalLB
+  ansible.builtin.copy:
+    content: |
+      apiVersion: helm.cattle.io/v1
+      kind: HelmChartConfig
+      metadata:
+        name: traefik
+        namespace: kube-system
+      spec:
+        valuesContent: |
+          service:
+            annotations:
+              metallb.universe.tf/loadBalancerIPs: "{{ traefik_metallb_ip }}"
+    dest: "{{ k3s_data_dir }}/server/manifests/traefik-config.yaml"
+    owner: root
+    group: root
+    mode: '0644'
+
 - name: Wait for k3s token file to be created
   ansible.builtin.wait_for:
     path: "{{ k3s_token_file }}"
