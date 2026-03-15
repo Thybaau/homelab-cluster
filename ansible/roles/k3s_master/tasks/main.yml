@@ -29,7 +29,8 @@
     /tmp/k3s-install.sh server \
       --bind-address={{ k3s_server_bind_address }} \
       --advertise-address={{ k3s_server_advertise_address }} \
-      --node-ip={{ k3s_server_node_ip }}
+      --node-ip={{ k3s_server_node_ip }} \
+      --disable=servicelb
   environment:
     INSTALL_K3S_VERSION: "{{ k3s_version }}"
   when: not k3s_already_installed
