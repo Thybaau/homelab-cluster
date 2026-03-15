@@ -26,13 +26,13 @@ spec:
           filtering:
             rewrites:
               - domain: "adguard.home"
-                answer: "192.168.1.102"
+                answer: "192.168.1.151"
               - domain: "homepage.home"
-                answer: "192.168.1.102"
+                answer: "192.168.1.151"
               - domain: "valhafin.home"
-                answer: "192.168.1.102"
+                answer: "192.168.1.151"
               - domain: "grafana.home"
-                answer: "192.168.1.102"
+                answer: "192.168.1.151"
 
         service:
           main:
