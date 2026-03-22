@@ -68,6 +68,10 @@ ingress:
   
   # Hôtes et chemins
   hosts:
+    - host: homepage.caremelle.org
+      paths:
+        - path: /
+          pathType: Prefix
     - host: homepage.home
       paths:
         - path: /

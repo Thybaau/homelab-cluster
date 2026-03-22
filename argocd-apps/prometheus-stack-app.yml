@@ -53,6 +53,7 @@ spec:
               enabled: true
               ingressClassName: traefik
               hosts:
+                - grafana.caremelle.org
                 - grafana.home
               path: /
           alertmanager:
