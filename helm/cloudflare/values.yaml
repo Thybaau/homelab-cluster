@@ -1,0 +1,25 @@
+# Configuration globale
+global:
+  namespace: networking
+
+# Configuration de l'application
+app:
+  replicaCount: 1
+
+  image:
+    repository: cloudflare/cloudflared
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+
+sealedSecret:
+  enabled: true
+  encryptedData:
+    TUNNEL_TOKEN: "AgDmf3FoAZx24zYgdOmfpD+AsjJ3SwK9SmpBqslhp8w++zAMtBYo3Pngz5hl1Lo6xTG6uvsQZETDOa/5ymwg0JEBHV1laGKe3533yz0Ie8diUHdXx+jSfmY1EvXzxQc8wX2KwTkJk1UCM9rQ/hahQ8HGYUJSmF3ZqGlX905VmsxugFwDSB17ktZWxlMFTt1kiwqsKENUSQq0QeInXXo0YL2JTkm+c4PJq3Eemhah5aksvB+qTRg7UokASjm20E812DqHuZTmaB5RhfKr+8K0YWFuRKDIwgTVoeqiKz6V3MUREVkDzNEBdiOfa/J9XKkWV9dzcJpo1Qpn/PUw4ShjQys6ES7fBPLnNZ9n68XXuUmanEjeJcIPm5aShu4N77SCaIDO6vNA0rO57t71GVvd7qRoRfvEMyCQ4txoIPwAMKwvDt9F0N22irfB4B8Msi0ygcr2jYkmhMjv/iCKYxEDkcDxZMy0Ab6WBcaKKShSK4N19B28sXQenha86yUTzq0glg7DJ8Xw7P49VYL5tTXjFlu+/17ipCQIPty8XQePXc/Tq49rA+3RgQQwTYFCIej7QEBuKX+BUxfo5fkKSuqukf8CxCzojUrTioCT4NjTbaQl3LpDDuq3M1z2bM6nKz4RjnNeAe2+ZS9o+neKKK8m0CN6kX76V532MUAGi7i4LpXXIzZk0jeqkhZSOhhKTzNon6Zufxbxgjf3Rvf5rBvq6LxorD+wO7d245wp/Jdx/ntuC1mAV+Np/8QED+yp+SPHlUTgHdlX/DtQr0xJLwL/lsg3Rflm/WNUzLZHnZBQGM2s8zy2+UREQ2wm/dk8HnMZVVemqeYl9n8dwxeIyLTzxGAdlnLUFZF6JaNfI7agn5i5Vj9SokTgdDzg+8PHJZJg+JpsPbkjCnkojAoG3bpVMhjGmhR+DwnyUoKIpIKO0U5hQVxokQOXanlf"

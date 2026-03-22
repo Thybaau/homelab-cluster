@@ -1,0 +1,14 @@
+apiVersion: v2
+name: cloudflare
+description: Helm chart pour déployer cloudflared tunnel - Expose les services du cluster via Cloudflare Tunnel
+type: application
+version: 0.1.0
+appVersion: "latest"
+keywords:
+  - cloudflare
+  - tunnel
+  - ingress
+  - https
+maintainers:
+  - name: Homelab Team
+    email: contact@homelab.local
