@@ -33,21 +33,21 @@ spec:
         config: |
           dns:
             upstream_dns:
-              - https://1.1.1.1/dns-query
-              - https://1.0.0.1/dns-query
+              - "https://1.1.1.1/dns-query"
+              - "https://1.0.0.1/dns-query"
             bootstrap_dns:
-              - 1.1.1.1
-              - 1.0.0.1
-          filtering:
-            rewrites:
-              - domain: "adguard.home"
-                answer: "192.168.1.151"
-              - domain: "homepage.home"
-                answer: "192.168.1.151"
-              - domain: "valhafin.home"
-                answer: "192.168.1.151"
-              - domain: "grafana.home"
-                answer: "192.168.1.151"
+              - "1.1.1.1"
+              - "1.0.0.1"
+            filtering:
+              rewrites:
+                - domain: "adguard.home"
+                  answer: "192.168.1.151"
+                - domain: "homepage.home"
+                  answer: "192.168.1.151"
+                - domain: "valhafin.home"
+                  answer: "192.168.1.151"
+                - domain: "grafana.home"
+                  answer: "192.168.1.151"
           dhcp:
             enabled: true
             interface_name: "eth0"
