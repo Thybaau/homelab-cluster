@@ -110,3 +110,45 @@
   ufw:
     state: enabled
   when: ufw_check.rc == 0
+
+- name: Create resolved.conf.d directory
+  file:
+    path: /etc/systemd/resolved.conf.d
+    state: directory
+    mode: '0755'
+  when: inventory_hostname in groups['k3s_workers']
+
+- name: Disable systemd-resolved DNS stub listener
+  copy:
+    dest: /etc/systemd/resolved.conf.d/no-stub.conf
+    content: |
+      [Resolve]
+      DNSStubListener=no
+    mode: '0644'
+  register: resolved_stub
+  when: inventory_hostname in groups['k3s_workers']
+
+- name: Remove resolv.conf symlink
+  file:
+    path: /etc/resolv.conf
+    state: absent
+  when: inventory_hostname in groups['k3s_workers']
+
+- name: Write static resolv.conf
+  copy:
+    dest: /etc/resolv.conf
+    content: |
+      nameserver 1.1.1.1
+      nameserver 8.8.8.8
+      options edns0 trust-ad
+      search tailb119d8.ts.net
+    mode: '0644'
+  when: inventory_hostname in groups['k3s_workers']
+
+- name: Restart systemd-resolved after stub disable
+  systemd:
+    name: systemd-resolved
+    state: restarted
+  when:
+    - inventory_hostname in groups['k3s_workers']
+    - resolved_stub is changed
