@@ -80,11 +80,6 @@ spec:
                       port: 3000
 
         persistence:
-          config:
-            enabled: true
-            size: 1Gi
-            storageClass: "local-path"
-            accessMode: ReadWriteOnce
           data:
             enabled: true
             size: 5Gi
