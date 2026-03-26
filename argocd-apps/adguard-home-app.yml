@@ -18,6 +18,12 @@ spec:
     chart: adguard-home
     helm:
       values: |
+        hostNetwork: true
+        dnsPolicy: ClusterFirstWithHostNet
+
+        nodeSelector:
+          kubernetes.io/hostname: k3s-master
+
         env:
           TZ: "Europe/Paris"
 
@@ -37,6 +43,24 @@ spec:
                 answer: "192.168.1.151"
               - domain: "grafana.home"
                 answer: "192.168.1.151"
+          dhcp:
+            enabled: true
+            interface_name: eth0
+            local_domain_name: lan
+            dhcpv4:
+              gateway_ip: 192.168.1.1
+              subnet_mask: 255.255.255.0
+              range_start: 192.168.1.20
+              range_end: 192.168.1.100
+              lease_duration: 86400
+              icmp_timeout_msec: 1000
+              options:
+                - "6 192.168.1.152"
+            dhcpv6:
+              range_start: ""
+              lease_duration: 86400
+              ra_slaac_only: false
+              ra_allow_slaac: false
 
         service:
           main:
