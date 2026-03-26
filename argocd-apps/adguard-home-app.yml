@@ -22,7 +22,7 @@ spec:
         dnsPolicy: ClusterFirstWithHostNet
 
         nodeSelector:
-          kubernetes.io/hostname: k3s-master
+          kubernetes.io/hostname: k3s-worker-01
 
         env:
           TZ: "Europe/Paris"
