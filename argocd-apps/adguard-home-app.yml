@@ -23,13 +23,7 @@ spec:
 
         # Configuration DNS rewrites
         config: |
-          dns:
-            upstream_dns:
-              - https://1.1.1.1/dns-query
-              - https://1.0.0.1/dns-query
-            bootstrap_dns:
-              - 1.1.1.1
-              - 1.0.0.1
+          filtering:
             rewrites:
               - domain: "adguard.home"
                 answer: "192.168.1.151"
