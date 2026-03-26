@@ -21,8 +21,23 @@ spec:
         env:
           TZ: "Europe/Paris"
 
-        # Configuration DNS rewrites
+        # hostNetwork requis pour le DHCP (broadcast L2)
+        hostNetwork: true
+        dnsPolicy: ClusterFirstWithHostNet
+
+        # Forcer le pod sur un nœud spécifique pour une IP DHCP stable
+        nodeSelector:
+          kubernetes.io/hostname: "k3s-master"
+
+        # Configuration DNS + rewrites + DHCP
         config: |
+          dns:
+            upstream_dns:
+              - https://1.1.1.1/dns-query
+              - https://1.0.0.1/dns-query
+            bootstrap_dns:
+              - 1.1.1.1
+              - 1.0.0.1
           filtering:
             rewrites:
               - domain: "adguard.home"
@@ -33,6 +48,20 @@ spec:
                 answer: "192.168.1.151"
               - domain: "grafana.home"
                 answer: "192.168.1.151"
+          dhcp:
+            enabled: true
+            interface_name: "eth0"
+            dhcpv4:
+              gateway_ip: "192.168.1.1"
+              subnet_mask: "255.255.255.0"
+              range_start: "192.168.1.20"
+              range_end: "192.168.1.100"
+              lease_duration: 86400
+              options:
+                - "6 192.168.1.152"
+            dhcpv6:
+              range_start: ""
+              lease_duration: 86400
 
         service:
           main:
