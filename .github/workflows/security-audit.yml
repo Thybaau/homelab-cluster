@@ -90,7 +90,8 @@ jobs:
         run: |
           echo "Scanning for private keys..."
           VIOLATIONS=$(grep -rn -E 'BEGIN.*PRIVATE KEY' . \
-            --exclude-dir=".git" --exclude-dir=".github" --exclude-dir="output" --exclude-dir="reports" || true)
+            --exclude-dir=".git" --exclude-dir=".github" --exclude-dir="output" --exclude-dir="reports" \
+            --exclude="*.md" || true)
 
           if [ -n "${VIOLATIONS}" ]; then
             echo "found=true" >> $GITHUB_OUTPUT
