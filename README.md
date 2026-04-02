@@ -1,430 +1,200 @@
-# k3s Ansible Deployment
+# homelab-cluster
 
-Déploiement automatisé d'un cluster k3s sur des VMs Ubuntu 24.04 hébergées sur Proxmox, avec orchestration Ansible et workflows GitHub Actions.
+[![Deploy k3s Cluster](https://github.com/Thybaau/homelab-cluster/actions/workflows/deploy.yml/badge.svg)](https://github.com/Thybaau/homelab-cluster/actions/workflows/deploy.yml)
+[![Security Audit](https://github.com/Thybaau/homelab-cluster/actions/workflows/security-audit.yml/badge.svg)](https://github.com/Thybaau/homelab-cluster/actions/workflows/security-audit.yml)
 
-## 📋 Table des Matières
+![k3s](https://img.shields.io/badge/k3s-v1.34.4-blue?logo=k3s&logoColor=white)
+![Ubuntu](https://img.shields.io/badge/Ubuntu-24.04-E95420?logo=ubuntu&logoColor=white)
+![Ansible](https://img.shields.io/badge/Ansible-8.x-EE0000?logo=ansible&logoColor=white)
+![Helm](https://img.shields.io/badge/Helm-v3-0F1689?logo=helm&logoColor=white)
+![Helmfile](https://img.shields.io/badge/Helmfile-v0.163.1-0F1689?logo=helm&logoColor=white)
+![ArgoCD](https://img.shields.io/badge/ArgoCD-5.51.6-EF7B4D?logo=argo&logoColor=white)
+![MetalLB](https://img.shields.io/badge/MetalLB-0.14.9-blue)
+![Sealed Secrets](https://img.shields.io/badge/Sealed_Secrets-2.13.2-326CE5?logo=kubernetes&logoColor=white)
 
-- [Vue d'Ensemble](#vue-densemble)
-- [Prérequis](#prérequis)
-- [Structure du Projet](#structure-du-projet)
-- [Installation](#installation)
-- [Utilisation](#utilisation)
-- [Infrastructure avec Helmfile](#infrastructure-avec-helmfile)
-- [Workflows GitHub Actions](#workflows-github-actions)
-- [Sécurité](#sécurité)
-- [Dépannage](#dépannage)
+Déploiement automatisé d'un cluster k3s sur des VMs Ubuntu 24.04 hébergées sur Proxmox, avec orchestration Ansible, gestion GitOps via ArgoCD, et services d'infrastructure déployés par Helm.
 
-## 🎯 Vue d'Ensemble
+## Vue d'ensemble
 
-Ce projet automatise le déploiement d'un cluster k3s avec:
-- **1 nœud master** (k3s-master)
-- **N nœuds workers** (k3s-worker-01+)
-- **Outils GitOps** (kubectl, helm, helmfile) installés sur le master
-- **Infrastructure automatisée** (ArgoCD) via Helmfile
-- **Workflows CI/CD** pour déploiement et audit de sécurité
+Ce projet gère l'intégralité du cycle de vie d'un cluster Kubernetes k3s :
 
-### Architecture
+- **Provisionnement** : Ansible prépare les nœuds, installe k3s (1 master + N workers), et déploie les outils GitOps
+- **Infrastructure** : Helmfile déploie les composants fondamentaux (ArgoCD, Cert-Manager)
+- **Applications** : ArgoCD synchronise automatiquement les applications depuis les manifests dans `argocd-apps/`
+- **Charts custom** : Helm charts locaux dans `helm/` pour les services du cluster
+- **CI/CD** : GitHub Actions orchestre le déploiement Ansible et l'audit de sécurité automatiquement
+
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│              Machine de Contrôle Ansible                │
-│                  (ou GitHub Runner)                     │
-└────────────────────┬────────────────────────────────────┘
-                     │ SSH
-        ┌────────────┼────────────┬───────────────┐
-        │            │            │               │
-   ┌────▼────┐  ┌───▼─────┐  ┌──▼──────┐   ┌───▼─────┐
-   │ Master  │  │Worker-01│  │Worker-02│   │Worker-0N│
-   │ :6443   │  │         │  │         │   │         │
-   └────┬────┘  └────┬────┘  └────┬────┘   └────┬────┘
-        │            │            │             │
-        └────────────┴────────────┴─────────────┘
-                  k3s Cluster Network
+┌──────────────────────────────────────────────────────────────────┐
+│                    Machine de Contrôle Ansible                   │
+│                      (ou GitHub Runner)                          │
+└──────────────────────┬───────────────────────────────────────────┘
+                       │ SSH
+          ┌────────────┼────────────────┐
+          │            │                │
+     ┌────▼────┐  ┌───▼──────┐   ┌────▼──────┐
+     │ Master  │  │Worker-01 │   │Worker-0N  │
+     │ :6443   │  │          │   │           │
+     └────┬────┘  └────┬─────┘   └────┬──────┘
+          │            │              │
+          └────────────┴──────────────┘
+                k3s Cluster Network
+                       │
+          ┌────────────┼────────────────┐
+          │            │                │
+     Helmfile     ArgoCD Root      Helm Charts
+     (ArgoCD,     App (sync        (metallb,
+     Cert-Mgr)    argocd-apps/)    valhafin, ...)
 ```
 
-## 📁 Structure du Projet
+## Prérequis
+
+- VMs Ubuntu 24.04 provisionnées (via [homelab-infra-iac](https://github.com/Thybaau/homelab-infra-iac))
+- Accès SSH avec l'utilisateur `k3s` sur tous les nœuds
+- Ansible 8.x (ansible-core 2.15+) installé localement
+- Python : kubernetes, jmespath, netaddr, PyYAML
+
+## Applications déployées
+
+| Application | Namespace | Sync Wave | Source | Description |
+|---|---|---|---|---|
+| [MetalLB](docs/metallb/) | `metallb-system` | 0 | Chart officiel + config locale | Load balancer L2 (pool `192.168.1.151-170`) |
+| [Sealed Secrets](docs/sealed-secrets/) | `sealed-secrets` | 0 | Chart Bitnami | Chiffrement des secrets pour GitOps |
+| [Homepage](docs/homepage/) | `homepage` | 1 | Chart local | Dashboard homelab |
+| [Monitoring Stack](docs/prometheus-stack/) | `monitoring` | 1 | kube-prometheus-stack + local | Prometheus, Grafana, Alertmanager |
+| [Valhafin](docs/valhafin/) | `valhafin` | 1 | Chart local | App de gestion de portefeuille |
+| [Cloudflare](docs/cloudflare/) | `networking` | 3 | Chart local | Tunnel Cloudflare |
+| [AdGuard Home](docs/adguard-home/) | `networking` | 5 | Chart gabe565 | DNS local + ad-blocking |
+
+## Structure du projet
+
 ```
 .
-├── ansible/
-│   ├── inventory.ini              # Inventaire des hôtes
-│   ├── playbook.yml               # Playbook principal
-│   ├── ansible.cfg                # Configuration Ansible
-│   ├── group_vars/
-│   │   ├── all.yml                # Variables globales
-│   │   └── k3s_cluster.yml        # Variables du cluster
-│   └── roles/
-│       ├── prepare_nodes/         # Préparation système
-│       ├── k3s_master/            # Installation master
-│       ├── k3s_workers/           # Installation workers
-│       ├── gitops_tools/          # kubectl & helm
-│       └── verify_cluster/        # Vérification
-├── .github/
-│   └── workflows/
-│       ├── deploy.yml             # Workflow de déploiement
-│       └── security-audit.yml     # Audit de sécurité
-├── output/                        # Kubeconfig & token (local)
-├── docs/                          # Documentation
-└── README.md
+├── ansible/                    # Automatisation Ansible
+│   ├── inventory.ini           # Inventaire des hôtes
+│   ├── playbook.yml            # Playbook principal
+│   ├── ansible.cfg             # Configuration Ansible
+│   ├── group_vars/             # Variables (all.yml, k3s_cluster.yml)
+│   └── roles/                  # Rôles Ansible
+│       ├── prepare_nodes/      # Préparation système (paquets, firewall, sysctl)
+│       ├── k3s_master/         # Installation k3s server
+│       ├── k3s_workers/        # Jonction des workers au cluster
+│       ├── gitops_tools/       # kubectl, helm, helmfile sur le master
+│       └── verify_cluster/     # Vérification post-déploiement
+├── argocd-apps/                # Manifests ArgoCD Application
+│   ├── adguard-home-app.yml    # DNS + ad-blocking
+│   ├── cloudflare-app.yml      # Cloudflare Tunnel
+│   ├── homepage-app.yml        # Dashboard homelab
+│   ├── metallb-app.yml         # Load balancer L2
+│   ├── prometheus-stack-app.yml# Monitoring (Prometheus + Grafana)
+│   ├── sealed-secrets-app.yml  # Gestion des secrets chiffrés
+│   └── valhafin-app.yml        # Application financière
+├── helm/                       # Charts Helm custom
+│   ├── cloudflare/             # Cloudflared tunnel
+│   ├── homepage/               # Dashboard homepage.dev
+│   ├── metallb/                # Config MetalLB (IP pool + L2)
+│   ├── prometheus-stack/       # SealedSecret Grafana
+│   └── valhafin/               # App complète (backend + frontend + DB)
+├── helmfile.yaml               # Infrastructure de base (ArgoCD, Cert-Manager)
+├── root-app.yml                # ArgoCD root Application (app-of-apps)
+├── docs/                       # Documentation
+└── scripts/                    # Scripts utilitaires
 ```
 
-## 🚀 Installation
+## Déploiement
 
-### 1. Cloner le Repository
-
-```bash
-git clone <repository-url>
-cd homelab-cluster
-```
-
-### 2. Configurer l'Inventaire
-
-Éditer `ansible/inventory.ini` avec vos IPs:
-
-```ini
-[k3s_master]
-k3s-master ansible_host=192.168.1.102
-
-[k3s_workers]
-k3s-worker-01 ansible_host=192.168.1.103
-k3s-worker-02 ansible_host=192.168.1.104
-# Ajouter d'autres workers si nécessaire
-
-[k3s_cluster:children]
-k3s_master
-k3s_workers
-
-[k3s_cluster:vars]
-ansible_user=k3s
-```
-
-### 3. Vérifier la Connectivité
-
-```bash
-cd ansible
-ansible all -i inventory.ini -m ping
-```
-
-Résultat attendu:
-```
-k3s-master | SUCCESS => {"ping": "pong"}
-k3s-worker-01 | SUCCESS => {"ping": "pong"}
-...
-```
-
-## 💻 Utilisation
-
-### Déploiement Local
-
-#### Déploiement Complet
+### Déploiement complet
 
 ```bash
 cd ansible
 ansible-playbook -i inventory.ini playbook.yml
 ```
 
-#### Déploiement par Étapes
+### Déploiement par étapes
 
 ```bash
-# 1. Préparer les nœuds uniquement
-ansible-playbook -i inventory.ini playbook.yml --tags prepare
-
-# 2. Installer le master uniquement
-ansible-playbook -i inventory.ini playbook.yml --tags master
-
-# 3. Installer les workers uniquement
-ansible-playbook -i inventory.ini playbook.yml --tags workers
-
-# 4. Installer les outils GitOps
-ansible-playbook -i inventory.ini playbook.yml --tags gitops
-
-# 5. Vérifier le cluster
-ansible-playbook -i inventory.ini playbook.yml --tags verify
+ansible-playbook -i inventory.ini playbook.yml --tags prepare   # Préparer les nœuds
+ansible-playbook -i inventory.ini playbook.yml --tags master    # Installer le master
+ansible-playbook -i inventory.ini playbook.yml --tags workers   # Joindre les workers
+ansible-playbook -i inventory.ini playbook.yml --tags gitops    # Outils GitOps + Helmfile
+ansible-playbook -i inventory.ini playbook.yml --tags verify    # Vérifier le cluster
 ```
 
-#### Mode Verbose
-
-```bash
-# Afficher les détails d'exécution
-ansible-playbook -i inventory.ini playbook.yml -v
-
-# Mode debug complet
-ansible-playbook -i inventory.ini playbook.yml -vvv
-```
-
-### Récupération du Kubeconfig
-
-Après le déploiement, récupèrer le kubeconfig depuis le master:
-
-```bash
-# Récupérer le kubeconfig
-ssh k3s@192.168.1.102 "sudo cat /etc/rancher/k3s/k3s.yaml" | \
-  sed 's/127.0.0.1/192.168.1.102/g' > ~/.kube/k3s-config
-
-# Sécuriser les permissions
-chmod 600 ~/.kube/k3s-config
-
-# Utiliser le cluster
-export KUBECONFIG=~/.kube/k3s-config
-kubectl get nodes
-```
-
-#### Option 2: Configuration Permanente
-
-```bash
-# Ajouter à votre ~/.bashrc
-echo 'export KUBECONFIG=~/.kube/k3s-config' >> ~/.bashrc
-source ~/.bashrc
-
-# Maintenant kubectl utilise automatiquement ce kubeconfig
-kubectl get nodes
-```
-
-### Récupération du Token (Optionnel)
-
-Si on veut ajouter des workers manuellement:
-
-```bash
-# Ou manuellement
-ssh k3s@192.168.1.102 "sudo cat /var/lib/rancher/k3s/server/node-token"
-```
-
-### Vérification du Cluster
-
-```bash
-# Vérifier les nœuds
-kubectl get nodes -o wide
-
-# Vérifier les pods système
-kubectl get pods -A
-
-# Vérifier la version
-kubectl version
-
-# Tester helm
-helm version
-```
-
-## 🚢 Infrastructure avec Helmfile
-
-Le système déploie automatiquement les composants d'infrastructure du cluster en utilisant Helmfile.
-
-### Composants Disponibles
-
-- **ArgoCD** (activé par défaut) : Déploiement continu GitOps
-- **Sealed Secrets** (désactivé) : Gestion des secrets chiffrés
-- **Cert-Manager** (désactivé) : Gestion des certificats TLS
-- **Prometheus** (désactivé) : Surveillance et alertes
-
-### Configuration
-
-Les composants sont définis dans `helmfile.yaml` à la racine du projet. Pour activer/désactiver un composant, modifier le champ `installed`:
-
-```yaml
-releases:
-  - name: argocd
-    namespace: argocd
-    chart: argo/argo-cd
-    version: 5.51.6
-    installed: true  # true = activé, false = désactivé
-```
-
-### Accès à ArgoCD
-
-Après le déploiement, ArgoCD est accessible via NodePort :
-
-```bash
-# Obtenir le port NodePort
-kubectl get service argocd-server -n argocd
-
-# Obtenir le mot de passe admin
-kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
-
-# Accéder à l'interface web
-https://<master-ip>:<nodeport>
-```
-
-Identifiants par défaut :
-- Utilisateur : `admin`
-- Mot de passe : Voir commande ci-dessus
-
-### Ajouter un Composant
-
-1. Modifier `helmfile.yaml` à la racine du projet :
-```yaml
-releases:
-  - name: sealed-secrets
-    namespace: sealed-secrets
-    chart: sealed-secrets/sealed-secrets
-    version: 2.13.2
-    installed: true  # Activer le composant
-```
-
-2. Exécuter le playbook :
-```bash
-cd ansible
-ansible-playbook -i inventory.ini playbook.yml --tags gitops
-```
-
-3. Vérifier le déploiement :
-```bash
-kubectl get pods -n sealed-secrets
-```
-
-### Mise à Jour des Composants
-
-Pour mettre à jour la version d'un composant :
-
-1. Modifier la version dans `helmfile.yaml`
-2. Exécuter : `ansible-playbook -i inventory.ini playbook.yml --tags gitops`
-3. Helmfile détecte le changement et met à jour le composant
-
-### Gestion Manuelle
-
-Sur le nœud master, on peut gérer l'infrastructure manuellement :
-
-```bash
-# SSH vers le master
-ssh k3s@192.168.1.102
-
-# Afficher l'état des releases
-helmfile status
-
-# Afficher les différences
-helmfile diff
-
-# Synchroniser manuellement
-helmfile sync
-
-# Lister les releases
-helmfile list
-
-# Supprimer tous les composants
-helmfile destroy
-```
-
-### Dépannage Helmfile
-
-**Les pods ne démarrent pas** :
-```bash
-kubectl get events -n <namespace> --sort-by='.lastTimestamp'
-kubectl logs -n <namespace> <pod-name>
-```
-
-**Helmfile échoue** :
-```bash
-# Vérifier la syntaxe du manifest
-helmfile lint
-
-# Afficher les logs détaillés
-helmfile sync --debug
-```
-
-**Réinitialiser l'infrastructure** :
-```bash
-# Supprimer les namespaces
-kubectl delete namespace argocd sealed-secrets cert-manager monitoring
-
-# Re-déployer
-cd ansible
-ansible-playbook -i inventory.ini playbook.yml --tags gitops
-```
-
-## 🤖 Workflows GitHub Actions
-
-### Workflow de Déploiement
-
-**Fichier**: `.github/workflows/deploy.yml`
-
-**Déclenchement**:
-- Manuel via l'interface GitHub (Actions → Deploy k3s Cluster → Run workflow)
-- Automatique sur push vers `main` (si fichiers Ansible modifiés)
-
-**Après le déploiement**:
-
-Le workflow affiche les instructions pour récupérer le kubeconfig. Depuis la machine locale:
+### Récupérer le kubeconfig
 
 ```bash
 ssh k3s@192.168.1.102 "sudo cat /etc/rancher/k3s/k3s.yaml" | \
   sed 's/127.0.0.1/192.168.1.102/g' > ~/.kube/k3s-config
 chmod 600 ~/.kube/k3s-config
-
-# Utiliser le cluster
 export KUBECONFIG=~/.kube/k3s-config
-kubectl get nodes
 ```
 
-### Workflow d'Audit de Sécurité
+## Réseau
 
-**Fichier**: `.github/workflows/security-audit.yml`
+- Master API : `192.168.1.102:6443`
+- MetalLB IP pool : `192.168.1.151-170`
+- Traefik (Ingress) : `192.168.1.151`
+- AdGuard DNS : `192.168.1.152`
+- Domaines locaux : `*.home` (via AdGuard DNS rewrites)
+- Domaines publics : `*.caremelle.org` (via Cloudflare Tunnel)
 
-**Déclenchement**:
-- Automatique sur push/PR (si fichiers Ansible modifiés)
-- Manuel via l'interface GitHub
-- Planifié quotidiennement à 2h du matin
+## CI/CD
 
-**Ce qui est vérifié**:
-- ✅ Mots de passe en dur
-- ✅ Tokens et clés API
-- ✅ Clés SSH privées
-- ✅ Credentials AWS
-- ✅ Mots de passe SSH/sudo
-- ✅ Utilisation d'Ansible Vault
-- ✅ Utilisation de variables
+Deux workflows GitHub Actions dans `.github/workflows/` :
 
-## 🔍 Dépannage
+### Deploy k3s Cluster (`deploy.yml`)
 
-### Problème: Installation k3s Échoue
+Exécute le playbook Ansible complet sur le cluster.
 
-```bash
-# Vérifier les logs sur le nœud
-ssh k3s@192.168.1.102
-sudo journalctl -u k3s -f
+| Déclencheur | Condition |
+|---|---|
+| Push sur `main` | Fichiers modifiés dans `ansible/` ou le workflow lui-même |
+| Manuel (`workflow_dispatch`) | Choix de l'environnement (production / staging) |
 
-# Vérifier l'état du service
-sudo systemctl status k3s
-```
+Étapes :
+1. Setup Python venv + installation des dépendances (`requirements-python.txt`)
+2. Installation des collections Ansible (`requirements.txt`)
+3. Configuration de la clé SSH (secret `K3S_SSH_PRIVATE_KEY`)
+4. Test de connectivité SSH vers tous les nœuds (`ansible ping`)
+5. Exécution du playbook (`ansible-playbook -i inventory.ini playbook.yml`)
+6. Vérification du cluster (nœuds + pods système)
+7. Cleanup de la clé SSH et du venv
 
-### Problème: Workers Ne Rejoignent Pas le Cluster
+Runner : **self-hosted** (accès réseau local requis pour SSH vers les nœuds).
 
-```bash
-# Vérifier la connectivité au master
-ssh k3s@192.168.1.103
-curl -k https://192.168.1.102:6443
+### Security Audit (`security-audit.yml`)
 
-# Vérifier le token
-ssh k3s@192.168.1.102
-sudo cat /var/lib/rancher/k3s/server/node-token
+Scanne le repository à la recherche de secrets en dur.
 
-# Vérifier les logs du worker
-ssh k3s@192.168.1.103
-sudo journalctl -u k3s-agent -f
-```
+| Déclencheur | Condition |
+|---|---|
+| Push | Branches `main` et `develop` |
+| Pull Request | Vers `main` et `develop` |
+| Planifié | Chaque lundi à 2h du matin |
+| Manuel (`workflow_dispatch`) | — |
 
-### Problème: Nœuds en État NotReady
+Éléments scannés :
+- Mots de passe hardcodés (`password: "..."`)
+- Tokens (`token: "..."`)
+- Clés API (`api_key: "..."`)
+- Clés privées (`BEGIN PRIVATE KEY`)
+- Credentials AWS
+- Mots de passe SSH/sudo Ansible (`ansible_ssh_pass`, `ansible_become_pass`)
+- Vérification de l'usage d'Ansible Vault
+- Vérification que les credentials utilisent des variables (`{{ ... }}`)
 
-```bash
-# Vérifier les pods système
-kubectl get pods -n kube-system
+Runner : **ubuntu-latest**. Le rapport d'audit est uploadé en artifact (rétention 90 jours). Le workflow échoue si des violations sont détectées.
 
-# Vérifier les événements
-kubectl get events -A --sort-by='.lastTimestamp'
+## Documentation
 
-# Décrire un nœud
-kubectl describe node k3s-worker-01
-```
+Voir le dossier [`docs/`](docs/) pour la documentation détaillée :
 
-### Réinitialiser le Cluster
+- [Architecture](docs/architecture.md) — Vue d'ensemble de l'architecture du cluster
+- [Guide Helmfile](docs/helmfile-upgrade.md) — Mise à jour de Helmfile
+- [Sealed Secrets Valhafin](docs/valhafin-sealed-secrets.md) — Gestion des secrets Valhafin
+- Documentation par application dans `docs/<app>/`
 
-```bash
-# Sur chaque nœud (master et workers)
-ssh k3s@<node-ip>
-sudo /usr/local/bin/k3s-uninstall.sh  # sur le master
-sudo /usr/local/bin/k3s-agent-uninstall.sh  # sur les workers
+## Licence
 
-# Relancer le déploiement
-ansible-playbook -i inventory.ini playbook.yml
-```
-
-## 📝 Licence
-
-Voir le fichier [LICENSE](LICENSE) pour plus de détails.
+Voir le fichier [LICENSE](LICENSE).
