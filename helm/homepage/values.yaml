@@ -10,7 +10,7 @@ app:
   # Configuration de l'image Docker
   image:
     repository: ghcr.io/gethomepage/homepage
-    tag: latest
+    tag: "v1.12.3"
     pullPolicy: IfNotPresent
   
   # Ressources allouées au pod
@@ -142,7 +142,7 @@ config:
             description: DNS et blocage de publicités
             widget:
               type: adguard
-              url: http://192.168.1.103:3000
+              url: http://adguard-home.networking.svc.cluster.local:3000
         - Tailscale:
             icon: tailscale.png
             href: https://login.tailscale.com/admin/machines

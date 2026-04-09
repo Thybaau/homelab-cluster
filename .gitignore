@@ -9,6 +9,9 @@ output/
 k3s-*.yaml
 k3s-*.txt
 
+# Sealed Secrets key backups (NEVER commit these!)
+sealed-secrets-keys-backup-*.yaml
+
 # Security audit reports
 reports/
 security-audit-report.txt

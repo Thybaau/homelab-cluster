@@ -50,6 +50,28 @@ kubeseal --fetch-cert \
 kubeseal --format=yaml --cert=pub-cert.pem < secret.yaml > sealedsecret.yaml
 ```
 
+## Backup des clés privées
+
+Le contrôleur Sealed Secrets génère des clés de chiffrement automatiquement (rotation tous les 30 jours par défaut). Si le cluster est reconstruit sans restaurer ces clés, tous les SealedSecrets existants dans Git deviennent inutilisables.
+
+**Script de backup :**
+
+```bash
+./scripts/backup-sealed-secrets-keys.sh [dossier_destination]
+```
+
+Le script exporte toutes les clés privées dans un fichier YAML daté avec permissions `600`. Transférer le fichier dans un gestionnaire de mots de passe (Bitwarden, 1Password, etc.) puis supprimer le fichier local.
+
+**Restauration :**
+
+```bash
+kubectl apply -f sealed-secrets-keys-backup-YYYY-MM-DD_HHMMSS.yaml
+# Redémarrer le contrôleur pour charger les clés restaurées
+kubectl rollout restart deployment sealed-secrets -n sealed-secrets
+```
+
+⚠️ Ne JAMAIS stocker le fichier de backup dans Git.
+
 ## Fichiers
 
 - Manifest ArgoCD : [`argocd-apps/sealed-secrets-app.yml`](../argocd-apps/sealed-secrets-app.yml)

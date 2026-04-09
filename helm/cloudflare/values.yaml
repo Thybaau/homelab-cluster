@@ -8,7 +8,7 @@ app:
 
   image:
     repository: cloudflare/cloudflared
-    tag: latest
+    tag: "2026.3.0"
     pullPolicy: IfNotPresent
 
   resources:
