@@ -54,6 +54,19 @@ backend:
   
   terminationGracePeriodSeconds: 30
 
+  # Security context au niveau du pod
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 1000
+
+  # Security context au niveau du conteneur
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop: ["ALL"]
+
 # Configuration du frontend
 frontend:
   enabled: true
@@ -105,7 +118,17 @@ frontend:
   
   terminationGracePeriodSeconds: 30
 
-# Configuration de la base de données
+  # Security context au niveau du pod
+  # Note: nginx standard nécessite root pour bind port 80
+  podSecurityContext:
+    runAsNonRoot: false
+
+  # Security context au niveau du conteneur
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: ["ALL"]
+      add: ["NET_BIND_SERVICE", "SETUID", "SETGID"]
 database:
   enabled: true
   
@@ -161,7 +184,18 @@ database:
   updateStrategy:
     type: RollingUpdate
 
-# Configuration des Sealed Secrets
+  # Security context au niveau du pod
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 999
+    fsGroup: 999
+
+  # Security context au niveau du conteneur
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: ["ALL"]
+      add: ["CHOWN", "DAC_OVERRIDE", "FOWNER", "SETUID", "SETGID"]
 sealedSecrets:
   enabled: true
 

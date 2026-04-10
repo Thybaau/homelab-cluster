@@ -32,10 +32,18 @@ spec:
     spec:
       serviceAccountName: {{ include "homepage.serviceAccountName" . }}
       terminationGracePeriodSeconds: {{ .Values.app.terminationGracePeriodSeconds }}
+      {{- with .Values.app.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       {{- if not .Values.persistence.enabled }}
       initContainers:
       - name: config-setup
         image: busybox:latest
+        {{- with .Values.app.initSecurityContext }}
+        securityContext:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
         command: ['sh', '-c']
         args:
           - |
@@ -50,6 +58,10 @@ spec:
       {{- end }}
       containers:
       - name: homepage
+        {{- with .Values.app.securityContext }}
+        securityContext:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
         image: "{{ .Values.app.image.repository }}:{{ .Values.app.image.tag }}"
         imagePullPolicy: {{ .Values.app.image.pullPolicy }}
         env:

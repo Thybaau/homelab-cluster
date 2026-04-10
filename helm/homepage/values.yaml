@@ -52,6 +52,24 @@ app:
   # Délai de grâce avant arrêt forcé
   terminationGracePeriodSeconds: 30
 
+  # Security context au niveau du pod
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 1000
+
+  # Security context au niveau du conteneur
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: ["ALL"]
+
+  # Security context pour l'initContainer busybox
+  initSecurityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: ["ALL"]
+
 # Configuration du service
 service:
   type: ClusterIP
