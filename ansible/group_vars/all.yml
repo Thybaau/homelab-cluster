@@ -57,6 +57,7 @@ firewall_ports_tcp:
   - 443    # HTTPS
   - "30000:32767" #NodePort range
   - 53     # DNS
+  - 3000   # AdGuard Home Web UI
 
 firewall_ports_udp:
   - 8472   # Flannel VXLAN
