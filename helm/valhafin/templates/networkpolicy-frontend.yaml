@@ -1,0 +1,26 @@
+{{- if and .Values.networkPolicy.enabled .Values.networkPolicy.frontend.enabled }}
+# NetworkPolicy frontend : autorise le trafic ingress depuis Traefik (namespace kube-system)
+# vers le frontend sur le port 80.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "valhafin.fullname" . }}-frontend-ingress
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "valhafin.frontend.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "valhafin.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: frontend
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: TCP
+          port: 80
+{{- end }}

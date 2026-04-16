@@ -186,3 +186,15 @@ customLabels: {}
 
 # Annotations personnalisées appliquées à toutes les ressources
 customAnnotations: {}
+
+# Configuration des NetworkPolicies
+networkPolicy:
+  enabled: true
+
+  # Bloque tout trafic ingress par défaut dans le namespace
+  defaultDeny:
+    enabled: true
+
+  # Autorise le trafic ingress depuis Traefik (kube-system) vers homepage
+  allowIngress:
+    enabled: true

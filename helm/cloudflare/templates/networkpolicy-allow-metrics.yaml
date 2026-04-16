@@ -1,0 +1,25 @@
+{{- if and .Values.networkPolicy.enabled .Values.networkPolicy.allowMetrics.enabled }}
+# NetworkPolicy allow-metrics : autorise le trafic ingress depuis Prometheus (namespace monitoring)
+# vers cloudflared sur le port 2000 (métriques).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "cloudflare.fullname" . }}-allow-metrics
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "cloudflare.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "cloudflare.selectorLabels" . | nindent 6 }}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+      ports:
+        - protocol: TCP
+          port: 2000
+{{- end }}

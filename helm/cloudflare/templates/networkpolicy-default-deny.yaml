@@ -1,0 +1,17 @@
+{{- if and .Values.networkPolicy.enabled .Values.networkPolicy.defaultDeny.enabled }}
+# NetworkPolicy default-deny : bloque tout trafic ingress dans le namespace networking.
+# Les flux légitimes sont autorisés par des NetworkPolicies spécifiques.
+# Note : AdGuard Home utilise hostNetwork: true — les NetworkPolicies ne s'appliquent pas
+# aux pods en hostNetwork avec Flannel (CNI par défaut de k3s).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "cloudflare.fullname" . }}-default-deny
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "cloudflare.labels" . | nindent 4 }}
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+{{- end }}

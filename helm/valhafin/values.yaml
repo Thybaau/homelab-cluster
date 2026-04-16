@@ -236,12 +236,24 @@ ingress:
 # Configuration des NetworkPolicies
 networkPolicy:
   enabled: true
-  
+
+  # Bloque tout trafic ingress par défaut dans le namespace
+  defaultDeny:
+    enabled: true
+
   database:
     # Restreint l'accès à la database au backend uniquement
     enabled: true
     allowedPods:
       - backend
+
+  # Autorise le trafic ingress depuis Traefik (kube-system) vers le backend
+  backend:
+    enabled: true
+
+  # Autorise le trafic ingress depuis Traefik (kube-system) vers le frontend
+  frontend:
+    enabled: true
 
 # Configuration du monitoring
 monitoring:

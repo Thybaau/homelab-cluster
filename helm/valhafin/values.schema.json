@@ -379,6 +379,14 @@
         "enabled": {
           "type": "boolean"
         },
+        "defaultDeny": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            }
+          }
+        },
         "database": {
           "type": "object",
           "properties": {
@@ -390,6 +398,22 @@
               "items": {
                 "type": "string"
               }
+            }
+          }
+        },
+        "backend": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            }
+          }
+        },
+        "frontend": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
             }
           }
         }

@@ -1,0 +1,26 @@
+{{- if and .Values.networkPolicy.enabled .Values.networkPolicy.backend.enabled }}
+# NetworkPolicy backend : autorise le trafic ingress depuis Traefik (namespace kube-system)
+# vers le backend sur le port 8080.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "valhafin.fullname" . }}-backend-ingress
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "valhafin.backend.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "valhafin.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: backend
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: TCP
+          port: 8080
+{{- end }}
