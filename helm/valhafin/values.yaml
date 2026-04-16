@@ -231,7 +231,7 @@ ingress:
           service: frontend
   
   tls:
-    enabled: true
+    enabled: false
 
 # Configuration des NetworkPolicies
 networkPolicy:

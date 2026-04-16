@@ -93,7 +93,7 @@ ingress:
   
   # Configuration TLS
   tls:
-    enabled: true
+    enabled: false
 
 # Configuration du ServiceAccount
 serviceAccount:
