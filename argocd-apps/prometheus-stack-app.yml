@@ -52,9 +52,10 @@ spec:
             ingress:
               enabled: true
               ingressClassName: traefik
+              annotations:
+                traefik.ingress.kubernetes.io/router.entrypoints: websecure
               hosts:
                 - grafana.caremelle.org
-                - grafana.home
               path: /
           alertmanager:
             enabled: true

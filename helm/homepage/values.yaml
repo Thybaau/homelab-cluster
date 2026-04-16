@@ -82,7 +82,7 @@ ingress:
   
   # Annotations spécifiques à Traefik
   annotations:
-    traefik.ingress.kubernetes.io/router.entrypoints: web
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
   
   # Hôtes et chemins
   hosts:
@@ -90,14 +90,10 @@ ingress:
       paths:
         - path: /
           pathType: Prefix
-    - host: homepage.home
-      paths:
-        - path: /
-          pathType: Prefix
   
-  # Configuration TLS (désactivée par défaut)
+  # Configuration TLS
   tls:
-    enabled: false
+    enabled: true
 
 # Configuration du ServiceAccount
 serviceAccount:
@@ -140,12 +136,12 @@ config:
     - Applications:
         - Valhafin:
             icon: mdi-finance
-            href: http://valhafin.home
+            href: https://valhafin.caremelle.org
             description: Gestion comptes de finance
     - Monitoring:
         - Grafana:
             icon: grafana.png
-            href: http://grafana.home
+            href: https://grafana.caremelle.org
             description: Cluster monitoring et dashboards
             widget:
               type: grafana
@@ -156,7 +152,7 @@ config:
     - Network:
         - AdGuard Home:
             icon: adguard-home.png
-            href: http://adguard.home
+            href: https://adguard.caremelle.org
             description: DNS et blocage de publicités
             widget:
               type: adguard

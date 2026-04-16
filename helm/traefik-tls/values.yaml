@@ -1,0 +1,2 @@
+# Values for traefik-tls chart
+# Ce chart déploie uniquement le SealedSecret contenant le certificat Origin CA Cloudflare

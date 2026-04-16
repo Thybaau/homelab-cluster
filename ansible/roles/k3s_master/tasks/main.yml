@@ -87,7 +87,7 @@
       {{ k3s_service_logs.stdout | default('Unable to retrieve logs') }}
   when: k3s_service_check.failed is defined and k3s_service_check.failed
 
-- name: Deploy Traefik HelmChartConfig for MetalLB
+- name: Deploy Traefik HelmChartConfig for MetalLB and TLS
   ansible.builtin.copy:
     content: |
       apiVersion: helm.cattle.io/v1
@@ -100,6 +100,23 @@
           service:
             annotations:
               metallb.universe.tf/loadBalancerIPs: "{{ traefik_metallb_ip }}"
+          ports:
+            websecure:
+              port: 8443
+              expose:
+                default: true
+              exposedPort: 443
+              protocol: TCP
+              tls:
+                enabled: true
+            web:
+              redirectTo:
+                port: websecure
+                permanent: true
+          tlsStore:
+            default:
+              defaultCertificate:
+                secretName: traefik-tls-cert
     dest: "{{ k3s_data_dir }}/server/manifests/traefik-config.yaml"
     owner: root
     group: root
