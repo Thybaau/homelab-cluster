@@ -138,6 +138,7 @@ export KUBECONFIG=~/.kube/k3s-config
 - AdGuard DNS : `192.168.1.152`
 - Domaines locaux : `*.home` (via AdGuard DNS rewrites)
 - Domaines publics : `*.caremelle.org` (via Cloudflare Tunnel)
+- NetworkPolicies : default-deny ingress sur `valhafin`, `homepage`, `networking` (voir [architecture](docs/architecture.md#sécurité-réseau-networkpolicies))
 
 ## CI/CD
 

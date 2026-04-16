@@ -128,6 +128,54 @@ Internet
 | `*.home` | AdGuard DNS rewrites | `192.168.1.151` (Traefik) |
 | `*.caremelle.org` | Cloudflare Tunnel | Services internes |
 
+## Sécurité réseau (NetworkPolicies)
+
+Les namespaces gérés par les charts custom appliquent une politique **default-deny ingress** : tout trafic entrant est bloqué par défaut, puis des règles explicites autorisent uniquement les flux légitimes.
+
+### Politique par namespace
+
+| Namespace | Default Deny | Règles Allow |
+|---|---|---|
+| `valhafin` | ✅ Ingress | Traefik → backend:8080, Traefik → frontend:80, backend → database:5432 |
+| `homepage` | ✅ Ingress | Traefik → homepage:3000 |
+| `networking` | ✅ Ingress | Prometheus → cloudflared:2000 (métriques) |
+
+### Namespaces non couverts
+
+| Namespace | Raison |
+|---|---|
+| `monitoring` | Géré par kube-prometheus-stack — flux internes complexes |
+| `metallb-system` | Géré par le chart officiel MetalLB — communication L2/ARP |
+| `sealed-secrets` | Chart externe — communication via kube-apiserver |
+| `argocd` | Géré par Helmfile — flux internes complexes |
+
+### Notes
+
+- Toutes les policies sont conditionnées par `networkPolicy.enabled` dans les `values.yaml` de chaque chart, désactivables individuellement.
+- Les sélecteurs de namespace utilisent le label automatique `kubernetes.io/metadata.name`.
+- AdGuard Home (`networking`) utilise `hostNetwork: true` — les NetworkPolicies ne s'appliquent pas aux pods en hostNetwork avec Flannel (CNI k3s).
+- Seul le trafic **ingress** est restreint. Les policies egress ne sont pas implémentées.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Flux autorisés (ingress)                      │
+│                                                                 │
+│  kube-system (Traefik)                                          │
+│       │                                                         │
+│       ├──→ valhafin/backend:8080                                │
+│       ├──→ valhafin/frontend:80                                 │
+│       └──→ homepage/homepage:3000                               │
+│                                                                 │
+│  valhafin/backend                                               │
+│       └──→ valhafin/database:5432                               │
+│                                                                 │
+│  monitoring (Prometheus)                                        │
+│       └──→ networking/cloudflared:2000                          │
+│                                                                 │
+│  Tout autre trafic ingress → ❌ BLOQUÉ (default-deny)           │
+└─────────────────────────────────────────────────────────────────┘
+```
+
 ## Gestion des secrets
 
 Tous les secrets sont chiffrés via **Sealed Secrets** avant d'être stockés dans Git :
