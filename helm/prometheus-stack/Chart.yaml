@@ -1,3 +1,4 @@
+---
 apiVersion: v2
 name: prometheus-stack
 description: Prometheus Stack with SealedSecrets for Grafana

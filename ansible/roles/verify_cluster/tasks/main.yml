@@ -31,7 +31,7 @@
     msg: |
       Some nodes are not in Ready state:
       {{ nodes_status.stdout }}
-      
+
       Nodes not Ready:
       {{ not_ready_nodes.stdout }}
   when: not_ready_nodes.stdout != ""
@@ -94,22 +94,22 @@
       ╔════════════════════════════════════════════════════════════════╗
       ║              k3s Cluster Status Report                         ║
       ╚════════════════════════════════════════════════════════════════╝
-      
+
       📊 Cluster Summary:
       -------------------
       Total Nodes:     {{ actual_node_count.stdout }}
       Expected Nodes:  {{ expected_node_count }}
       k3s Version:     {{ k3s_version.stdout | trim }}
       Status:          ✓ All nodes Ready
-      
+
       📋 Node Details:
       ----------------
       {{ nodes_detailed.stdout }}
-      
+
       🔧 System Pods:
       ---------------
       {{ system_pods.stdout }}
-      
+
       ✓ Cluster verification completed successfully!
 
 - name: Display cluster status report

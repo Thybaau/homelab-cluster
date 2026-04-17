@@ -86,10 +86,10 @@
       ========================================
       URL d'accès : https://{{ k3s_master_ip }}:{{ argocd_service.stdout | regex_search(':\\d+') | regex_replace(':', '') }}
       Nom d'utilisateur : admin
-      
+
       Pour récupérer le mot de passe admin :
       kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
-      
+
       Détails du service :
       {{ argocd_service.stdout }}
       ========================================
@@ -105,17 +105,17 @@
       environment:
         KUBECONFIG: "{{ k3s_kubeconfig_file }}"
       register: argocd_events
-      
+
     - name: Display events for debugging
       debug:
         var: argocd_events.stdout_lines
-        
+
     - name: Fail with detailed error
       fail:
         msg: |
           La vérification d'ArgoCD a échoué après {{ verification_timeout }}s
           Consultez le statut des pods et les événements ci-dessus pour plus de détails
   when: >
-    argocd_server_ready.rc != 0 or 
-    argocd_repo_ready.rc != 0 or 
+    argocd_server_ready.rc != 0 or
+    argocd_repo_ready.rc != 0 or
     argocd_controller_ready.rc != 0

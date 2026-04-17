@@ -1,3 +1,4 @@
+---
 apiVersion: v2
 name: valhafin
 description: Helm chart pour déployer l'application Valhafin (Backend Go, Frontend React, PostgreSQL)

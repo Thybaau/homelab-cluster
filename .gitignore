@@ -55,3 +55,6 @@ __pycache__/
 .Python
 venv/
 env/
+
+# Pre-commit
+.pre-commit-cache/

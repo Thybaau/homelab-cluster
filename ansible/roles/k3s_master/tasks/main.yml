@@ -45,7 +45,7 @@
       k3s installation failed on {{ inventory_hostname }}
       Return code: {{ k3s_install_result.rc }}
       Error output: {{ k3s_install_result.stderr | default('No error output available') }}
-  when: 
+  when:
     - not k3s_already_installed
     - k3s_install_result.failed is defined
     - k3s_install_result.failed

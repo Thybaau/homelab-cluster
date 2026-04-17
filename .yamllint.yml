@@ -1,0 +1,35 @@
+---
+# yamllint configuration for homelab-cluster
+# Used by pre-commit and can be run standalone: yamllint -c .yamllint.yml .
+
+extends: default
+
+ignore: |
+  # Helm templates contain Go templating syntax, not valid YAML
+  helm/*/templates/
+  # Auto-generated sealed-secrets backup files
+  scripts/sealed-secrets-keys-backup-*.yaml
+
+rules:
+  line-length:
+    max: 200
+    allow-non-breakable-words: true
+    allow-non-breakable-inline-mappings: true
+  truthy:
+    allowed-values: ['true', 'false', 'yes', 'no']
+    check-keys: false
+  comments:
+    require-starting-space: true
+    ignore-shebangs: true
+    min-spaces-from-content: 1
+  indentation:
+    spaces: 2
+    indent-sequences: true
+  document-start:
+    present: true
+  braces:
+    min-spaces-inside: 0
+    max-spaces-inside: 1
+  brackets:
+    min-spaces-inside: 0
+    max-spaces-inside: 0

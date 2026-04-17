@@ -1,3 +1,4 @@
+---
 # Configuration globale
 global:
   namespace: homepage
@@ -6,13 +7,13 @@ global:
 app:
   # Nombre de réplicas (1 pour usage homelab)
   replicaCount: 1
-  
+
   # Configuration de l'image Docker
   image:
     repository: ghcr.io/gethomepage/homepage
     tag: "v1.12.3"
     pullPolicy: IfNotPresent
-  
+
   # Ressources allouées au pod
   resources:
     requests:
@@ -21,7 +22,7 @@ app:
     limits:
       cpu: 500m
       memory: 512Mi
-  
+
   # Probe de vivacité (redémarre le pod si échec)
   livenessProbe:
     httpGet:
@@ -31,7 +32,7 @@ app:
     periodSeconds: 30
     timeoutSeconds: 5
     failureThreshold: 3
-  
+
   # Probe de disponibilité (retire du service si échec)
   readinessProbe:
     httpGet:
@@ -41,14 +42,14 @@ app:
     periodSeconds: 10
     timeoutSeconds: 5
     failureThreshold: 3
-  
+
   # Stratégie de mise à jour
   strategy:
     type: RollingUpdate
     rollingUpdate:
       maxUnavailable: 0
       maxSurge: 1
-  
+
   # Délai de grâce avant arrêt forcé
   terminationGracePeriodSeconds: 30
 
@@ -79,18 +80,18 @@ service:
 ingress:
   enabled: true
   className: traefik
-  
+
   # Annotations spécifiques à Traefik
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
-  
+
   # Hôtes et chemins
   hosts:
     - host: homepage.caremelle.org
       paths:
         - path: /
           pathType: Prefix
-  
+
   # Configuration TLS
   tls:
     enabled: false
@@ -118,19 +119,19 @@ config:
     theme: dark
     color: slate
     headerStyle: boxed
-  
+
   # Widget Proxmox
   proxmox:
     enabled: true
     url: "https://192.168.1.200:8006"
     # Les credentials sont injectés via le SealedSecret homepage-proxmox
-  
+
   # Widget ArgoCD
   argocd:
     enabled: true
     url: "http://192.168.1.102:30080"
     # Le token est injecté via le SealedSecret homepage-argocd
-  
+
   # Services personnalisés (ajoutés à services.yaml)
   customServices:
     - Applications:
@@ -177,7 +178,7 @@ config:
                 deviceid: nouBQ4Qe3i11CNTRL
                 key: "{{HOMEPAGE_VAR_TAILSCALE_KEY}}"
                 fields: ["address", "last_seen", "expires"]
-  
+
   # Widgets personnalisés (ajoutés à widgets.yaml)
   customWidgets: []
 

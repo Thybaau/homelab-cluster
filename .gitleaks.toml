@@ -1,0 +1,9 @@
+# Gitleaks configuration for homelab-cluster
+# Allowlist to reduce false positives
+
+[allowlist]
+description = "Allowlist pour homelab-cluster"
+paths = [
+  '''docs/.*\.md''',
+  '''\.github/workflows/.*''',
+]

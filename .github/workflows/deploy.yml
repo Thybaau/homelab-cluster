@@ -1,3 +1,4 @@
+---
 name: Deploy k3s Cluster
 
 on:

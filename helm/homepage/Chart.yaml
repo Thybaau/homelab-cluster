@@ -1,3 +1,4 @@
+---
 apiVersion: v2
 name: homepage
 description: Helm chart pour déployer homepage.dev - Dashboard personnalisable pour homelab

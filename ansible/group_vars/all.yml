@@ -55,7 +55,7 @@ firewall_ports_tcp:
   - 22     # SSH
   - 80     # HTTP
   - 443    # HTTPS
-  - "30000:32767" #NodePort range
+  - "30000:32767" # NodePort range
   - 53     # DNS
   - 3000   # AdGuard Home Web UI
 

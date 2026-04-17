@@ -1,0 +1,25 @@
+---
+# ansible-lint configuration for homelab-cluster
+# Profile: moderate (progressive adoption)
+# Run standalone: ansible-lint -c .ansible-lint
+
+profile: moderate
+
+# Exclude non-Ansible paths
+exclude_paths:
+  - helm/
+  - argocd-apps/
+  - scripts/
+  - docs/
+  - .github/
+  - .pre-commit-config.yaml
+  - helmfile.yaml
+  - root-app.yml
+
+# Opt-in rules
+enable_list:
+  - no-log-password
+  - no-same-owner
+
+# Ansible project directory
+project_dir: ansible/
