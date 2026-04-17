@@ -61,6 +61,7 @@ ArgoCD utilise le pattern **App-of-Apps** : une `root-app` pointe vers le dossie
 root-app.yml
     │
     └── argocd-apps/
+         ├── traefik-tls-app.yml      (sync-wave: -2)
          ├── metallb-app.yml          (sync-wave: 0)
          ├── sealed-secrets-app.yml   (sync-wave: 0)
          ├── homepage-app.yml         (sync-wave: 1)
@@ -70,7 +71,7 @@ root-app.yml
          └── adguard-home-app.yml     (sync-wave: 5)
 ```
 
-Les `sync-wave` contrôlent l'ordre de déploiement : MetalLB et Sealed Secrets d'abord (wave 0), puis les applications (wave 1+), et enfin le DNS (wave 5).
+Les `sync-wave` contrôlent l'ordre de déploiement : TLS cert d'abord (wave -2), puis MetalLB et Sealed Secrets (wave 0), puis les applications (wave 1+), et enfin le DNS (wave 5).
 
 Toutes les applications sont configurées avec :
 - `automated.prune: true` — supprime les ressources orphelines
@@ -92,23 +93,33 @@ Internet
 │    Traefik       │◄────│    MetalLB        │
 │  (Ingress)       │     │  192.168.1.151    │
 │  192.168.1.151   │     │  (L2 mode)        │
-└────────┬─────────┘     └──────────────────┘
+│  HTTPS (443)     │     └──────────────────┘
+│  HTTP→HTTPS redir│
+└────────┬─────────┘
          │
-    ┌────┴────────────────────┐
-    │    Routage par host     │
-    ├─────────────────────────┤
-    │ valhafin.home → backend │
-    │ homepage.home → homepage│
-    │ grafana.home  → grafana │
-    │ adguard.home  → adguard │
-    └─────────────────────────┘
+    ┌────┴──────────────────────────┐
+    │    Routage par host (HTTPS)   │
+    ├───────────────────────────────┤
+    │ valhafin.caremelle.org → backend  │
+    │ homepage.caremelle.org → homepage │
+    │ grafana.caremelle.org  → grafana  │
+    │ adguard.caremelle.org  → adguard  │
+    └───────────────────────────────┘
 
 ┌──────────────────┐
 │  AdGuard Home    │  DNS local
-│  192.168.1.152   │  *.home → 192.168.1.151
+│  192.168.1.152   │  *.caremelle.org → 192.168.1.151
 │  (LoadBalancer)  │  Upstream: Quad9 + Cloudflare DoH
 └──────────────────┘
 ```
+
+### TLS
+
+Traefik sert un certificat wildcard Cloudflare Origin CA (`*.caremelle.org`) via un TLSStore default. Le certificat est stocké dans un SealedSecret (`traefik-tls-cert` dans `kube-system`), déployé par ArgoCD via le chart `traefik-tls` (sync-wave -2, avant toutes les applications).
+
+- Entrypoint `web` (80) : redirection permanente vers HTTPS
+- Entrypoint `websecure` (443) : TLS activé avec le certificat Origin CA
+- Tous les ingress utilisent l'entrypoint `websecure`
 
 ### Plages IP
 
@@ -125,8 +136,8 @@ Internet
 
 | Domaine | Résolution | Cible |
 |---|---|---|
-| `*.home` | AdGuard DNS rewrites | `192.168.1.151` (Traefik) |
-| `*.caremelle.org` | Cloudflare Tunnel | Services internes |
+| `*.caremelle.org` (local) | AdGuard DNS rewrites | `192.168.1.151` (Traefik, HTTPS) |
+| `*.caremelle.org` (internet) | Cloudflare Tunnel | Services internes (homepage uniquement) |
 
 ## Sécurité réseau (NetworkPolicies)
 
@@ -176,6 +187,21 @@ Les namespaces gérés par les charts custom appliquent une politique **default-
 └─────────────────────────────────────────────────────────────────┘
 ```
 
+## Sécurité des pods (Security Contexts)
+
+Tous les pods des charts custom appliquent des `securityContext` pod-level et container-level :
+
+| Composant | runAsNonRoot | readOnlyRootFilesystem | capabilities |
+|---|---|---|---|
+| Valhafin backend | ✅ (UID 1000) | ✅ | drop ALL |
+| Valhafin frontend | ❌ (nginx standard) | ❌ (écrit /var/cache) | drop ALL + add NET_BIND_SERVICE, SETUID, SETGID |
+| Valhafin database | ✅ (UID 999) | ❌ (écrit PGDATA) | drop ALL + add CHOWN, DAC_OVERRIDE, FOWNER, SETUID, SETGID |
+| Cloudflared | ✅ (UID 65532) | ✅ | drop ALL |
+| Homepage | ✅ (UID 1000) | ❌ (écrit /app/config) | drop ALL |
+
+- `allowPrivilegeEscalation: false` sur tous les conteneurs sans exception
+- Tous les securityContext sont paramétrables via `values.yaml`
+
 ## Gestion des secrets
 
 Tous les secrets sont chiffrés via **Sealed Secrets** avant d'être stockés dans Git :
@@ -197,6 +223,7 @@ Secrets gérés :
 - `grafana-admin-credentials` — mot de passe admin Grafana
 - `cloudflare-tunnel-token` — token du tunnel Cloudflare
 - `homepage-proxmox` / `homepage-argocd` — credentials widgets Homepage
+- `traefik-tls-cert` — certificat wildcard Cloudflare Origin CA (`*.caremelle.org`)
 
 ## Monitoring
 
@@ -211,7 +238,7 @@ Le stack de monitoring est basé sur **kube-prometheus-stack** :
 ```
 
 - Prometheus : rétention 7 jours, 10 Gi de stockage, limites CPU 300m / RAM 768Mi
-- Grafana : accessible via `grafana.home` et `grafana.caremelle.org`, credentials via SealedSecret
+- Grafana : accessible via `grafana.caremelle.org`, credentials via SealedSecret
 - Alertmanager : activé avec 2 Gi de stockage
 
 ## CI/CD
