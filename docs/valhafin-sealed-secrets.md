@@ -280,7 +280,7 @@ Localisez la section `sealedSecrets` dans `values.yaml` :
 # Configuration des Sealed Secrets
 sealedSecrets:
   enabled: true
-  
+
   database:
     name: valhafin-db-credentials
     # Les valeurs encryptedData doivent être générées avec kubeseal
@@ -288,7 +288,7 @@ sealedSecrets:
       POSTGRES_DB: "AgBxxx..."  # Placeholder - remplacer par valeur chiffrée
       POSTGRES_USER: "AgBxxx..."  # Placeholder - remplacer par valeur chiffrée
       POSTGRES_PASSWORD: "AgBxxx..."  # Placeholder - remplacer par valeur chiffrée
-  
+
   backend:
     name: valhafin-backend-secrets
     encryptedData:
@@ -301,14 +301,14 @@ Remplacez les valeurs placeholder par les valeurs chiffrées de vos SealedSecret
 # Configuration des Sealed Secrets
 sealedSecrets:
   enabled: true
-  
+
   database:
     name: valhafin-db-credentials
     encryptedData:
       POSTGRES_DB: "AgBxK8F7Hn3...votre-valeur-chiffrée-complète..."
       POSTGRES_USER: "AgDZ3nR4Tx5...votre-valeur-chiffrée-complète..."
       POSTGRES_PASSWORD: "AgCY9mP2Qw1...votre-valeur-chiffrée-complète..."
-  
+
   backend:
     name: valhafin-backend-secrets
     encryptedData:
@@ -683,17 +683,17 @@ kubectl get secret -n valhafin valhafin-db-credentials -o json | jq -r '.data | 
    # Créer un script pour générer tous les secrets
    #!/bin/bash
    set -e
-   
+
    # Récupérer la clé publique
    kubeseal --fetch-cert > pub-cert.pem
-   
+
    # Chiffrer tous les secrets
    for secret in secrets/*-secret.yaml; do
      output="${secret/-secret.yaml/-sealedsecret.yaml}"
      kubeseal --format=yaml --cert=pub-cert.pem < "$secret" > "$output"
      echo "Generated $output"
    done
-   
+
    echo "All secrets encrypted successfully"
    ```
 
@@ -725,7 +725,7 @@ kubectl get secret -n valhafin valhafin-db-credentials -o json | jq -r '.data | 
    ```bash
    # Sauvegarder la clé privée du Sealed Secrets Controller
    kubectl get secret -n kube-system sealed-secrets-key -o yaml > sealed-secrets-key-backup.yaml
-   
+
    # Stocker cette sauvegarde dans un endroit sécurisé (PAS dans Git !)
    # Par exemple : Vault, gestionnaire de mots de passe, coffre-fort physique
    ```

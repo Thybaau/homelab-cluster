@@ -111,12 +111,12 @@ config:
           widget:
             type: "prometheus"
             url: "http://prometheus.local"
-        
+
         - name: "Grafana"
           icon: "grafana.png"
           href: "http://grafana.local"
           description: "Visualisation de métriques"
-    
+
     - name: "Applications"
       services:
         - name: "Nextcloud"
@@ -138,7 +138,7 @@ config:
       latitude: "48.8566"
       longitude: "2.3522"
       units: "metric"
-    
+
     # Widget recherche
     - type: "search"
       provider: "google"
@@ -165,13 +165,13 @@ Consultez la [documentation officielle](https://gethomepage.dev/en/widgets/) pou
 app:
   # Nombre de réplicas (1 recommandé pour homelab)
   replicaCount: 1
-  
+
   # Image Docker
   image:
     repository: ghcr.io/gethomepage/homepage
     tag: latest  # Ou version spécifique : v0.8.0
     pullPolicy: IfNotPresent
-  
+
   # Ressources allouées
   resources:
     requests:
@@ -196,21 +196,21 @@ service:
 ingress:
   enabled: true
   className: traefik
-  
+
   annotations:
     # Entrypoint HTTP (port 80)
     traefik.ingress.kubernetes.io/router.entrypoints: web
-    
+
     # Pour HTTPS (nécessite certificat)
     # traefik.ingress.kubernetes.io/router.entrypoints: websecure
     # cert-manager.io/cluster-issuer: letsencrypt-prod
-  
+
   hosts:
     - host: homepage.local  # Changez selon votre domaine
       paths:
         - path: /
           pathType: Prefix
-  
+
   # Configuration TLS
   tls:
     enabled: false
@@ -226,7 +226,7 @@ ingress:
 serviceAccount:
   # Activer pour la découverte automatique des services K8s
   enabled: true
-  
+
   # Nom personnalisé (optionnel)
   name: ""  # Si vide, utilise "homepage"
 ```
@@ -237,13 +237,13 @@ serviceAccount:
 persistence:
   # Activer pour sauvegarder la configuration
   enabled: false
-  
+
   # Classe de stockage (vide = default)
   storageClass: ""
-  
+
   # Taille du volume
   size: 1Gi
-  
+
   # Mode d'accès
   accessMode: ReadWriteOnce
 ```
@@ -304,7 +304,7 @@ config:
     url: "https://192.168.1.200:8006"
     username: "root@pam!homepage"
     password: "votre-token"
-  
+
   customServices:
     - name: "Infrastructure"
       services:
@@ -312,7 +312,7 @@ config:
           icon: "proxmox.png"
           href: "https://192.168.1.200:8006"
           description: "Hyperviseur"
-    
+
     - name: "Monitoring"
       services:
         - name: "Grafana"
@@ -326,7 +326,7 @@ config:
 ```yaml
 app:
   replicaCount: 3  # 3 réplicas pour HA
-  
+
   resources:
     requests:
       cpu: 200m
@@ -348,17 +348,17 @@ persistence:
 ingress:
   enabled: true
   className: traefik
-  
+
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     cert-manager.io/cluster-issuer: letsencrypt-prod
-  
+
   hosts:
     - host: homepage.example.com
       paths:
         - path: /
           pathType: Prefix
-  
+
   tls:
     enabled: true
     - secretName: homepage-tls

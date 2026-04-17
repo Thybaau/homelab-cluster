@@ -1,0 +1,8 @@
+# Violations existantes à corriger progressivement
+# Format: <filename> <rule-id>
+ansible/roles/gitops_tools/tasks/main.yml command-instead-of-module
+ansible/roles/gitops_tools/tasks/main.yml command-instead-of-shell
+ansible/roles/gitops_tools/tasks/verify_infrastructure.yml key-order[task]
+ansible/roles/k3s_workers/handlers/main.yml name[casing]
+ansible/roles/prepare_nodes/tasks/main.yml syntax-check[unknown-module]
+ansible/roles/verify_cluster/defaults/main.yml var-naming[no-role-prefix]

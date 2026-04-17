@@ -382,13 +382,13 @@ groups:
     for: 5m
     annotations:
       summary: "Homepage pod is not running"
-  
+
   - alert: HomepageHighMemory
     expr: container_memory_usage_bytes{namespace="homepage"} > 400000000
     for: 10m
     annotations:
       summary: "Homepage memory usage > 400MB"
-  
+
   - alert: HomepageNotAccessible
     expr: probe_success{job="homepage"} == 0
     for: 5m
