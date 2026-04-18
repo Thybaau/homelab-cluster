@@ -36,13 +36,13 @@ spec:
               - "https://dns.cloudflare.com/dns-query"
           filtering:
             rewrites:
-              - domain: "adguard.home"
+              - domain: "adguard.caremelle.org"
                 answer: "192.168.1.151"
-              - domain: "homepage.home"
+              - domain: "homepage.caremelle.org"
                 answer: "192.168.1.151"
-              - domain: "valhafin.home"
+              - domain: "valhafin.caremelle.org"
                 answer: "192.168.1.151"
-              - domain: "grafana.home"
+              - domain: "grafana.caremelle.org"
                 answer: "192.168.1.151"
               - domain: "argocd.caremelle.org"
                 answer: "192.168.1.151"
