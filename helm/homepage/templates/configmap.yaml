@@ -33,7 +33,7 @@ data:
         {{- if .Values.config.argocd.enabled }}
         - ArgoCD:
             icon: argo-cd.png
-            href: {{ .Values.config.argocd.url }}
+            href: {{ .Values.config.argocd.href }}
             description: GitOps continuous delivery
             widget:
               type: argocd

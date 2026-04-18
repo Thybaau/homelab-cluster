@@ -129,7 +129,8 @@ config:
   # Widget ArgoCD
   argocd:
     enabled: true
-    url: "https://argocd.caremelle.org"
+    url: "http://argocd-server.argocd.svc.cluster.local"
+    href: "https://argocd.caremelle.org"
     # Le token est injecté via le SealedSecret homepage-argocd
 
   # Services personnalisés (ajoutés à services.yaml)
