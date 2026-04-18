@@ -129,7 +129,7 @@ config:
   # Widget ArgoCD
   argocd:
     enabled: true
-    url: "http://192.168.1.102:30080"
+    url: "https://argocd.caremelle.org"
     # Le token est injecté via le SealedSecret homepage-argocd
 
   # Services personnalisés (ajoutés à services.yaml)
