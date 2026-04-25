@@ -71,6 +71,60 @@ spec:
                     resources:
                       requests:
                         storage: 2Gi
+              secrets:
+                - discord-webhook-urls
+            config:
+              global:
+                resolve_timeout: 5m
+              route:
+                receiver: discord-monitoring
+                group_by: ['alertname', 'namespace']
+                group_wait: 30s
+                group_interval: 5m
+                repeat_interval: 4h
+                routes:
+                  - receiver: discord-critical
+                    matchers:
+                      - severity = critical
+                    repeat_interval: 1h
+                    continue: false
+                  - receiver: discord-monitoring
+                    matchers:
+                      - severity = warning
+                    repeat_interval: 4h
+                    continue: false
+              receivers:
+                - name: discord-critical
+                  discord_configs:
+                    - webhook_url_file: /etc/alertmanager/secrets/discord-webhook-urls/discord-critical-webhook-url
+                      send_resolved: true
+                      title: '{{ template "discord.title" . }}'
+                      message: '{{ template "discord.text" . }}'
+                - name: discord-monitoring
+                  discord_configs:
+                    - webhook_url_file: /etc/alertmanager/secrets/discord-webhook-urls/discord-monitoring-webhook-url
+                      send_resolved: true
+                      title: '{{ template "discord.title" . }}'
+                      message: '{{ template "discord.text" . }}'
+              inhibit_rules:
+                - source_matchers:
+                    - severity = critical
+                  target_matchers:
+                    - severity = warning
+                  equal: ['alertname', 'namespace']
+            templateFiles:
+              discord.tmpl: |-
+                {{ define "discord.title" }}
+                {{ if eq .Status "firing" }}
+                {{ if .Alerts }}{{ if eq (index .Alerts 0).Labels.severity "critical" }}🚨 CRITIQUE{{ else }}⚠️ WARNING{{ end }}{{ else }}⚠️ WARNING{{ end }}
+                {{ else }}✅ RÉSOLU{{ end }}
+                {{ end }}
+                {{ define "discord.text" }}
+                {{ range .Alerts }}
+                {{ .Annotations.summary }}
+                Dashboard: {{ .Annotations.dashboard_url }}
+                {{ end }}
+                {{ end }}
     - repoURL: https://github.com/Thybaau/homelab-cluster.git
       targetRevision: HEAD
       path: helm/prometheus-stack
