@@ -15,10 +15,13 @@ spec:
   project: default
   sources:
     - repoURL: https://prometheus-community.github.io/helm-charts
-      targetRevision: 65.1.1
+      targetRevision: 72.6.2
       chart: kube-prometheus-stack
       helm:
         values: |
+          crds:
+            upgradeJob:
+              enabled: true
           prometheus:
             prometheusSpec:
               retention: 7d
@@ -62,8 +65,10 @@ spec:
             enabled: true
             alertmanagerSpec:
               resources:
-                limits:
+                requests:
                   memory: 64Mi
+                limits:
+                  memory: 256Mi
               storage:
                 volumeClaimTemplate:
                   spec:
