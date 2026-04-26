@@ -64,7 +64,6 @@ spec:
           alertmanager:
             enabled: true
             alertmanagerSpec:
-              configSecret: alertmanager-discord-config
               resources:
                 requests:
                   memory: 64Mi
@@ -79,6 +78,57 @@ spec:
                         storage: 2Gi
               secrets:
                 - discord-webhook-urls
+            config:
+              global:
+                resolve_timeout: 5m
+              route:
+                receiver: discord-monitoring
+                group_by: ['alertname', 'namespace']
+                group_wait: 30s
+                group_interval: 5m
+                repeat_interval: 4h
+                routes:
+                  - receiver: discord-critical
+                    matchers:
+                      - severity = critical
+                    repeat_interval: 1h
+                    continue: false
+                  - receiver: discord-monitoring
+                    matchers:
+                      - severity = warning
+                    repeat_interval: 4h
+                    continue: false
+              receivers:
+                - name: discord-critical
+                  slack_configs:
+                    - api_url_file: /etc/alertmanager/secrets/discord-webhook-urls/discord-critical-webhook-url
+                      send_resolved: true
+                      color: '{{ if eq .Status "firing" }}danger{{ else }}good{{ end }}'
+                      title: '{{ if eq .Status "firing" }}🚨 CRITIQUE{{ else }}✅ RÉSOLU{{ end }}'
+                      text: |-
+                        {{ range .Alerts }}
+                        *{{ .Labels.alertname }}* — {{ .Labels.namespace | default "cluster" }}
+                        {{ .Annotations.summary }}
+                        {{ if .Annotations.dashboard_url }}📊 <{{ .Annotations.dashboard_url }}|Dashboard>{{ end }}
+                        {{ end }}
+                - name: discord-monitoring
+                  slack_configs:
+                    - api_url_file: /etc/alertmanager/secrets/discord-webhook-urls/discord-monitoring-webhook-url
+                      send_resolved: true
+                      color: '{{ if eq .Status "firing" }}warning{{ else }}good{{ end }}'
+                      title: '{{ if eq .Status "firing" }}⚠️ WARNING{{ else }}✅ RÉSOLU{{ end }}'
+                      text: |-
+                        {{ range .Alerts }}
+                        *{{ .Labels.alertname }}* — {{ .Labels.namespace | default "cluster" }}
+                        {{ .Annotations.summary }}
+                        {{ if .Annotations.dashboard_url }}📊 <{{ .Annotations.dashboard_url }}|Dashboard>{{ end }}
+                        {{ end }}
+              inhibit_rules:
+                - source_matchers:
+                    - severity = critical
+                  target_matchers:
+                    - severity = warning
+                  equal: ['alertname', 'namespace']
     - repoURL: https://github.com/Thybaau/homelab-cluster.git
       targetRevision: HEAD
       path: helm/prometheus-stack
