@@ -129,6 +129,59 @@ spec:
                   target_matchers:
                     - severity = warning
                   equal: ['alertname', 'namespace']
+          additionalPrometheusRulesMap:
+            homelab-infrastructure:
+              groups:
+                - name: homelab-infrastructure.rules
+                  rules:
+                    - alert: StorageWarning
+                      expr: (1 - node_filesystem_avail_bytes{mountpoint="/",fstype!=""} / node_filesystem_size_bytes{mountpoint="/",fstype!=""}) * 100 > 80
+                      for: 10m
+                      labels:
+                        severity: warning
+                      annotations:
+                        summary: "Stockage du nœud {{ $labels.instance }} à {{ $value | humanize }}%"
+                        dashboard_url: "https://grafana.caremelle.org/d/storage"
+                    - alert: StorageCritical
+                      expr: (1 - node_filesystem_avail_bytes{mountpoint="/",fstype!=""} / node_filesystem_size_bytes{mountpoint="/",fstype!=""}) * 100 > 90
+                      for: 5m
+                      labels:
+                        severity: critical
+                      annotations:
+                        summary: "Stockage du nœud {{ $labels.instance }} à {{ $value | humanize }}% — seuil critique dépassé"
+                        dashboard_url: "https://grafana.caremelle.org/d/storage"
+                    - alert: NodeNotReady
+                      expr: kube_node_status_condition{condition="Ready",status="true"} == 0
+                      for: 3m
+                      labels:
+                        severity: critical
+                      annotations:
+                        summary: "Le nœud {{ $labels.node }} n'est plus en état Ready"
+                        dashboard_url: "https://grafana.caremelle.org/d/cluster-overview"
+                    - alert: PodCrashLooping
+                      expr: increase(kube_pod_container_status_restarts_total[15m]) > 0
+                      for: 0m
+                      labels:
+                        severity: critical
+                      annotations:
+                        summary: "Le pod {{ $labels.namespace }}/{{ $labels.pod }} redémarre en boucle"
+                        dashboard_url: "https://grafana.caremelle.org/d/cluster-overview"
+                    - alert: PodHighMemoryUsage
+                      expr: (container_memory_working_set_bytes{container!=""} / kube_pod_container_resource_limits{resource="memory",container!=""}) * 100 > 85
+                      for: 10m
+                      labels:
+                        severity: warning
+                      annotations:
+                        summary: "Le pod {{ $labels.namespace }}/{{ $labels.pod }} utilise {{ $value | humanize }}% de sa limite mémoire"
+                        dashboard_url: "https://grafana.caremelle.org/d/cluster-overview"
+                    - alert: PodHighCpuUsage
+                      expr: (rate(container_cpu_usage_seconds_total{container!=""}[5m]) / kube_pod_container_resource_limits{resource="cpu",container!=""}) * 100 > 90
+                      for: 10m
+                      labels:
+                        severity: warning
+                      annotations:
+                        summary: "Le pod {{ $labels.namespace }}/{{ $labels.pod }} utilise {{ $value | humanize }}% de sa limite CPU"
+                        dashboard_url: "https://grafana.caremelle.org/d/cluster-overview"
     - repoURL: https://github.com/Thybaau/homelab-cluster.git
       targetRevision: HEAD
       path: helm/prometheus-stack
