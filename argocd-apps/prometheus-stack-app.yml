@@ -129,6 +129,11 @@ spec:
                   target_matchers:
                     - severity = warning
                   equal: ['alertname', 'namespace']
+                - source_matchers:
+                    - alertname = StorageCritical
+                  target_matchers:
+                    - alertname = StorageWarning
+                  equal: ['instance']
           additionalPrometheusRulesMap:
             homelab-infrastructure:
               groups:
@@ -159,7 +164,7 @@ spec:
                         summary: "Le nœud {{ $labels.node }} n'est plus en état Ready"
                         dashboard_url: "https://grafana.caremelle.org/d/cluster-overview"
                     - alert: PodCrashLooping
-                      expr: increase(kube_pod_container_status_restarts_total[15m]) > 0
+                      expr: increase(kube_pod_container_status_restarts_total[15m]) > 3
                       for: 0m
                       labels:
                         severity: critical
@@ -167,7 +172,7 @@ spec:
                         summary: "Le pod {{ $labels.namespace }}/{{ $labels.pod }} redémarre en boucle"
                         dashboard_url: "https://grafana.caremelle.org/d/cluster-overview"
                     - alert: PodHighMemoryUsage
-                      expr: (container_memory_working_set_bytes{container!=""} / kube_pod_container_resource_limits{resource="memory",container!=""}) * 100 > 85
+                      expr: (container_memory_working_set_bytes{container!=""} / on(namespace,pod,container) kube_pod_container_resource_limits{resource="memory",container!=""}) * 100 > 85
                       for: 10m
                       labels:
                         severity: warning
@@ -175,7 +180,7 @@ spec:
                         summary: "Le pod {{ $labels.namespace }}/{{ $labels.pod }} utilise {{ $value | humanize }}% de sa limite mémoire"
                         dashboard_url: "https://grafana.caremelle.org/d/cluster-overview"
                     - alert: PodHighCpuUsage
-                      expr: (rate(container_cpu_usage_seconds_total{container!=""}[5m]) / kube_pod_container_resource_limits{resource="cpu",container!=""}) * 100 > 90
+                      expr: (rate(container_cpu_usage_seconds_total{container!=""}[5m]) / on(namespace,pod,container) kube_pod_container_resource_limits{resource="cpu",container!=""}) * 100 > 90
                       for: 10m
                       labels:
                         severity: warning
