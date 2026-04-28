@@ -187,6 +187,31 @@ spec:
                       annotations:
                         summary: "Le pod {{ $labels.namespace }}/{{ $labels.pod }} utilise {{ $value | humanize }}% de sa limite CPU"
                         dashboard_url: "https://grafana.caremelle.org/d/cluster-overview"
+            # REQUIRES: blackbox-exporter (Story 4.1) — règle dormante tant que probe_success n'existe pas
+            homelab-services:
+              groups:
+                - name: homelab-services.rules
+                  rules:
+                    - alert: ServiceDown
+                      expr: probe_success == 0
+                      for: 5m
+                      labels:
+                        severity: critical
+                      annotations:
+                        summary: "Le service {{ $labels.instance }} ne répond plus (probe HTTP en échec)"
+                        dashboard_url: "https://grafana.caremelle.org/d/cluster-overview"
+            homelab-alerting-health:
+              groups:
+                - name: homelab-alerting-health.rules
+                  rules:
+                    - alert: AlertmanagerFailedNotifications
+                      expr: increase(alertmanager_notifications_failed_total[15m]) > 1
+                      for: 0m
+                      labels:
+                        severity: critical
+                      annotations:
+                        summary: "Alertmanager n'a pas réussi à envoyer des notifications ({{ $value | humanize }} échecs en 15 min)"
+                        dashboard_url: "https://grafana.caremelle.org/d/cluster-overview"
     - repoURL: https://github.com/Thybaau/homelab-cluster.git
       targetRevision: HEAD
       path: helm/prometheus-stack
