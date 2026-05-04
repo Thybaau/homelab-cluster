@@ -1,0 +1,5 @@
+apiVersion: v2
+name: loki
+description: "Configuration locale pour Loki — backend de stockage de logs centralisé"
+type: application
+version: 0.1.0
