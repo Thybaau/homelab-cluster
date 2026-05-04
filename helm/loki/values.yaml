@@ -23,6 +23,7 @@ loki:
     retention_period: 168h
   compactor:
     retention_enabled: true
+    delete_request_store: filesystem
 
 # Mode Monolithic — un seul replica
 singleBinary:
