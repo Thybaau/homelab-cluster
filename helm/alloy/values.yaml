@@ -1,0 +1,97 @@
+alloy:
+  configMap:
+    content: |-
+      // Logging configuration
+      logging {
+        level  = "info"
+        format = "logfmt"
+      }
+
+      // Découverte des pods Kubernetes
+      discovery.kubernetes "pods" {
+        role = "pod"
+      }
+
+      // Relabeling pour extraire les métadonnées
+      discovery.relabel "pods" {
+        targets = discovery.kubernetes.pods.targets
+
+        // Garder uniquement les pods Running
+        rule {
+          source_labels = ["__meta_kubernetes_pod_phase"]
+          regex         = "Pending|Succeeded|Failed|Unknown"
+          action        = "drop"
+        }
+
+        // Extraire le namespace
+        rule {
+          source_labels = ["__meta_kubernetes_namespace"]
+          target_label  = "namespace"
+        }
+
+        // Extraire le nom du pod
+        rule {
+          source_labels = ["__meta_kubernetes_pod_name"]
+          target_label  = "pod"
+        }
+
+        // Extraire le nom du container
+        rule {
+          source_labels = ["__meta_kubernetes_pod_container_name"]
+          target_label  = "container"
+        }
+
+        // Extraire le nom du node
+        rule {
+          source_labels = ["__meta_kubernetes_pod_node_name"]
+          target_label  = "node"
+        }
+
+        // Construire le chemin du fichier de log
+        rule {
+          source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_name", "__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
+          separator     = "/"
+          target_label  = "__path__"
+          replacement   = "/var/log/pods/*$1_$2_$3/$4/*.log"
+        }
+      }
+
+      // Découverte des fichiers de logs sur le filesystem
+      local.file_match "pods" {
+        path_targets = discovery.relabel.pods.output
+      }
+
+      // Lecture des fichiers de logs
+      loki.source.file "pods" {
+        targets    = local.file_match.pods.targets
+        forward_to = [loki.process.pods.receiver]
+      }
+
+      // Traitement des logs (parsing CRI)
+      loki.process "pods" {
+        // Parser le format CRI (containerd)
+        stage.cri {}
+
+        forward_to = [loki.write.loki.receiver]
+      }
+
+      // Envoi vers Loki
+      loki.write "loki" {
+        endpoint {
+          url = "http://loki.monitoring.svc:3100/loki/api/v1/push"
+        }
+      }
+
+  mounts:
+    varlog: true
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 100m
+      memory: 256Mi
+
+controller:
+  type: "daemonset"

@@ -61,6 +61,12 @@ spec:
               hosts:
                 - grafana.caremelle.org
               path: /
+            additionalDataSources:
+              - name: Loki
+                type: loki
+                url: http://loki.monitoring.svc:3100
+                access: proxy
+                isDefault: false
           alertmanager:
             enabled: true
             alertmanagerSpec:
