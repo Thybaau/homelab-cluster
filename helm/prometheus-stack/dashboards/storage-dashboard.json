@@ -259,24 +259,62 @@
       },
       "transformations": [
         {
-          "id": "merge",
-          "options": {}
+          "id": "joinByField",
+          "options": {
+            "byField": "persistentvolumeclaim",
+            "mode": "outer"
+          }
         },
         {
           "id": "organize",
           "options": {
             "excludeByName": {
               "Time": true,
+              "Time 1": true,
+              "Time 2": true,
+              "Time 3": true,
               "__name__": true,
+              "__name__ 1": true,
+              "__name__ 2": true,
+              "__name__ 3": true,
               "endpoint": true,
+              "endpoint 1": true,
+              "endpoint 2": true,
+              "endpoint 3": true,
               "instance": true,
+              "instance 1": true,
+              "instance 2": true,
+              "instance 3": true,
               "job": true,
+              "job 1": true,
+              "job 2": true,
+              "job 3": true,
               "metrics_path": true,
+              "metrics_path 1": true,
+              "metrics_path 2": true,
+              "metrics_path 3": true,
+              "service": true,
+              "service 1": true,
+              "service 2": true,
+              "service 3": true,
+              "exported_namespace": true,
+              "exported_namespace 1": true,
+              "exported_namespace 2": true,
+              "exported_namespace 3": true,
+              "namespace 2": true,
+              "namespace 3": true,
               "node": true,
-              "service": true
+              "node 1": true,
+              "node 2": true,
+              "node 3": true,
+              "persistentvolumeclaim 1": true,
+              "persistentvolumeclaim 2": true,
+              "persistentvolumeclaim 3": true
             },
+            "indexByName": {},
             "renameByName": {
               "namespace": "Namespace",
+              "namespace 1": "Namespace",
               "persistentvolumeclaim": "PVC",
               "Value #A": "Utilisé",
               "Value #B": "Capacité",
