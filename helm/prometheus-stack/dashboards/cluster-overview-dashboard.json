@@ -38,7 +38,7 @@
           "type": "prometheus",
           "uid": "prometheus"
         },
-        "query": "label_values(node_uname_info, nodename)",
+        "query": "label_values(node_cpu_seconds_total, instance)",
         "includeAll": true,
         "allValue": ".*",
         "multi": true,
@@ -49,7 +49,8 @@
         },
         "refresh": 2,
         "sort": 1,
-        "label": "Nœud"
+        "label": "Nœud",
+        "regex": ""
       }
     ]
   },
@@ -131,8 +132,8 @@
       "gridPos": { "h": 6, "w": 12, "x": 0, "y": 6 },
       "targets": [
         {
-          "expr": "(1 - avg by(nodename) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m]) * on(instance) group_left(nodename) node_uname_info{nodename=~\"$node\"})) * 100",
-          "legendFormat": "{{nodename}}",
+          "expr": "(1 - avg by(instance) (rate(node_cpu_seconds_total{mode=\"idle\", instance=~\"$node\"}[5m]))) * 100",
+          "legendFormat": "{{instance}}",
           "refId": "A"
         }
       ],
@@ -176,8 +177,8 @@
       "gridPos": { "h": 6, "w": 12, "x": 12, "y": 6 },
       "targets": [
         {
-          "expr": "(1 - (node_memory_MemAvailable_bytes * on(instance) group_left(nodename) node_uname_info{nodename=~\"$node\"}) / (node_memory_MemTotal_bytes * on(instance) group_left(nodename) node_uname_info{nodename=~\"$node\"})) * 100",
-          "legendFormat": "{{nodename}}",
+          "expr": "(1 - node_memory_MemAvailable_bytes{instance=~\"$node\"} / node_memory_MemTotal_bytes{instance=~\"$node\"}) * 100",
+          "legendFormat": "{{instance}}",
           "refId": "A"
         }
       ],
