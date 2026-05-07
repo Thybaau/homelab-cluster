@@ -58,6 +58,7 @@ firewall_ports_tcp:
   - "30000:32767" # NodePort range
   - 53     # DNS
   - 3000   # AdGuard Home Web UI
+  - 9100   # Node Exporter (Prometheus metrics)
 
 firewall_ports_udp:
   - 8472   # Flannel VXLAN
