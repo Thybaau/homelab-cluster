@@ -1,0 +1,340 @@
+{
+  "uid": "storage",
+  "title": "Stockage",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": false,
+  "refresh": "30s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "node",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "query": "label_values(node_uname_info, nodename)",
+        "includeAll": true,
+        "allValue": ".*",
+        "multi": true,
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "refresh": 2,
+        "sort": 1,
+        "label": "Nœud"
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "row",
+      "title": "Utilisation disque des VMs",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "collapsed": false
+    },
+    {
+      "id": 2,
+      "type": "gauge",
+      "title": "Disque utilisé par nœud (%)",
+      "description": "Pourcentage d'utilisation du disque principal par nœud — Vert < 70%, Orange 70-85%, Rouge > 85%",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 1 },
+      "targets": [
+        {
+          "expr": "(1 - node_filesystem_avail_bytes{mountpoint=\"/\", fstype!=\"tmpfs\"} / node_filesystem_size_bytes{mountpoint=\"/\", fstype!=\"tmpfs\"}) * 100 * on(instance) group_left(nodename) node_uname_info{nodename=~\"$node\"}",
+          "legendFormat": "{{nodename}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 70 },
+              { "color": "red", "value": 85 }
+            ]
+          },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "auto",
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Espace utilisé par nœud (Go)",
+      "description": "Espace disque utilisé sur le disque principal de chaque nœud, en gigaoctets",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": { "h": 7, "w": 6, "x": 12, "y": 1 },
+      "targets": [
+        {
+          "expr": "(node_filesystem_size_bytes{mountpoint=\"/\", fstype!=\"tmpfs\"} - node_filesystem_avail_bytes{mountpoint=\"/\", fstype!=\"tmpfs\"}) / 1024 / 1024 / 1024 * on(instance) group_left(nodename) node_uname_info{nodename=~\"$node\"}",
+          "legendFormat": "{{nodename}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decgbytes",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 30 },
+              { "color": "red", "value": 40 }
+            ]
+          },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none"
+      }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Espace total par nœud (Go)",
+      "description": "Capacité totale du disque principal de chaque nœud, en gigaoctets",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": { "h": 7, "w": 6, "x": 18, "y": 1 },
+      "targets": [
+        {
+          "expr": "node_filesystem_size_bytes{mountpoint=\"/\", fstype!=\"tmpfs\"} / 1024 / 1024 / 1024 * on(instance) group_left(nodename) node_uname_info{nodename=~\"$node\"}",
+          "legendFormat": "{{nodename}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decgbytes",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "blue", "value": null }
+            ]
+          },
+          "color": { "mode": "fixed", "fixedColor": "blue" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none"
+      }
+    },
+    {
+      "id": 5,
+      "type": "row",
+      "title": "PVCs — Volumes persistants",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 8 },
+      "collapsed": false
+    },
+    {
+      "id": 6,
+      "type": "table",
+      "title": "Utilisation des PVCs",
+      "description": "Liste des Persistent Volume Claims avec leur utilisation, triée par pourcentage décroissant",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 9 },
+      "targets": [
+        {
+          "expr": "kubelet_volume_stats_used_bytes",
+          "legendFormat": "",
+          "refId": "A",
+          "format": "table",
+          "instant": true
+        },
+        {
+          "expr": "kubelet_volume_stats_capacity_bytes",
+          "legendFormat": "",
+          "refId": "B",
+          "format": "table",
+          "instant": true
+        },
+        {
+          "expr": "kubelet_volume_stats_used_bytes / kubelet_volume_stats_capacity_bytes * 100",
+          "legendFormat": "",
+          "refId": "C",
+          "format": "table",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Value #A" },
+            "properties": [
+              { "id": "unit", "value": "decbytes" },
+              { "id": "displayName", "value": "Utilisé" }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Value #B" },
+            "properties": [
+              { "id": "unit", "value": "decbytes" },
+              { "id": "displayName", "value": "Capacité" }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Value #C" },
+            "properties": [
+              { "id": "unit", "value": "percent" },
+              { "id": "displayName", "value": "Utilisation (%)" },
+              { "id": "thresholds", "value": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "orange", "value": 70 },
+                  { "color": "red", "value": 85 }
+                ]
+              }},
+              { "id": "custom.displayMode", "value": "color-background-solid" }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          { "displayName": "Utilisation (%)", "desc": true }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "endpoint": true,
+              "instance": true,
+              "job": true,
+              "metrics_path": true,
+              "node": true,
+              "service": true
+            },
+            "renameByName": {
+              "namespace": "Namespace",
+              "persistentvolumeclaim": "PVC",
+              "Value #A": "Utilisé",
+              "Value #B": "Capacité",
+              "Value #C": "Utilisation (%)"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "row",
+      "title": "Top consommateurs",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 18 },
+      "collapsed": false
+    },
+    {
+      "id": 8,
+      "type": "bargauge",
+      "title": "Top consommateurs d'espace disque",
+      "description": "Les 10 plus gros mountpoints par espace utilisé, tous nœuds confondus (hors tmpfs et overlay)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 19 },
+      "targets": [
+        {
+          "expr": "topk(10, (node_filesystem_size_bytes{fstype!=\"tmpfs\", fstype!=\"overlay\"} - node_filesystem_avail_bytes{fstype!=\"tmpfs\", fstype!=\"overlay\"}) * on(instance) group_left(nodename) node_uname_info{nodename=~\"$node\"}) / 1024 / 1024 / 1024",
+          "legendFormat": "{{nodename}} — {{mountpoint}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decgbytes",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 20 },
+              { "color": "red", "value": 40 }
+            ]
+          },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true
+      }
+    }
+  ]
+}
