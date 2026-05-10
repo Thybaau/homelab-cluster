@@ -182,8 +182,8 @@
     {
       "id": 6,
       "type": "table",
-      "title": "Utilisation des PVCs",
-      "description": "Liste des Persistent Volume Claims avec leur utilisation, triée par pourcentage décroissant",
+      "title": "Inventaire des PVCs",
+      "description": "Liste des Persistent Volume Claims avec leur capacité demandée et le nœud hébergeant le volume. Note : le local-path provisioner ne permet pas de mesurer l'utilisation réelle par PVC.",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -191,23 +191,16 @@
       "gridPos": { "h": 9, "w": 24, "x": 0, "y": 9 },
       "targets": [
         {
-          "expr": "kubelet_volume_stats_used_bytes",
+          "expr": "kube_persistentvolumeclaim_resource_requests_storage_bytes",
           "legendFormat": "",
           "refId": "A",
           "format": "table",
           "instant": true
         },
         {
-          "expr": "kubelet_volume_stats_capacity_bytes",
+          "expr": "kubelet_volume_stats_used_bytes{job=\"kubelet\"} * 0 + 1",
           "legendFormat": "",
           "refId": "B",
-          "format": "table",
-          "instant": true
-        },
-        {
-          "expr": "kubelet_volume_stats_used_bytes / kubelet_volume_stats_capacity_bytes * 100",
-          "legendFormat": "",
-          "refId": "C",
           "format": "table",
           "instant": true
         }
@@ -223,30 +216,7 @@
             "matcher": { "id": "byName", "options": "Value #A" },
             "properties": [
               { "id": "unit", "value": "decbytes" },
-              { "id": "displayName", "value": "Utilisé" }
-            ]
-          },
-          {
-            "matcher": { "id": "byName", "options": "Value #B" },
-            "properties": [
-              { "id": "unit", "value": "decbytes" },
-              { "id": "displayName", "value": "Capacité" }
-            ]
-          },
-          {
-            "matcher": { "id": "byName", "options": "Value #C" },
-            "properties": [
-              { "id": "unit", "value": "percent" },
-              { "id": "displayName", "value": "Utilisation (%)" },
-              { "id": "thresholds", "value": {
-                "mode": "absolute",
-                "steps": [
-                  { "color": "green", "value": null },
-                  { "color": "orange", "value": 70 },
-                  { "color": "red", "value": 85 }
-                ]
-              }},
-              { "id": "custom.displayMode", "value": "color-background-solid" }
+              { "id": "displayName", "value": "Capacité demandée" }
             ]
           }
         ]
@@ -254,7 +224,7 @@
       "options": {
         "showHeader": true,
         "sortBy": [
-          { "displayName": "Utilisation (%)", "desc": true }
+          { "displayName": "Capacité demandée", "desc": true }
         ]
       },
       "transformations": [
@@ -272,53 +242,42 @@
               "Time": true,
               "Time 1": true,
               "Time 2": true,
-              "Time 3": true,
               "__name__": true,
               "__name__ 1": true,
               "__name__ 2": true,
-              "__name__ 3": true,
+              "container": true,
               "endpoint": true,
               "endpoint 1": true,
               "endpoint 2": true,
-              "endpoint 3": true,
               "instance": true,
               "instance 1": true,
               "instance 2": true,
-              "instance 3": true,
               "job": true,
               "job 1": true,
               "job 2": true,
-              "job 3": true,
               "metrics_path": true,
               "metrics_path 1": true,
               "metrics_path 2": true,
-              "metrics_path 3": true,
+              "pod": true,
               "service": true,
               "service 1": true,
               "service 2": true,
-              "service 3": true,
               "exported_namespace": true,
-              "exported_namespace 1": true,
-              "exported_namespace 2": true,
-              "exported_namespace 3": true,
+              "namespace 1": true,
               "namespace 2": true,
-              "namespace 3": true,
-              "node": true,
-              "node 1": true,
-              "node 2": true,
-              "node 3": true,
-              "persistentvolumeclaim 1": true,
-              "persistentvolumeclaim 2": true,
-              "persistentvolumeclaim 3": true
+              "Value #B": true
             },
-            "indexByName": {},
+            "indexByName": {
+              "persistentvolumeclaim": 0,
+              "namespace": 1,
+              "node": 2,
+              "Value #A": 3
+            },
             "renameByName": {
               "namespace": "Namespace",
-              "namespace 1": "Namespace",
               "persistentvolumeclaim": "PVC",
-              "Value #A": "Utilisé",
-              "Value #B": "Capacité",
-              "Value #C": "Utilisation (%)"
+              "node": "Nœud",
+              "Value #A": "Capacité demandée"
             }
           }
         }
