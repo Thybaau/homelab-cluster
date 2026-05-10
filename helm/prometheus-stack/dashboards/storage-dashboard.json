@@ -263,7 +263,6 @@
               "service 1": true,
               "service 2": true,
               "exported_namespace": true,
-              "namespace 1": true,
               "namespace 2": true,
               "Value #B": true
             },
