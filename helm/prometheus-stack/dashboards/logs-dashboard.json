@@ -1,0 +1,154 @@
+{
+  "uid": "logs",
+  "title": "Logs",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": false,
+  "refresh": "30s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "namespace",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "query": "label_values(namespace)",
+        "includeAll": true,
+        "allValue": ".*",
+        "multi": false,
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "refresh": 2,
+        "sort": 1,
+        "label": "Namespace"
+      },
+      {
+        "name": "pod",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "query": "label_values({namespace=~\"$namespace\"}, pod)",
+        "includeAll": true,
+        "allValue": ".*",
+        "multi": false,
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "refresh": 2,
+        "sort": 1,
+        "label": "Pod"
+      },
+      {
+        "name": "search",
+        "type": "textbox",
+        "current": {
+          "selected": false,
+          "text": "",
+          "value": ""
+        },
+        "label": "Recherche",
+        "options": []
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "row",
+      "title": "Volume de logs",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "collapsed": false
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Volume de logs par intervalle",
+      "description": "Nombre de lignes de logs par intervalle de temps, groupé par namespace et filtré par les variables sélectionnées",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 1 },
+      "targets": [
+        {
+          "expr": "sum by(namespace) (count_over_time({namespace=~\"$namespace\", pod=~\"$pod\"} |~ \"$search\" [$__interval]))",
+          "legendFormat": "{{namespace}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Aucun log disponible",
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "stacking": { "mode": "normal" },
+            "barAlignment": 0,
+            "lineWidth": 1,
+            "showPoints": "never"
+          },
+          "color": { "mode": "palette-classic" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": { "mode": "multi", "sort": "desc" },
+        "legend": { "displayMode": "list", "placement": "bottom" }
+      }
+    },
+    {
+      "id": 3,
+      "type": "row",
+      "title": "Logs",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 9 },
+      "collapsed": false
+    },
+    {
+      "id": 4,
+      "type": "logs",
+      "title": "Logs filtrés",
+      "description": "Logs du cluster filtrés par namespace, pod et terme de recherche — triés par timestamp décroissant",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": { "h": 18, "w": 24, "x": 0, "y": 10 },
+      "targets": [
+        {
+          "expr": "{namespace=~\"$namespace\", pod=~\"$pod\"} |~ \"$search\"",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "noValue": "Aucun log correspondant aux filtres sélectionnés"
+        },
+        "overrides": []
+      },
+      "options": {
+        "showTime": true,
+        "showLabels": true,
+        "showCommonLabels": false,
+        "wrapLogMessage": true,
+        "prettifyLogMessage": false,
+        "enableLogDetails": true,
+        "dedupStrategy": "none",
+        "sortOrder": "Descending"
+      }
+    }
+  ]
+}
