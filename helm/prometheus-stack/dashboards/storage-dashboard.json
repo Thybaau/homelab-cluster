@@ -63,6 +63,7 @@
           "unit": "percent",
           "min": 0,
           "max": 100,
+          "noValue": "Aucune métrique disque disponible",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -106,6 +107,7 @@
       "fieldConfig": {
         "defaults": {
           "unit": "decgbytes",
+          "noValue": "Aucune métrique disque disponible",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -150,6 +152,7 @@
       "fieldConfig": {
         "defaults": {
           "unit": "decgbytes",
+          "noValue": "Aucune métrique disque disponible",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -209,7 +212,8 @@
         "defaults": {
           "custom": {
             "align": "auto"
-          }
+          },
+          "noValue": "Aucun PVC détecté"
         },
         "overrides": [
           {
@@ -309,6 +313,7 @@
       "fieldConfig": {
         "defaults": {
           "unit": "decgbytes",
+          "noValue": "Aucune métrique filesystem disponible",
           "thresholds": {
             "mode": "absolute",
             "steps": [
