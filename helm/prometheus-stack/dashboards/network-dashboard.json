@@ -264,13 +264,13 @@
     {
       "id": 9,
       "type": "table",
-      "title": "Ingress actifs",
-      "description": "Liste des ingress actifs dans le cluster — basé sur kube_ingress_info (kube-state-metrics)",
+      "title": "Ingress déclarés",
+      "description": "Liste des ingress définis dans le cluster. Le statut up/down réel sera disponible avec le Blackbox Exporter (Epic 4).",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "gridPos": { "h": 7, "w": 7, "x": 5, "y": 19 },
+      "gridPos": { "h": 10, "w": 7, "x": 5, "y": 19 },
       "targets": [
         {
           "expr": "kube_ingress_info",
@@ -300,22 +300,24 @@
             "excludeByName": {
               "Time": true,
               "__name__": true,
+              "container": true,
+              "endpoint": true,
               "instance": true,
               "job": true,
-              "Value": true,
-              "endpoint": true,
               "metrics_path": true,
               "pod": true,
               "service": true,
-              "uid": true
+              "uid": true,
+              "ingressclass": true,
+              "Value": true
             },
             "indexByName": {
-              "namespace": 0,
-              "ingress": 1
+              "ingress": 0,
+              "namespace": 1
             },
             "renameByName": {
-              "namespace": "Namespace",
-              "ingress": "Ingress"
+              "ingress": "Ingress",
+              "namespace": "Namespace"
             }
           }
         }
