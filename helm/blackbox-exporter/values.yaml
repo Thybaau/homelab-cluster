@@ -14,6 +14,8 @@ config:
 serviceMonitor:
   enabled: true
   defaults:
+    labels:
+      release: monitoring-stack
     interval: 60s
     scrapeTimeout: 30s
   targets:
