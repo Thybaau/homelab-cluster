@@ -20,7 +20,7 @@
         },
         "query": "label_values(namespace)",
         "includeAll": true,
-        "allValue": ".*",
+        "allValue": ".+",
         "multi": false,
         "current": {
           "selected": true,
@@ -40,7 +40,7 @@
         },
         "query": "label_values({namespace=~\"$namespace\"}, pod)",
         "includeAll": true,
-        "allValue": ".*",
+        "allValue": ".+",
         "multi": false,
         "current": {
           "selected": true,
