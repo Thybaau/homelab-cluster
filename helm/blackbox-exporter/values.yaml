@@ -25,6 +25,9 @@ serviceMonitor:
     - name: homepage
       url: http://homepage.homepage.svc:3000
       interval: 60s
+    - name: adguard-home
+      url: http://adguard-home.networking.svc:3000
+      interval: 60s
 
 # Resources
 resources:
