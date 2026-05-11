@@ -64,6 +64,7 @@ spec:
             additionalDataSources:
               - name: Loki
                 type: loki
+                uid: loki
                 url: http://loki.monitoring.svc:3100
                 access: proxy
                 isDefault: false
