@@ -256,6 +256,10 @@ networkPolicy:
   frontend:
     enabled: true
 
+  # Autorise le trafic ingress depuis blackbox-exporter (monitoring) vers le backend pour les probes HTTP
+  allowProbes:
+    enabled: true
+
 # Configuration du monitoring
 monitoring:
   enabled: false

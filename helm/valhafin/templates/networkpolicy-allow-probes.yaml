@@ -1,0 +1,26 @@
+{{- if and .Values.networkPolicy.enabled .Values.networkPolicy.allowProbes.enabled }}
+# NetworkPolicy allow-probes : autorise le trafic ingress depuis blackbox-exporter (namespace monitoring)
+# vers le backend sur le port 8080 (probes HTTP).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "valhafin.fullname" . }}-allow-probes
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "valhafin.backend.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "valhafin.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: backend
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+      ports:
+        - protocol: TCP
+          port: 8080
+{{- end }}

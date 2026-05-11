@@ -200,3 +200,7 @@ networkPolicy:
   # Autorise le trafic ingress depuis Traefik (kube-system) vers homepage
   allowIngress:
     enabled: true
+
+  # Autorise le trafic ingress depuis blackbox-exporter (monitoring) vers homepage pour les probes HTTP
+  allowProbes:
+    enabled: true

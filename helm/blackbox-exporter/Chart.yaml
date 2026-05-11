@@ -1,0 +1,6 @@
+---
+apiVersion: v2
+name: blackbox-exporter
+description: "Vérification de la disponibilité des services exposés via probes HTTP"
+type: application
+version: 0.1.0

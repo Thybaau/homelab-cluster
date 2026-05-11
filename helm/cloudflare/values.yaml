@@ -49,3 +49,7 @@ networkPolicy:
   # Autorise le trafic ingress depuis Prometheus (monitoring) vers cloudflared pour le scraping de métriques
   allowMetrics:
     enabled: true
+
+  # Autorise le trafic ingress depuis blackbox-exporter (monitoring) vers cloudflared pour les probes HTTP
+  allowProbes:
+    enabled: true
