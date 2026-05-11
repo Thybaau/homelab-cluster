@@ -228,7 +228,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "gridPos": { "h": 7, "w": 8, "x": 0, "y": 19 },
+      "gridPos": { "h": 7, "w": 5, "x": 0, "y": 19 },
       "targets": [
         {
           "expr": "sum by(entrypoint) (traefik_entrypoint_requests_total)",
@@ -263,45 +263,63 @@
     },
     {
       "id": 9,
-      "type": "stat",
+      "type": "table",
       "title": "Ingress actifs",
-      "description": "Nombre d'ingress actifs par namespace — basé sur kube_ingress_info (kube-state-metrics)",
+      "description": "Liste des ingress actifs dans le cluster — basé sur kube_ingress_info (kube-state-metrics)",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "gridPos": { "h": 7, "w": 4, "x": 8, "y": 19 },
+      "gridPos": { "h": 7, "w": 7, "x": 5, "y": 19 },
       "targets": [
         {
-          "expr": "count by(namespace, ingress) (kube_ingress_info)",
-          "legendFormat": "{{namespace}}/{{ingress}}",
-          "refId": "A"
+          "expr": "kube_ingress_info",
+          "legendFormat": "",
+          "refId": "A",
+          "format": "table",
+          "instant": true
         }
       ],
       "fieldConfig": {
         "defaults": {
           "noValue": "Aucun ingress détecté",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null }
-            ]
-          },
-          "color": { "mode": "fixed", "fixedColor": "green" }
+          "custom": {
+            "align": "left"
+          }
         },
         "overrides": []
       },
       "options": {
-        "reduceOptions": {
-          "calcs": ["lastNotNull"],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "value_and_name",
-        "colorMode": "value",
-        "graphMode": "none",
-        "orientation": "vertical"
-      }
+        "showHeader": true,
+        "footer": { "show": false }
+      },
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "__name__": true,
+              "instance": true,
+              "job": true,
+              "Value": true,
+              "endpoint": true,
+              "metrics_path": true,
+              "pod": true,
+              "service": true,
+              "uid": true
+            },
+            "indexByName": {
+              "namespace": 0,
+              "ingress": 1
+            },
+            "renameByName": {
+              "namespace": "Namespace",
+              "ingress": "Ingress"
+            }
+          }
+        }
+      ]
     },
     {
       "id": 10,
