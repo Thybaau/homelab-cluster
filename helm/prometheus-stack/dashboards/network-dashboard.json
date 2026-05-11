@@ -223,12 +223,12 @@
       "id": 8,
       "type": "stat",
       "title": "Requêtes totales par entrypoint",
-      "description": "Nombre total de requêtes HTTP traitées par chaque entrypoint Traefik (web, websecure, traefik)",
+      "description": "Nombre total de requêtes HTTP traitées par entrypoint Traefik. web = HTTP (80), websecure = HTTPS (443). L'entrypoint 'traefik' (dashboard interne) n'apparaît que s'il reçoit du trafic.",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "gridPos": { "h": 5, "w": 8, "x": 0, "y": 19 },
+      "gridPos": { "h": 7, "w": 8, "x": 0, "y": 19 },
       "targets": [
         {
           "expr": "sum by(entrypoint) (traefik_entrypoint_requests_total)",
@@ -270,11 +270,11 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "gridPos": { "h": 5, "w": 4, "x": 8, "y": 19 },
+      "gridPos": { "h": 7, "w": 4, "x": 8, "y": 19 },
       "targets": [
         {
-          "expr": "count by(namespace) (kube_ingress_info)",
-          "legendFormat": "{{namespace}}",
+          "expr": "count by(namespace, ingress) (kube_ingress_info)",
+          "legendFormat": "{{namespace}}/{{ingress}}",
           "refId": "A"
         }
       ],
@@ -297,10 +297,10 @@
           "fields": "",
           "values": false
         },
-        "textMode": "auto",
+        "textMode": "value_and_name",
         "colorMode": "value",
         "graphMode": "none",
-        "orientation": "horizontal"
+        "orientation": "vertical"
       }
     },
     {
@@ -312,7 +312,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 19 },
+      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 19 },
       "targets": [
         {
           "expr": "sum by(service) (rate(traefik_service_requests_total{service=~\".*$service.*\"}[5m]))",
@@ -343,22 +343,22 @@
       "id": 11,
       "type": "row",
       "title": "Latence des requêtes",
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 27 },
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 29 },
       "collapsed": false
     },
     {
       "id": 12,
       "type": "timeseries",
       "title": "Latence p95 par service",
-      "description": "Percentile 95 de la latence des requêtes par service Traefik — représente la latence pour 95% des requêtes",
+      "description": "Percentile 95 de la latence des requêtes par service Traefik — seuls les services avec du trafic sont affichés",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 28 },
+      "gridPos": { "h": 12, "w": 12, "x": 0, "y": 30 },
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum by(le, service) (rate(traefik_service_request_duration_seconds_bucket{service=~\".*$service.*\"}[5m])))",
+          "expr": "histogram_quantile(0.95, sum by(le, service) (rate(traefik_service_request_duration_seconds_bucket{service=~\".*$service.*\"}[5m]))) > 0",
           "legendFormat": "{{service}}",
           "refId": "A"
         }
@@ -368,7 +368,7 @@
           "unit": "s",
           "noValue": "Aucune métrique de latence disponible",
           "custom": {
-            "lineWidth": 1,
+            "lineWidth": 2,
             "fillOpacity": 10,
             "spanNulls": false,
             "showPoints": "never"
@@ -392,17 +392,17 @@
     },
     {
       "id": 13,
-      "type": "gauge",
+      "type": "stat",
       "title": "Latence moyenne par service",
       "description": "Latence moyenne des requêtes par service Traefik — Vert < 500ms, Orange 500ms-2s, Rouge > 2s",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 28 },
+      "gridPos": { "h": 12, "w": 12, "x": 12, "y": 30 },
       "targets": [
         {
-          "expr": "sum by(service) (rate(traefik_service_request_duration_seconds_sum{service=~\".*$service.*\"}[5m])) / sum by(service) (rate(traefik_service_request_duration_seconds_count{service=~\".*$service.*\"}[5m]))",
+          "expr": "sum by(service) (rate(traefik_service_request_duration_seconds_sum{service=~\".*$service.*\"}[5m])) / sum by(service) (rate(traefik_service_request_duration_seconds_count{service=~\".*$service.*\"}[5m])) > 0",
           "legendFormat": "{{service}}",
           "refId": "A"
         }
@@ -410,8 +410,6 @@
       "fieldConfig": {
         "defaults": {
           "unit": "s",
-          "min": 0,
-          "max": 5,
           "noValue": "Aucune métrique de latence disponible",
           "thresholds": {
             "mode": "absolute",
@@ -431,9 +429,10 @@
           "fields": "",
           "values": false
         },
-        "orientation": "auto",
-        "showThresholdLabels": false,
-        "showThresholdMarkers": true
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "area",
+        "orientation": "horizontal"
       }
     }
   ]
