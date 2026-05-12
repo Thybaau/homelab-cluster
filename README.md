@@ -9,10 +9,12 @@
 ![Helm](https://img.shields.io/badge/Helm-v3-0F1689?logo=helm&logoColor=white)
 ![Helmfile](https://img.shields.io/badge/Helmfile-v0.163.1-0F1689?logo=helm&logoColor=white)
 ![ArgoCD](https://img.shields.io/badge/ArgoCD-5.51.6-EF7B4D?logo=argo&logoColor=white)
+![Prometheus](https://img.shields.io/badge/Prometheus-72.6.2-E6522C?logo=prometheus&logoColor=white)
+![Grafana](https://img.shields.io/badge/Grafana-Loki_3.7.1-F46800?logo=grafana&logoColor=white)
 ![MetalLB](https://img.shields.io/badge/MetalLB-0.14.9-blue)
 ![Sealed Secrets](https://img.shields.io/badge/Sealed_Secrets-2.13.2-326CE5?logo=kubernetes&logoColor=white)
 
-Déploiement automatisé d'un cluster k3s sur des VMs Ubuntu 24.04 hébergées sur Proxmox, avec orchestration Ansible, gestion GitOps via ArgoCD, et services d'infrastructure déployés par Helm.
+Déploiement automatisé d'un cluster k3s sur des VMs Ubuntu 24.04 hébergées sur Proxmox, avec orchestration Ansible, gestion GitOps via ArgoCD, et services d'infrastructure déployés par Helm. Le cluster intègre un stack d'observabilité complet : métriques (Prometheus), logs centralisés (Loki + Alloy), alerting Discord (Alertmanager), dashboards custom (Grafana config-as-code), et monitoring des services (blackbox-exporter, postgres-exporter).
 
 ## Vue d'ensemble
 
@@ -62,9 +64,13 @@ Ce projet gère l'intégralité du cycle de vie d'un cluster Kubernetes k3s :
 | [MetalLB](docs/metallb/) | `metallb-system` | 0 | Chart officiel + config locale | Load balancer L2 (pool `192.168.1.151-170`) |
 | [Sealed Secrets](docs/sealed-secrets/) | `sealed-secrets` | 0 | Chart Bitnami | Chiffrement des secrets pour GitOps |
 | [Homepage](docs/homepage/) | `homepage` | 1 | Chart local | Dashboard homelab |
-| [Monitoring Stack](docs/prometheus-stack/) | `monitoring` | 1 | kube-prometheus-stack + local | Prometheus, Grafana, Alertmanager |
+| [Monitoring Stack](docs/prometheus-stack/) | `monitoring` | 1 | kube-prometheus-stack + local | Prometheus, Grafana, Alertmanager, dashboards |
 | [Valhafin](docs/valhafin/) | `valhafin` | 1 | Chart local | App de gestion de portefeuille |
-| [Cloudflare](docs/cloudflare/) | `networking` | 3 | Chart local | Tunnel Cloudflare |
+| [Cloudflare](docs/cloudflare/) | `networking` | 1 | Chart local | Tunnel Cloudflare |
+| Loki | `monitoring` | 2 | Chart grafana-community v13.1.3 | Backend de stockage de logs (mode Monolithic) |
+| Alloy | `monitoring` | 3 | Chart grafana v1.7.0 | Collecteur de logs DaemonSet (filesystem → Loki) |
+| blackbox-exporter | `monitoring` | 4 | Chart prometheus-community v11.9.1 | Probes HTTP disponibilité services |
+| postgres-exporter | `monitoring` | 4 | Chart prometheus-community v7.5.2 | Métriques PostgreSQL |
 | [AdGuard Home](docs/adguard-home/) | `networking` | 5 | Chart gabe565 | DNS local + ad-blocking |
 
 ## Structure du projet
@@ -84,17 +90,25 @@ Ce projet gère l'intégralité du cycle de vie d'un cluster Kubernetes k3s :
 │       └── verify_cluster/     # Vérification post-déploiement
 ├── argocd-apps/                # Manifests ArgoCD Application
 │   ├── adguard-home-app.yml    # DNS + ad-blocking
+│   ├── alloy-app.yml           # Collecteur de logs DaemonSet
+│   ├── blackbox-exporter-app.yml # Probes HTTP services
 │   ├── cloudflare-app.yml      # Cloudflare Tunnel
 │   ├── homepage-app.yml        # Dashboard homelab
+│   ├── loki-app.yml            # Backend de stockage de logs
 │   ├── metallb-app.yml         # Load balancer L2
-│   ├── prometheus-stack-app.yml# Monitoring (Prometheus + Grafana)
+│   ├── postgres-exporter-app.yml # Métriques PostgreSQL
+│   ├── prometheus-stack-app.yml# Monitoring (Prometheus + Grafana + Alertmanager)
 │   ├── sealed-secrets-app.yml  # Gestion des secrets chiffrés
 │   └── valhafin-app.yml        # Application financière
 ├── helm/                       # Charts Helm custom
+│   ├── alloy/                  # Collecteur de logs (pipeline River, DaemonSet)
+│   ├── blackbox-exporter/      # Probes HTTP (valhafin, homepage)
 │   ├── cloudflare/             # Cloudflared tunnel
 │   ├── homepage/               # Dashboard homepage.dev
+│   ├── loki/                   # Backend logs (Monolithic, PVC 10Gi, rétention 7j)
 │   ├── metallb/                # Config MetalLB (IP pool + L2)
-│   ├── prometheus-stack/       # SealedSecret Grafana
+│   ├── postgres-exporter/      # Métriques PostgreSQL + SealedSecret
+│   ├── prometheus-stack/       # Dashboards JSON, SealedSecrets, PodMonitor Traefik
 │   └── valhafin/               # App complète (backend + frontend + DB)
 ├── helmfile.yaml               # Infrastructure de base (ArgoCD, Cert-Manager)
 ├── root-app.yml                # ArgoCD root Application (app-of-apps)
@@ -139,6 +153,34 @@ export KUBECONFIG=~/.kube/k3s-config
 - Domaines locaux : `*.home` (via AdGuard DNS rewrites)
 - Domaines publics : `*.caremelle.org` (via Cloudflare Tunnel)
 - NetworkPolicies : default-deny ingress sur `valhafin`, `homepage`, `networking` (voir [architecture](docs/architecture.md#sécurité-réseau-networkpolicies))
+
+## Observabilité
+
+Le cluster intègre une stack d'observabilité complet, entièrement déployée via ArgoCD :
+
+### Métriques & Alerting
+- **Prometheus** (kube-prometheus-stack v72.6.2) : collecte des métriques cluster, node-exporter, kube-state-metrics
+- **Alertmanager → Discord** : 8 règles d'alerting routées vers 2 canaux Discord (critiques 🚨 / warnings ⚠️)
+- **blackbox-exporter** : probes HTTP sur les services exposés (valhafin, homepage)
+- **postgres-exporter** : métriques PostgreSQL (connexions, taille base, requêtes)
+
+### Logs centralisés
+- **Loki** (mode Monolithic) : stockage des logs, rétention 7 jours, PVC 10 Gi
+- **Alloy** (DaemonSet) : collecte filesystem `/var/log/pods/`, parsing CRI, labels namespace/pod/container
+
+### Dashboards Grafana (config-as-code)
+4 dashboards provisionnés automatiquement via sidecar ConfigMap :
+
+| Dashboard | URL | Description |
+|---|---|---|
+| Cluster Overview | `/d/cluster-overview` | Santé nœuds, CPU/RAM, probes, PostgreSQL |
+| Stockage | `/d/storage` | Utilisation disque VMs et PVCs |
+| Réseau | `/d/network` | Trafic par nœud/pod, Traefik, latence |
+| Logs | `/d/logs` | Logs filtrables par namespace/pod avec recherche |
+
+Pour ajouter un dashboard : créer un fichier JSON dans `helm/prometheus-stack/dashboards/` et pousser sur Git.
+
+Voir la [documentation détaillée du monitoring](docs/prometheus-stack/README.md).
 
 ## CI/CD
 

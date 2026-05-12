@@ -61,14 +61,18 @@ ArgoCD utilise le pattern **App-of-Apps** : une `root-app` pointe vers le dossie
 root-app.yml
     │
     └── argocd-apps/
-         ├── traefik-tls-app.yml      (sync-wave: -2)
-         ├── metallb-app.yml          (sync-wave: 0)
-         ├── sealed-secrets-app.yml   (sync-wave: 0)
-         ├── homepage-app.yml         (sync-wave: 1)
-         ├── prometheus-stack-app.yml (sync-wave: 1)
-         ├── valhafin-app.yml         (sync-wave: 1)
-         ├── cloudflare-app.yml       (sync-wave: 3)
-         └── adguard-home-app.yml     (sync-wave: 5)
+         ├── traefik-tls-app.yml          (sync-wave: -2)
+         ├── metallb-app.yml              (sync-wave: 0)
+         ├── sealed-secrets-app.yml       (sync-wave: 0)
+         ├── homepage-app.yml             (sync-wave: 1)
+         ├── prometheus-stack-app.yml     (sync-wave: 1)
+         ├── valhafin-app.yml             (sync-wave: 1)
+         ├── cloudflare-app.yml           (sync-wave: 1)
+         ├── loki-app.yml                 (sync-wave: 2)
+         ├── alloy-app.yml                (sync-wave: 3)
+         ├── blackbox-exporter-app.yml    (sync-wave: 4)
+         ├── postgres-exporter-app.yml    (sync-wave: 4)
+         └── adguard-home-app.yml         (sync-wave: 5)
 ```
 
 Les `sync-wave` contrôlent l'ordre de déploiement : TLS cert d'abord (wave -2), puis MetalLB et Sealed Secrets (wave 0), puis les applications (wave 1+), et enfin le DNS (wave 5).
@@ -147,9 +151,9 @@ Les namespaces gérés par les charts custom appliquent une politique **default-
 
 | Namespace | Default Deny | Règles Allow |
 |---|---|---|
-| `valhafin` | ✅ Ingress | Traefik → backend:8080, Traefik → frontend:80, backend → database:5432 |
-| `homepage` | ✅ Ingress | Traefik → homepage:3000 |
-| `networking` | ✅ Ingress | Prometheus → cloudflared:2000 (métriques) |
+| `valhafin` | ✅ Ingress | Traefik → backend:8080, Traefik → frontend:80, backend → database:5432, monitoring → backend:8080 (probes), monitoring → database:5432 (postgres-exporter) |
+| `homepage` | ✅ Ingress | Traefik → homepage:3000, monitoring → homepage:3000 (probes) |
+| `networking` | ✅ Ingress | Prometheus → cloudflared:2000 (métriques), monitoring → cloudflared:2000 (probes) |
 
 ### Namespaces non couverts
 
@@ -180,8 +184,11 @@ Les namespaces gérés par les charts custom appliquent une politique **default-
 │  valhafin/backend                                               │
 │       └──→ valhafin/database:5432                               │
 │                                                                 │
-│  monitoring (Prometheus)                                        │
-│       └──→ networking/cloudflared:2000                          │
+│  monitoring (Prometheus, blackbox-exporter, postgres-exporter)   │
+│       ├──→ valhafin/backend:8080      (probes HTTP)             │
+│       ├──→ valhafin/database:5432     (métriques PostgreSQL)    │
+│       ├──→ homepage/homepage:3000     (probes HTTP)             │
+│       └──→ networking/cloudflared:2000 (métriques)              │
 │                                                                 │
 │  Tout autre trafic ingress → ❌ BLOQUÉ (default-deny)           │
 └─────────────────────────────────────────────────────────────────┘
@@ -221,25 +228,114 @@ Secrets gérés :
 - `valhafin-db-credentials` — credentials PostgreSQL
 - `valhafin-backend-secrets` — clé de chiffrement AES-256
 - `grafana-admin-credentials` — mot de passe admin Grafana
+- `discord-webhook-urls` — webhooks Discord pour Alertmanager (critical + monitoring)
+- `postgres-exporter-credentials` — DSN PostgreSQL pour postgres-exporter
 - `cloudflare-tunnel-token` — token du tunnel Cloudflare
 - `homepage-proxmox` / `homepage-argocd` — credentials widgets Homepage
 - `traefik-tls-cert` — certificat wildcard Cloudflare Origin CA (`*.caremelle.org`)
 
 ## Monitoring
 
-Le stack de monitoring est basé sur **kube-prometheus-stack** :
+Le stack d'observabilité est basé sur **kube-prometheus-stack** enrichi de composants complémentaires pour les logs, l'alerting et le monitoring des services.
 
 ```
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│ Prometheus  │────▶│  Grafana    │     │Alertmanager │
-│ retention:7d│     │grafana.home │     │             │
-│ storage:10Gi│     │ storage:2Gi │     │ storage:2Gi │
-└─────────────┘     └─────────────┘     └─────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│                        OBSERVABILITÉ                                │
+│                                                                     │
+│  ┌──────────────┐    ┌──────────────┐    ┌──────────────────────┐  │
+│  │  Prometheus  │    │     Loki     │    │      Grafana         │  │
+│  │  (métriques) │    │   (logs)     │    │   (visualisation)    │  │
+│  │  retention:7d│    │  rétention:7j│    │  grafana.caremelle.org│ │
+│  │  storage:10Gi│    │  storage:10Gi│    │  storage:2Gi         │  │
+│  └──────┬───────┘    └──────▲───────┘    └──────────────────────┘  │
+│         │                   │                       ▲               │
+│         │            ┌──────┴───────┐          Dashboards          │
+│         │            │    Alloy     │          config-as-code       │
+│         │            │ (DaemonSet)  │          (4 JSON + sidecar)   │
+│         │            │ /var/log/pods│                               │
+│         │            └──────────────┘                               │
+│         ▼                                                          │
+│  ┌──────────────┐    ┌──────────────┐    ┌──────────────────────┐  │
+│  │ Alertmanager │    │  blackbox-   │    │  postgres-exporter   │  │
+│  │  → Discord   │    │  exporter    │    │  (métriques PG)      │  │
+│  │ 🚨 critiques │    │ (probes HTTP)│    │  valhafin-database   │  │
+│  │ ⚠️ warnings  │    └──────────────┘    └──────────────────────┘  │
+│  └──────────────┘                                                  │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
-- Prometheus : rétention 7 jours, 10 Gi de stockage, limites CPU 300m / RAM 768Mi
-- Grafana : accessible via `grafana.caremelle.org`, credentials via SealedSecret
-- Alertmanager : activé avec 2 Gi de stockage
+### Composants
+
+| Composant | Version chart | Mode | Ressources |
+|---|---|---|---|
+| kube-prometheus-stack | 72.6.2 | Inline values ArgoCD | Prometheus 10Gi, Grafana 2Gi, Alertmanager 2Gi |
+| Loki | 13.1.3 (grafana-community) | Monolithic, 1 replica | 256Mi/512Mi RAM, PVC 10Gi |
+| Alloy | 1.7.0 (grafana) | DaemonSet (1 pod/nœud) | 128Mi/256Mi RAM par nœud |
+| blackbox-exporter | 11.9.1 (prometheus-community) | Deployment | 32Mi/64Mi RAM |
+| postgres-exporter | 7.5.2 (prometheus-community) | Deployment | 32Mi/64Mi RAM |
+
+### Alerting (Alertmanager → Discord)
+
+Alertmanager route les alertes vers 2 canaux Discord :
+- **#alertes-critiques** : severity critical (repeat 1h)
+- **#alertes-monitoring** : severity warning (repeat 4h) + watchdog heartbeat
+
+Configuration :
+- Webhooks Discord via SealedSecret `discord-webhook-urls` + `url_file` (jamais en clair)
+- Grouping : `alertname` + `namespace`, group_wait 30s, group_interval 5m
+- Templates : emojis 🚨/⚠️/✅, lien `dashboard_url`, summary en français
+- Inhibit rules : critical supprime warning (même alertname+namespace), StorageCritical supprime StorageWarning (même instance)
+
+### Règles d'alerting (PrometheusRules)
+
+Configurées dans `additionalPrometheusRulesMap` des values inline :
+
+| Groupe | Alerte | Sévérité | Condition |
+|---|---|---|---|
+| homelab-infrastructure | StorageWarning | warning | Disque VM > 80% pendant 10m |
+| homelab-infrastructure | StorageCritical | critical | Disque VM > 90% pendant 5m |
+| homelab-infrastructure | NodeNotReady | critical | Nœud NotReady pendant 3m |
+| homelab-infrastructure | PodCrashLooping | critical | > 3 restarts en 15m |
+| homelab-infrastructure | PodHighMemoryUsage | warning | RAM pod > 85% limit pendant 10m |
+| homelab-infrastructure | PodHighCpuUsage | warning | CPU pod > 90% limit pendant 10m |
+| homelab-services | ServiceDown | critical | probe_success == 0 pendant 5m |
+| homelab-alerting-health | AlertmanagerFailedNotifications | critical | Échecs d'envoi > 1 en 15m |
+
+### Logs centralisés (Loki + Alloy)
+
+Pipeline de collecte :
+```
+Pods (stdout/stderr) → /var/log/pods/ → Alloy (DaemonSet)
+    → discovery.kubernetes → relabel (namespace, pod, container, node)
+    → local.file_match → loki.source.file → stage.cri {}
+    → loki.write → http://loki.monitoring.svc:3100/loki/api/v1/push
+```
+
+- Loki : mode Monolithic, auth disabled, replication_factor 1, rétention 168h (compactor)
+- Alloy : collecte filesystem `/var/log/pods/`, parsing CRI (containerd k3s)
+- Datasource Loki configurée dans Grafana (`uid: loki`)
+
+### Dashboards Grafana (config-as-code)
+
+Mécanisme de provisionnement :
+1. Fichiers JSON dans `helm/prometheus-stack/dashboards/`
+2. Template Helm `dashboards-configmaps.yaml` génère un ConfigMap par fichier (`.Files.Glob`)
+3. Label `grafana_dashboard: "1"` → sidecar Grafana détecte et charge automatiquement
+4. Survie à la perte du PVC Grafana
+
+| Dashboard | UID | Datasource | Description |
+|---|---|---|---|
+| Cluster Overview | `cluster-overview` | Prometheus | Santé nœuds, CPU/RAM par nœud/namespace/pod, probes, PostgreSQL |
+| Stockage | `storage` | Prometheus | Utilisation disque VMs, PVCs, top consommateurs |
+| Réseau | `network` | Prometheus | Trafic par nœud/pod, ingress Traefik, latence par service |
+| Logs | `logs` | Loki | Logs centralisés filtrables par namespace/pod avec recherche |
+
+### Monitoring des services
+
+- **blackbox-exporter** : probes HTTP sur `valhafin-backend.valhafin.svc:8080/health` et `homepage.homepage.svc:3000` (interval 60s)
+- **postgres-exporter** : métriques PostgreSQL via `valhafin-database.valhafin.svc:5432` (connexions, taille base, requêtes)
+- **PodMonitor Traefik** : scraping des métriques Traefik (requêtes, latence, codes réponse) sur le port 9100
+- ServiceMonitors avec label `release: monitoring-stack` pour la découverte Prometheus
 
 ## CI/CD
 
@@ -265,6 +361,10 @@ Le workflow de déploiement utilise un runner self-hosted (accès réseau local 
 | Helmfile | v0.163.1 |
 | MetalLB | 0.14.9 |
 | Sealed Secrets | 2.13.2 |
-| kube-prometheus-stack | 65.1.1 |
+| kube-prometheus-stack | 72.6.2 |
+| Loki | 3.7.1 (chart 13.1.3) |
+| Alloy | v1.15.0 (chart 1.7.0) |
+| blackbox-exporter | chart 11.9.1 |
+| postgres-exporter | chart 7.5.2 |
 | AdGuard Home | 0.3.25 (chart gabe565) |
 | Cert-Manager | v1.13.3 (désactivé) |
