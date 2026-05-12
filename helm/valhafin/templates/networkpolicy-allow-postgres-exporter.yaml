@@ -1,0 +1,26 @@
+{{- if and .Values.networkPolicy.enabled .Values.networkPolicy.allowPostgresExporter.enabled }}
+# NetworkPolicy allow-postgres-exporter : autorise le trafic ingress depuis postgres-exporter (namespace monitoring)
+# vers la database sur le port 5432 (collecte métriques PostgreSQL).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "valhafin.fullname" . }}-allow-postgres-exporter
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "valhafin.database.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "valhafin.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: database
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+      ports:
+        - protocol: TCP
+          port: 5432
+{{- end }}

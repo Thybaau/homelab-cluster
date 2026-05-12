@@ -260,6 +260,10 @@ networkPolicy:
   allowProbes:
     enabled: true
 
+  # Autorise le trafic ingress depuis postgres-exporter (monitoring) vers la database pour la collecte de métriques
+  allowPostgresExporter:
+    enabled: true
+
 # Configuration du monitoring
 monitoring:
   enabled: false

@@ -1,0 +1,6 @@
+---
+apiVersion: v2
+name: postgres-exporter
+description: "Collecte des métriques PostgreSQL de la base Valhafin pour Prometheus"
+type: application
+version: 0.1.0

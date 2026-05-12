@@ -1,0 +1,51 @@
+---
+# Configuration de la connexion PostgreSQL
+config:
+  datasource:
+    host: "valhafin-database.valhafin.svc"
+    port: "5432"
+    user: ""
+    password: ""
+    database: ""
+    sslmode: "disable"
+  datasourceSecret:
+    name: "postgres-exporter-credentials"
+    key: "DATA_SOURCE_NAME"
+
+# ServiceMonitor pour la découverte Prometheus
+serviceMonitor:
+  enabled: true
+  labels:
+    release: monitoring-stack
+  interval: 60s
+  scrapeTimeout: 30s
+
+# Resources
+resources:
+  requests:
+    cpu: 10m
+    memory: 32Mi
+  limits:
+    cpu: 30m
+    memory: 64Mi
+
+# Réplicas
+replicaCount: 1
+
+# Security context
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop: ["ALL"]
+  readOnlyRootFilesystem: true
+
+# SealedSecret pour les credentials PostgreSQL
+sealedSecret:
+  enabled: true
+  encryptedData:
+    DATA_SOURCE_NAME: "AgB+9I3xIP3ASDaAoHcTQRsdnFG23hGdOkah4tw08p0xDnEqAuLE+K4Gh5t0VPksG/sSMV3XuhmPKjgLb+YlgRiXIijo0vEeqLdVnAQ/FL3LPWQH2X88wCewpDA6kfy4h83Et/VsbdLj2Xuv/AY88s+R7ULFkJOTpt3TN6Wcfojwpm0J3qLvIRUPrpYsyFzz6dvIXZxBgp5GhFKYY6vO11CK7uC+4FMyl4NdKCgiK7PISrtO4qoy+jmM96Cv1qZV6TRROCgN8GMbJNpPrYnAiY24Z+iY9950luhDSnvW86mkzMIWV6eDA3WNdIhwoXHC+Nd2eog3vKnwAR/QjlHrQYqz3+1zPisTyt35rmjVDNk/BnmxS2PkpxiPZ2QoY1zOnqPug+jF24sLz4D39JWqvXCgYIUUK+6MS6j6d6+TpIQVn6glaNH4MB6F98X3QMAoDSEPzG8f+k7MVddBnUeX4vsfS6QHvG+nuZkRAlnDyCRId6Njld0NueacsZN5re+tP5St6TitgrEyWYwGDGA+gMEJoVe/CmBXGgcBFQpAIbKctJyHn2tQEXL0CnUJqd/dRGI3jn9WCCQIbE2n6CVQ6UTQg30viycWeSqeOAL0bUsP0TAoZz1ZzGC29H7E3+c2+DTlHfrVLakMnlrV8KiFya+mhcjIuxmIjUZwiYCZdJsSorkGvo8V6dGnok+qoN69c5rmRogXN8vcD0yESPAr+hE2E5x3jEFLVv+GIoTTRDBHk93A4oajI/DyKcG4pXo6lPMwObxJAuypuFjjWyJ8I/gXYa0dc0lwG1q2CKZDJ5AbJP01DEwbw3prMxGVUIO48ujylYslvH0BCT+5LjHq7VtKl5dds4LQPimbG0Be4NenZ2l420A="
