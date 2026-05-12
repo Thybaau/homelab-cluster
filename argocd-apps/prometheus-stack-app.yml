@@ -112,6 +112,14 @@ spec:
                 group_interval: 5m
                 repeat_interval: 4h
                 routes:
+                  - receiver: 'null'
+                    matchers:
+                      - severity = info
+                    continue: false
+                  - receiver: 'null'
+                    matchers:
+                      - alertname = InfoInhibitor
+                    continue: false
                   - receiver: discord-critical
                     matchers:
                       - severity = critical
@@ -123,6 +131,7 @@ spec:
                     repeat_interval: 4h
                     continue: false
               receivers:
+                - name: 'null'
                 - name: discord-critical
                   slack_configs:
                     - api_url_file: /etc/alertmanager/secrets/discord-webhook-urls/discord-critical-webhook-url
