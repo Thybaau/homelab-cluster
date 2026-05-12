@@ -40,6 +40,23 @@ spec:
                     resources:
                       requests:
                         storage: 10Gi
+          kubeEtcd:
+            enabled: false
+          kubeControllerManager:
+            enabled: false
+          kubeProxy:
+            enabled: false
+          kubeScheduler:
+            enabled: false
+          nodeExporter:
+            enabled: true
+            operatingSystems:
+              linux:
+                enabled: true
+              aix:
+                enabled: false
+              darwin:
+                enabled: false
           grafana:
             enabled: true
             admin:
