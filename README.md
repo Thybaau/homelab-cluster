@@ -14,7 +14,21 @@
 ![MetalLB](https://img.shields.io/badge/MetalLB-0.14.9-blue)
 ![Sealed Secrets](https://img.shields.io/badge/Sealed_Secrets-2.13.2-326CE5?logo=kubernetes&logoColor=white)
 
-Déploiement automatisé d'un cluster k3s sur des VMs Ubuntu 24.04 hébergées sur Proxmox, avec orchestration Ansible, gestion GitOps via ArgoCD, et services d'infrastructure déployés par Helm. Le cluster intègre un stack d'observabilité complet : métriques (Prometheus), logs centralisés (Loki + Alloy), alerting Discord (Alertmanager), dashboards custom (Grafana config-as-code), et monitoring des services (blackbox-exporter, postgres-exporter).
+Déploiement automatisé d'un cluster k3s sur des VMs Ubuntu 24.04 hébergées sur Proxmox, avec orchestration Ansible, gestion GitOps via ArgoCD, et services d'infrastructure déployés par Helm.
+
+Le cluster intègre une stack d'observabilité complète : métriques (Prometheus), logs centralisés (Loki + Alloy), alerting Discord (Alertmanager), dashboards custom (Grafana config-as-code), et monitoring des services (blackbox-exporter, postgres-exporter).
+
+## Sommaire
+
+- [Vue d'ensemble](#vue-densemble)
+- [Prérequis](#prérequis)
+- [Applications déployées](#applications-déployées)
+- [Structure du projet](#structure-du-projet)
+- [Déploiement](#déploiement)
+- [Réseau](#réseau)
+- [Observabilité](#observabilité)
+- [CI/CD](#cicd)
+- [Documentation](#documentation)
 
 ## Vue d'ensemble
 
