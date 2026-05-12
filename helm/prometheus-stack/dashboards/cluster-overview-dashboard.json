@@ -605,7 +605,7 @@
       "gridPos": { "h": 4, "w": 8, "x": 16, "y": 35 },
       "targets": [
         {
-          "expr": "pg_stat_activity_count{datname=\"valhafin\"}",
+          "expr": "sum by(state) (pg_stat_activity_count{datname=\"valhafin\"})",
           "legendFormat": "{{state}}",
           "refId": "A"
         }
