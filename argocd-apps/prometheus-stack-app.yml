@@ -137,7 +137,7 @@ spec:
                       text: |-
                         {{ range .Alerts }}
                         *{{ .Labels.alertname }}* — {{ .Labels.namespace }}
-                        {{ .Annotations.summary }}
+                        {{ if .Annotations.description }}{{ .Annotations.description }}{{ else }}{{ .Annotations.summary }}{{ end }}
                         {{ if .Annotations.dashboard_url }}📊 <{{ .Annotations.dashboard_url }}|Dashboard>{{ end }}
                         {{ end }}
                 - name: discord-monitoring
@@ -149,7 +149,7 @@ spec:
                       text: |-
                         {{ range .Alerts }}
                         *{{ .Labels.alertname }}* — {{ .Labels.namespace }}
-                        {{ .Annotations.summary }}
+                        {{ if .Annotations.description }}{{ .Annotations.description }}{{ else }}{{ .Annotations.summary }}{{ end }}
                         {{ if .Annotations.dashboard_url }}📊 <{{ .Annotations.dashboard_url }}|Dashboard>{{ end }}
                         {{ end }}
               inhibit_rules:
