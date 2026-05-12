@@ -114,10 +114,6 @@ spec:
                 routes:
                   - receiver: 'null'
                     matchers:
-                      - severity = info
-                    continue: false
-                  - receiver: 'null'
-                    matchers:
                       - alertname = InfoInhibitor
                     continue: false
                   - receiver: discord-critical
