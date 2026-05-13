@@ -338,6 +338,12 @@
         },
         "overrides": [
           {
+            "matcher": { "id": "byName", "options": "Namespace" },
+            "properties": [
+              { "id": "custom.width", "value": 110 }
+            ]
+          },
+          {
             "matcher": { "id": "byName", "options": "Value" },
             "properties": [
               { "id": "custom.width", "value": 100 },
@@ -394,6 +400,12 @@
         },
         "overrides": [
           {
+            "matcher": { "id": "byName", "options": "Namespace" },
+            "properties": [
+              { "id": "custom.width", "value": 110 }
+            ]
+          },
+          {
             "matcher": { "id": "byName", "options": "Value" },
             "properties": [
               { "id": "custom.width", "value": 120 }
@@ -425,7 +437,7 @@
       "id": 12,
       "type": "row",
       "title": "Probes — Statut des services",
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 29 },
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 50 },
       "collapsed": false
     },
     {
@@ -437,7 +449,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "gridPos": { "h": 4, "w": 12, "x": 0, "y": 30 },
+      "gridPos": { "h": 4, "w": 12, "x": 0, "y": 51 },
       "targets": [
         {
           "expr": "probe_success",
@@ -485,7 +497,7 @@
       "type": "text",
       "title": "Information probes",
       "description": "Message informatif sur la disponibilité des probes HTTP",
-      "gridPos": { "h": 4, "w": 12, "x": 12, "y": 30 },
+      "gridPos": { "h": 4, "w": 12, "x": 12, "y": 51 },
       "options": {
         "mode": "markdown",
         "content": "## ℹ️ Probes HTTP\n\nLes probes HTTP seront disponibles après le déploiement du blackbox-exporter (Epic 4, Story 4.1).\n\nUne fois configurées, ce panel affichera le statut up/down de chaque service exposé."
@@ -495,7 +507,7 @@
       "id": 15,
       "type": "row",
       "title": "PostgreSQL Valhafin",
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 34 },
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 55 },
       "collapsed": false
     },
     {
@@ -507,7 +519,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "gridPos": { "h": 4, "w": 8, "x": 0, "y": 35 },
+      "gridPos": { "h": 4, "w": 8, "x": 0, "y": 56 },
       "targets": [
         {
           "expr": "pg_up",
@@ -558,7 +570,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "gridPos": { "h": 4, "w": 8, "x": 8, "y": 35 },
+      "gridPos": { "h": 4, "w": 8, "x": 8, "y": 56 },
       "targets": [
         {
           "expr": "pg_database_size_bytes{datname=\"valhafin\"}",
@@ -602,7 +614,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 35 },
+      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 56 },
       "targets": [
         {
           "expr": "sum by(state) (pg_stat_activity_count{datname=\"valhafin\"})",
@@ -635,6 +647,296 @@
         "colorMode": "value",
         "graphMode": "none"
       }
+    },
+    {
+      "id": 19,
+      "type": "row",
+      "title": "Quotas de ressources par pod",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 29 },
+      "collapsed": false
+    },
+    {
+      "id": 20,
+      "type": "table",
+      "title": "CPU — Usage vs Requests vs Limits",
+      "description": "Consommation CPU réelle comparée aux requests et limits par pod — filtrable via $namespace",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 30 },
+      "targets": [
+        {
+          "expr": "sum by(namespace, pod) (rate(container_cpu_usage_seconds_total{namespace=~\"$namespace\", container!=\"\", container!=\"POD\"}[5m]))",
+          "legendFormat": "",
+          "refId": "A",
+          "format": "table",
+          "instant": true
+        },
+        {
+          "expr": "sum by(namespace, pod) (kube_pod_container_resource_requests{namespace=~\"$namespace\", resource=\"cpu\", container!=\"\"})",
+          "legendFormat": "",
+          "refId": "B",
+          "format": "table",
+          "instant": true
+        },
+        {
+          "expr": "sum by(namespace, pod) (kube_pod_container_resource_limits{namespace=~\"$namespace\", resource=\"cpu\", container!=\"\"})",
+          "legendFormat": "",
+          "refId": "C",
+          "format": "table",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 3,
+          "custom": {
+            "align": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "CPU Usage" },
+            "properties": [
+              { "id": "decimals", "value": 3 },
+              { "id": "custom.width", "value": 120 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "CPU Requests" },
+            "properties": [
+              { "id": "decimals", "value": 3 },
+              { "id": "custom.width", "value": 120 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "CPU Limits" },
+            "properties": [
+              { "id": "decimals", "value": 3 },
+              { "id": "custom.width", "value": 120 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Requests %" },
+            "properties": [
+              { "id": "unit", "value": "percent" },
+              { "id": "decimals", "value": 1 },
+              { "id": "custom.width", "value": 110 },
+              { "id": "thresholds", "value": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 80 }, { "color": "red", "value": 100 }] } },
+              { "id": "custom.cellOptions", "value": { "type": "color-background", "mode": "basic" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Limits %" },
+            "properties": [
+              { "id": "unit", "value": "percent" },
+              { "id": "decimals", "value": 1 },
+              { "id": "custom.width", "value": 110 },
+              { "id": "thresholds", "value": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 70 }, { "color": "red", "value": 90 }] } },
+              { "id": "custom.cellOptions", "value": { "type": "color-background", "mode": "basic" } }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          { "displayName": "CPU Usage", "desc": true }
+        ],
+        "footer": {
+          "show": true,
+          "reducer": ["sum"],
+          "fields": ["CPU Usage", "CPU Requests", "CPU Limits"]
+        }
+      },
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": { "Time": true, "Time 1": true, "Time 2": true, "Time 3": true },
+            "renameByName": {
+              "namespace": "Namespace",
+              "pod": "Pod",
+              "Value #A": "CPU Usage",
+              "Value #B": "CPU Requests",
+              "Value #C": "CPU Limits"
+            }
+          }
+        },
+        {
+          "id": "calculateField",
+          "options": {
+            "alias": "Requests %",
+            "mode": "binary",
+            "binary": {
+              "left": "CPU Usage",
+              "operator": "/",
+              "right": "CPU Requests"
+            },
+            "reduce": { "reducer": "sum" }
+          }
+        },
+        {
+          "id": "calculateField",
+          "options": {
+            "alias": "Limits %",
+            "mode": "binary",
+            "binary": {
+              "left": "CPU Usage",
+              "operator": "/",
+              "right": "CPU Limits"
+            },
+            "reduce": { "reducer": "sum" }
+          }
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "type": "table",
+      "title": "RAM — Usage vs Requests vs Limits",
+      "description": "Consommation RAM réelle comparée aux requests et limits par pod — filtrable via $namespace",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 40 },
+      "targets": [
+        {
+          "expr": "sum by(namespace, pod) (container_memory_working_set_bytes{namespace=~\"$namespace\", container!=\"\", container!=\"POD\"})",
+          "legendFormat": "",
+          "refId": "A",
+          "format": "table",
+          "instant": true
+        },
+        {
+          "expr": "sum by(namespace, pod) (kube_pod_container_resource_requests{namespace=~\"$namespace\", resource=\"memory\", container!=\"\"})",
+          "legendFormat": "",
+          "refId": "B",
+          "format": "table",
+          "instant": true
+        },
+        {
+          "expr": "sum by(namespace, pod) (kube_pod_container_resource_limits{namespace=~\"$namespace\", resource=\"memory\", container!=\"\"})",
+          "legendFormat": "",
+          "refId": "C",
+          "format": "table",
+          "instant": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "custom": {
+            "align": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "RAM Usage" },
+            "properties": [
+              { "id": "unit", "value": "bytes" },
+              { "id": "custom.width", "value": 120 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "RAM Requests" },
+            "properties": [
+              { "id": "unit", "value": "bytes" },
+              { "id": "custom.width", "value": 120 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "RAM Limits" },
+            "properties": [
+              { "id": "unit", "value": "bytes" },
+              { "id": "custom.width", "value": 120 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Requests %" },
+            "properties": [
+              { "id": "unit", "value": "percent" },
+              { "id": "decimals", "value": 1 },
+              { "id": "custom.width", "value": 110 },
+              { "id": "thresholds", "value": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 80 }, { "color": "red", "value": 100 }] } },
+              { "id": "custom.cellOptions", "value": { "type": "color-background", "mode": "basic" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Limits %" },
+            "properties": [
+              { "id": "unit", "value": "percent" },
+              { "id": "decimals", "value": 1 },
+              { "id": "custom.width", "value": 110 },
+              { "id": "thresholds", "value": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 70 }, { "color": "red", "value": 90 }] } },
+              { "id": "custom.cellOptions", "value": { "type": "color-background", "mode": "basic" } }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          { "displayName": "RAM Usage", "desc": true }
+        ],
+        "footer": {
+          "show": true,
+          "reducer": ["sum"],
+          "fields": ["RAM Usage", "RAM Requests", "RAM Limits"]
+        }
+      },
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": { "Time": true, "Time 1": true, "Time 2": true, "Time 3": true },
+            "renameByName": {
+              "namespace": "Namespace",
+              "pod": "Pod",
+              "Value #A": "RAM Usage",
+              "Value #B": "RAM Requests",
+              "Value #C": "RAM Limits"
+            }
+          }
+        },
+        {
+          "id": "calculateField",
+          "options": {
+            "alias": "Requests %",
+            "mode": "binary",
+            "binary": {
+              "left": "RAM Usage",
+              "operator": "/",
+              "right": "RAM Requests"
+            },
+            "reduce": { "reducer": "sum" }
+          }
+        },
+        {
+          "id": "calculateField",
+          "options": {
+            "alias": "Limits %",
+            "mode": "binary",
+            "binary": {
+              "left": "RAM Usage",
+              "operator": "/",
+              "right": "RAM Limits"
+            },
+            "reduce": { "reducer": "sum" }
+          }
+        }
+      ]
     }
   ]
 }
