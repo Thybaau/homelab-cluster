@@ -1126,7 +1126,11 @@
             "sum"
           ],
           "countRows": false,
-          "fields": "/CPU Usage|CPU Requests|CPU Limits/"
+          "fields": [
+            "CPU Usage",
+            "CPU Requests",
+            "CPU Limits"
+          ]
         }
       },
       "transformations": [
@@ -1396,7 +1400,11 @@
             "sum"
           ],
           "countRows": false,
-          "fields": "/RAM Usage|RAM Requests|RAM Limits/"
+          "fields": [
+            "RAM Usage",
+            "RAM Requests",
+            "RAM Limits"
+          ]
         }
       },
       "transformations": [
