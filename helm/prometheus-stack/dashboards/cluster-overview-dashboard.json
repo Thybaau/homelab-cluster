@@ -1024,7 +1024,7 @@
               },
               {
                 "id": "custom.width",
-                "value": 110
+                "value": 100
               },
               {
                 "id": "thresholds",
@@ -1032,8 +1032,12 @@
                   "mode": "absolute",
                   "steps": [
                     {
-                      "color": "green",
+                      "color": "transparent",
                       "value": null
+                    },
+                    {
+                      "color": "green",
+                      "value": 0.01
                     },
                     {
                       "color": "orange",
@@ -1056,6 +1060,21 @@
               {
                 "id": "noValue",
                 "value": "-"
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "special",
+                    "options": {
+                      "match": "null+nan",
+                      "result": {
+                        "text": "-",
+                        "color": "transparent"
+                      }
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -1075,7 +1094,7 @@
               },
               {
                 "id": "custom.width",
-                "value": 110
+                "value": 100
               },
               {
                 "id": "thresholds",
@@ -1083,8 +1102,12 @@
                   "mode": "absolute",
                   "steps": [
                     {
-                      "color": "green",
+                      "color": "transparent",
                       "value": null
+                    },
+                    {
+                      "color": "green",
+                      "value": 0.01
                     },
                     {
                       "color": "orange",
@@ -1107,6 +1130,21 @@
               {
                 "id": "noValue",
                 "value": "-"
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "special",
+                    "options": {
+                      "match": "null+nan",
+                      "result": {
+                        "text": "-",
+                        "color": "transparent"
+                      }
+                    }
+                  }
+                ]
               }
             ]
           }
@@ -1126,11 +1164,7 @@
             "sum"
           ],
           "countRows": false,
-          "fields": [
-            "CPU Usage",
-            "CPU Requests",
-            "CPU Limits"
-          ]
+          "enablePagination": false
         }
       },
       "transformations": [
@@ -1298,7 +1332,7 @@
               },
               {
                 "id": "custom.width",
-                "value": 110
+                "value": 100
               },
               {
                 "id": "thresholds",
@@ -1306,8 +1340,12 @@
                   "mode": "absolute",
                   "steps": [
                     {
-                      "color": "green",
+                      "color": "transparent",
                       "value": null
+                    },
+                    {
+                      "color": "green",
+                      "value": 0.01
                     },
                     {
                       "color": "orange",
@@ -1330,6 +1368,21 @@
               {
                 "id": "noValue",
                 "value": "-"
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "special",
+                    "options": {
+                      "match": "null+nan",
+                      "result": {
+                        "text": "-",
+                        "color": "transparent"
+                      }
+                    }
+                  }
+                ]
               }
             ]
           },
@@ -1349,7 +1402,7 @@
               },
               {
                 "id": "custom.width",
-                "value": 110
+                "value": 100
               },
               {
                 "id": "thresholds",
@@ -1357,8 +1410,12 @@
                   "mode": "absolute",
                   "steps": [
                     {
-                      "color": "green",
+                      "color": "transparent",
                       "value": null
+                    },
+                    {
+                      "color": "green",
+                      "value": 0.01
                     },
                     {
                       "color": "orange",
@@ -1381,6 +1438,21 @@
               {
                 "id": "noValue",
                 "value": "-"
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "special",
+                    "options": {
+                      "match": "null+nan",
+                      "result": {
+                        "text": "-",
+                        "color": "transparent"
+                      }
+                    }
+                  }
+                ]
               }
             ]
           }
@@ -1400,11 +1472,7 @@
             "sum"
           ],
           "countRows": false,
-          "fields": [
-            "RAM Usage",
-            "RAM Requests",
-            "RAM Limits"
-          ]
+          "enablePagination": false
         }
       },
       "transformations": [
