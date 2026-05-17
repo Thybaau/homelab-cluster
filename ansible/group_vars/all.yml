@@ -59,6 +59,7 @@ firewall_ports_tcp:
   - 53     # DNS
   - 3000   # AdGuard Home Web UI
   - 9100   # Node Exporter (Prometheus metrics)
+  - 7946   # MetalLB
 
 firewall_ports_udp:
   - 8472   # Flannel VXLAN
@@ -66,6 +67,7 @@ firewall_ports_udp:
   - 53     # DNS
   - 67     # DHCP server
   - 68     # DHCP client
+  - 7946   # MetalLB
 
 # Helmfile Configuration
 helmfile_download_url: "https://github.com/helmfile/helmfile/releases/download/{{ helmfile_version }}/helmfile_{{ helmfile_version | regex_replace('^v', '') }}_linux_amd64.tar.gz"
