@@ -68,6 +68,8 @@ firewall_ports_udp:
   - 67     # DHCP server
   - 68     # DHCP client
   - 7946   # MetalLB
+  - 6666   # LocalTuya (Home-Assistant)
+  - 6667   # LocalTuya (Home-Assistant)
 
 # Helmfile Configuration
 helmfile_download_url: "https://github.com/helmfile/helmfile/releases/download/{{ helmfile_version }}/helmfile_{{ helmfile_version | regex_replace('^v', '') }}_linux_amd64.tar.gz"
