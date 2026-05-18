@@ -1,0 +1,80 @@
+---
+# Home Assistant - Values pour chart pajikos/home-assistant
+# Déployé via ArgoCD multi-sources
+# Doc: https://github.com/pajikos/home-assistant-helm-chart
+
+# Networking - hostNetwork pour découverte LocalTuya (UDP 6666/6667)
+hostNetwork: true
+dnsPolicy: ClusterFirstWithHostNet
+
+# Fixer le pod sur un nœud pour la persistance local-path
+nodeSelector:
+  kubernetes.io/hostname: k3s-worker-01
+
+# Variables d'environnement
+env:
+  - name: TZ
+    value: "Europe/Paris"
+
+# Persistance - config HA + HACS + SQLite
+persistence:
+  enabled: true
+  size: 10Gi
+  storageClass: "local-path"
+  accessMode: ReadWriteOnce
+
+# Service
+service:
+  type: ClusterIP
+  port: 8123
+
+# Ingress via Traefik
+ingress:
+  enabled: true
+  className: traefik
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+  hosts:
+    - host: ha.caremelle.org
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+# Configuration HA - trusted proxies pour Traefik
+configuration:
+  enabled: true
+  forceInit: false
+  trusted_proxies:
+    - 10.42.0.0/16
+    - 10.43.0.0/16
+
+# InitContainer - Installation automatique de HACS au premier boot
+# Le volume de persistance est nommé d'après le fullname du chart (= "home-assistant")
+initContainers:
+  - name: install-hacs
+    image: busybox:latest
+    command:
+      - sh
+      - -c
+      - |
+        if [ ! -d /config/custom_components/hacs ]; then
+          echo "HACS not found, installing..."
+          wget -O /tmp/hacs.zip https://github.com/hacs/integration/releases/latest/download/hacs.zip
+          mkdir -p /config/custom_components/hacs
+          unzip /tmp/hacs.zip -d /config/custom_components/hacs
+          rm /tmp/hacs.zip
+          echo "HACS installed successfully."
+        else
+          echo "HACS already present, skipping."
+        fi
+    volumeMounts:
+      - mountPath: /config
+        name: home-assistant
+
+# Monitoring - intégration Prometheus existant
+serviceMonitor:
+  enabled: true
+  scrapeInterval: 60s
+  labels:
+    release: prometheus

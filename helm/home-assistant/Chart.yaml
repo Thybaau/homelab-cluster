@@ -1,0 +1,14 @@
+---
+apiVersion: v2
+name: home-assistant
+description: Values pour le chart pajikos/home-assistant - Déployé via ArgoCD multi-sources
+type: application
+version: 0.1.0
+appVersion: "2024.12"
+keywords:
+  - home-assistant
+  - domotique
+  - iot
+maintainers:
+  - name: Thibault Caremelle
+    email: contact@homelab.local
