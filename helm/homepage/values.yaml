@@ -71,6 +71,12 @@ app:
     capabilities:
       drop: ["ALL"]
 
+  # Host aliases pour résolution DNS interne (services hostNetwork)
+  hostAliases:
+    - ip: "192.168.1.151"
+      hostnames:
+        - ha.caremelle.org
+
 # Configuration du service
 service:
   type: ClusterIP
@@ -182,7 +188,7 @@ config:
             description: Domotique et automatisation
             widget:
               type: homeassistant
-              url: http://192.168.1.103:8123
+              url: https://ha.caremelle.org
               key: "{{HOMEPAGE_VAR_HOMEASSISTANT_KEY}}"
               fields: ["people_home", "lights_on", "switches_on"]
     - Applications:
