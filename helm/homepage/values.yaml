@@ -182,7 +182,7 @@ config:
             description: Domotique et automatisation
             widget:
               type: homeassistant
-              url: http://home-assistant.home-assistant.svc.cluster.local:8123
+              url: https://ha.caremelle.org
               key: "{{HOMEPAGE_VAR_HOMEASSISTANT_KEY}}"
               fields: ["people_home", "lights_on", "switches_on"]
     - Applications:
