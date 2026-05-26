@@ -182,7 +182,7 @@ config:
             description: Domotique et automatisation
             widget:
               type: homeassistant
-              url: https://ha.caremelle.org
+              url: http://192.168.1.103:8123
               key: "{{HOMEPAGE_VAR_HOMEASSISTANT_KEY}}"
               fields: ["people_home", "lights_on", "switches_on"]
     - Applications:
