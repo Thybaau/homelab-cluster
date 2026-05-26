@@ -178,7 +178,7 @@ config:
     - Home Assistant:
         - Home Assistant:
             icon: home-assistant.png
-            href: https://home-assistant.caremelle.org
+            href: https://ha.caremelle.org
             description: Domotique et automatisation
             widget:
               type: homeassistant
