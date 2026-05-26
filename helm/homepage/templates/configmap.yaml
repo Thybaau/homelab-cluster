@@ -29,7 +29,7 @@ data:
               username: {{`{{HOMEPAGE_VAR_PROXMOX_USER}}`}}
               password: {{`{{HOMEPAGE_VAR_PROXMOX_PASS}}`}}
         {{- end }}
-    - Developer:
+    - GitOps:
         {{- if .Values.config.argocd.enabled }}
         - ArgoCD:
             icon: argo-cd.png
