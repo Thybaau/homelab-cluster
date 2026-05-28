@@ -196,6 +196,10 @@ config:
             icon: mdi-finance
             href: https://valhafin.caremelle.org
             description: Gestion comptes de finance
+        - Pâtisseries Caremelle:
+            icon: mdi-cake
+            href: https://patisseries.caremelle.org
+            description: Site de pâtisseries
 
   # Widgets personnalisés (ajoutés à widgets.yaml)
   customWidgets: []
