@@ -60,6 +60,8 @@ backend:
     runAsNonRoot: true
     runAsUser: 1000
     fsGroup: 1000
+    seccompProfile:
+      type: RuntimeDefault
 
   # Security context au niveau du conteneur
   securityContext:
@@ -123,13 +125,16 @@ frontend:
   # Note: nginx standard nécessite root pour bind port 80
   podSecurityContext:
     runAsNonRoot: false
+    seccompProfile:
+      type: RuntimeDefault
 
   # Security context au niveau du conteneur
   securityContext:
     allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
     capabilities:
       drop: ["ALL"]
-      add: ["NET_BIND_SERVICE", "SETUID", "SETGID"]
+      add: ["NET_BIND_SERVICE"]
 database:
   enabled: true
 
@@ -190,13 +195,15 @@ database:
     runAsNonRoot: true
     runAsUser: 999
     fsGroup: 999
+    seccompProfile:
+      type: RuntimeDefault
 
   # Security context au niveau du conteneur
   securityContext:
     allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
     capabilities:
       drop: ["ALL"]
-      add: ["CHOWN", "DAC_OVERRIDE", "FOWNER", "SETUID", "SETGID"]
 sealedSecrets:
   enabled: true
 
