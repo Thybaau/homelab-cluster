@@ -1,9 +1,34 @@
 # Gitleaks configuration for homelab-cluster
-# Allowlist to reduce false positives
+# Extends default rules with allowlists to reduce false positives
+
+title = "homelab-cluster gitleaks config"
 
 [allowlist]
 description = "Allowlist pour homelab-cluster"
+
+# Fichiers chiffrés Ansible Vault — contiennent $ANSIBLE_VAULT;1.1;AES256
+regexTarget = "match"
+
 paths = [
   '''docs/.*\.md''',
   '''\.github/workflows/.*''',
+  '''.*\.example$''',
+  '''.*\.template$''',
+  '''.*\.sample$''',
 ]
+
+# Patterns permettant d'ignorer les valeurs chiffrées
+regexes = [
+  '''\$ANSIBLE_VAULT;[0-9]+\.[0-9]+;AES256''',
+  '''ENC\[AES256_GCM,.*\]''',
+]
+
+# Ignorer les fichiers spécifiques liés au chiffrement SOPS
+[[rules]]
+id = "sops-encrypted-values"
+description = "Ignore SOPS encrypted values"
+regex = '''ENC\[AES256_GCM,data:.+,iv:.+,tag:.+,type:.*\]'''
+
+[rules.allowlist]
+regexTarget = "match"
+regexes = ['''ENC\[AES256_GCM,data:.+,iv:.+,tag:.+,type:.*\]''']
