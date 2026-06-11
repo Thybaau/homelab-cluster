@@ -59,11 +59,20 @@ jobs:
         with:
           scan-type: "fs"
           scan-ref: "."
-          format: "sarif"
-          output: "trivy-fs.sarif"
+          format: "table"
           severity: "CRITICAL,HIGH"
           exit-code: "1"
         continue-on-error: true
+
+      - name: Trivy filesystem SARIF export
+        uses: aquasecurity/trivy-action@bfa4b33a029b9aa80ddb784b45574c30e072c59e # v0.36.0
+        if: always()
+        with:
+          scan-type: "fs"
+          scan-ref: "."
+          format: "sarif"
+          output: "trivy-fs.sarif"
+          severity: "CRITICAL,HIGH"
 
       - name: Trivy config scan (Helm + K8s misconfigurations)
         id: trivy-config
@@ -71,11 +80,20 @@ jobs:
         with:
           scan-type: "config"
           scan-ref: "."
-          format: "sarif"
-          output: "trivy-config.sarif"
+          format: "table"
           severity: "CRITICAL,HIGH,MEDIUM"
           exit-code: "1"
         continue-on-error: true
+
+      - name: Trivy config SARIF export
+        uses: aquasecurity/trivy-action@bfa4b33a029b9aa80ddb784b45574c30e072c59e # v0.36.0
+        if: always()
+        with:
+          scan-type: "config"
+          scan-ref: "."
+          format: "sarif"
+          output: "trivy-config.sarif"
+          severity: "CRITICAL,HIGH,MEDIUM"
 
       - name: Ensure SARIF files exist
         if: always()
@@ -103,5 +121,5 @@ jobs:
       - name: Fail on Trivy findings
         if: steps.trivy-fs.outcome == 'failure' || steps.trivy-config.outcome == 'failure'
         run: |
-          echo "::error::Security findings detected — check the Security tab for details."
+          echo "::error::Security findings detected — check Trivy scan steps above for details."
           exit 1
