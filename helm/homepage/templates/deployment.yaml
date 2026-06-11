@@ -43,7 +43,7 @@ spec:
       {{- if not .Values.persistence.enabled }}
       initContainers:
       - name: config-setup
-        image: busybox:latest
+        image: busybox:1.37
         {{- with .Values.app.initSecurityContext }}
         securityContext:
           {{- toYaml . | nindent 10 }}

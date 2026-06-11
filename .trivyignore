@@ -1,0 +1,22 @@
+# Trivy ignore file for homelab-cluster
+# False positives and accepted risks
+
+# KSV-0125: "untrusted registry" — flags all non-docker.io/library images
+# Our images from ghcr.io, cloudflare/, etc. are legitimate
+KSV-0125
+
+# KSV-0037: "should not be set with kube-system namespace"
+# Traefik is installed by k3s in kube-system by default, PodMonitor/SealedSecret must match
+KSV-0037
+
+# KSV-01010: "ConfigMap stores sensitive contents"
+# Homepage dashboard widget config uses keys like "key", "username" as field names, not real secrets
+KSV-01010
+
+# KSV-0117: "port < 1024"
+# Standard for nginx/frontend containers serving on port 80 behind a reverse proxy
+KSV-0117
+
+# KSV-0109: "ConfigMap stores secrets"
+# Homepage config uses HOMEPAGE_VAR_* env variable references to SealedSecrets, not actual passwords
+KSV-0109

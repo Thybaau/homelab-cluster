@@ -62,6 +62,10 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /var/lib/postgresql/data
+            - name: tmp
+              mountPath: /tmp
+            - name: run
+              mountPath: /var/run/postgresql
           livenessProbe:
             exec:
               command:
@@ -84,6 +88,11 @@ spec:
             failureThreshold: {{ .Values.database.readinessProbe.failureThreshold }}
           resources:
             {{- toYaml .Values.database.resources | nindent 12 }}
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: run
+          emptyDir: {}
   volumeClaimTemplates:
     - metadata:
         name: data
