@@ -2,7 +2,9 @@
 # Global variables for all hosts
 
 # Versions
-k3s_version: v1.34.4+k3s1
+# K3s utilise le channel "stable" (même source que le System Upgrade Controller)
+# Cela garantit que Ansible et SUC installent/ciblent toujours la même version.
+k3s_channel: stable
 kubectl_version: stable
 helm_version: v3
 helmfile_version: v0.163.1

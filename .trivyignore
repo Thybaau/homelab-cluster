@@ -30,3 +30,16 @@ KSV-0012
 # valhafin-frontend needs NET_BIND_SERVICE for nginx port 80
 # Will be removed when migrating to nginx-unprivileged
 KSV-0022
+
+# KSV-0111: "User with admin access" (ClusterRoleBinding to cluster-admin)
+# System Upgrade Controller requires cluster-admin to create Jobs, cordon/drain nodes,
+# modify annotations, and manage the full upgrade lifecycle. This is the official design
+# from Rancher: https://github.com/rancher/system-upgrade-controller
+KSV-0111
+
+# KSV-0023: "HostPath Volumes" forbidden by pod security standard
+# System Upgrade Controller needs read-only access to host CA certificates
+# (/etc/ssl, /etc/pki, /etc/ca-certificates) to validate TLS connections
+# to the K3s update channel (https://update.k3s.io). This is the official
+# deployment pattern from Rancher.
+KSV-0023

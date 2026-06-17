@@ -1,0 +1,34 @@
+---
+# System Upgrade Controller configuration
+controller:
+  image:
+    repository: rancher/system-upgrade-controller
+    tag: "v0.14.2"
+    pullPolicy: IfNotPresent
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+
+# Plans de mise à jour K3s
+# NOTE: Le CRD Plan SUC ne supporte PAS de fenêtre de maintenance native.
+# Les upgrades se déclenchent dès qu'une nouvelle version stable est détectée.
+# La cadence est contrôlée par le channel "stable" (versions matures uniquement).
+plans:
+  # Channel K3s stable (résolu automatiquement vers la dernière version stable)
+  channel: https://update.k3s.io/v1-release/channels/stable
+
+  # Image utilisée pour l'upgrade des nœuds
+  upgradeImage: rancher/k3s-upgrade
+
+  server:
+    # Nombre de server nodes upgradés simultanément
+    concurrency: 1
+
+  agent:
+    # Nombre d'agent nodes upgradés simultanément
+    concurrency: 1

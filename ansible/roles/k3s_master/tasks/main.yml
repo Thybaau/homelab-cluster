@@ -32,7 +32,7 @@
       --node-ip={{ k3s_server_node_ip }} \
       --disable=servicelb
   environment:
-    INSTALL_K3S_VERSION: "{{ k3s_version }}"
+    INSTALL_K3S_CHANNEL: "{{ k3s_channel }}"
   when: not k3s_already_installed
   register: k3s_install_result
   failed_when: k3s_install_result.rc != 0

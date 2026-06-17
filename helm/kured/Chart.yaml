@@ -1,0 +1,6 @@
+---
+apiVersion: v2
+name: kured
+description: "Configuration locale pour Kured — Kubernetes Reboot Daemon"
+type: application
+version: 0.1.0
