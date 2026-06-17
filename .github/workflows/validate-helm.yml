@@ -94,13 +94,15 @@ jobs:
             # Step 2: Helm template (capture output, check exit code)
             echo "→ helm template + kubeconform..."
             RENDERED=$(mktemp)
-            if ! helm template test "$chart" > "$RENDERED" 2>&1; then
+            HELM_STDERR=$(mktemp)
+            if ! helm template test "$chart" > "$RENDERED" 2>"$HELM_STDERR"; then
               echo "❌ FAILED: helm template $chart"
-              cat "$RENDERED"
-              rm -f "$RENDERED"
+              cat "$HELM_STDERR"
+              rm -f "$RENDERED" "$HELM_STDERR"
               FAILED=1
               continue
             fi
+            rm -f "$HELM_STDERR"
 
             if [ ! -s "$RENDERED" ]; then
               echo "⚠️  WARNING: helm template produced empty output for $chart"
