@@ -1,0 +1,26 @@
+---
+apiVersion: upgrade.cattle.io/v1
+kind: Plan
+metadata:
+  name: agent-plan
+  namespace: system-upgrade
+  labels:
+    app.kubernetes.io/name: system-upgrade-controller
+    app.kubernetes.io/component: plan-agent
+    app.kubernetes.io/managed-by: Helm
+spec:
+  concurrency: {{ .Values.plans.agent.concurrency }}
+  cordon: true
+  nodeSelector:
+    matchExpressions:
+      - key: node-role.kubernetes.io/control-plane
+        operator: DoesNotExist
+  prepare:
+    args:
+      - prepare
+      - server-plan
+    image: {{ .Values.plans.upgradeImage }}
+  serviceAccountName: system-upgrade
+  channel: {{ .Values.plans.channel }}
+  upgrade:
+    image: {{ .Values.plans.upgradeImage }}

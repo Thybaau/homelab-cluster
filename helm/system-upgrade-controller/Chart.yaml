@@ -1,0 +1,16 @@
+---
+apiVersion: v2
+name: system-upgrade-controller
+description: Rancher System Upgrade Controller pour auto-update K3s
+type: application
+version: 0.1.0
+appVersion: "0.14.2"
+keywords:
+  - k3s
+  - upgrade
+  - system-upgrade-controller
+  - rancher
+home: https://github.com/rancher/system-upgrade-controller
+maintainers:
+  - name: Homelab Team
+    email: contact@homelab.local

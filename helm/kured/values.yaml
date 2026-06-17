@@ -1,0 +1,38 @@
+---
+# Values pour le chart upstream kubereboot/kured (v5.6.0)
+# Référencé via le pattern multi-source ArgoCD
+# Docs: https://github.com/kubereboot/charts/blob/main/charts/kured/values.yaml
+
+configuration:
+  # Jours autorisés pour les reboots (dimanche uniquement)
+  rebootDays: [su]
+  # Fenêtre horaire autorisée
+  startTime: "03:00"
+  endTime: "05:00"
+  timeZone: "Europe/Paris"
+  # Fichier sentinel indiquant qu'un reboot est requis
+  rebootSentinel: "/var/run/reboot-required"
+  # Intervalle de vérification du sentinel
+  period: "1h0m0s"
+  # Nombre de nœuds rebootés simultanément
+  concurrency: 1
+  # Intégration Prometheus — bloque les reboots si alertes critiques actives
+  prometheusUrl: "http://monitoring-stack-kube-prom-prometheus.monitoring.svc.cluster.local:9090"
+  # Exclure les alertes informatives qui sont toujours firing
+  alertFilterRegexp: "^(Watchdog|InfoInhibitor)$"
+  alertFiringOnly: true
+  # Timeout pour le drain du nœud avant reboot
+  drainTimeout: "5m"
+  # Grace period pour les pods pendant le drain (secondes)
+  drainGracePeriod: "30"
+
+tolerations:
+  - key: node-role.kubernetes.io/control-plane
+    operator: Exists
+    effect: NoSchedule
+
+metrics:
+  create: true
+  namespace: monitoring
+  labels:
+    release: monitoring-stack
