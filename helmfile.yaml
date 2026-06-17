@@ -18,6 +18,8 @@ releases:
     wait: true
     timeout: 600
     values:
+      - global:
+          domain: argocd.caremelle.org
       - server:
           service:
             type: ClusterIP
@@ -26,8 +28,6 @@ releases:
             ingressClassName: traefik
             annotations:
               traefik.ingress.kubernetes.io/router.entrypoints: websecure
-            hosts:
-              - argocd.caremelle.org
       - configs:
           params:
             server.insecure: true
