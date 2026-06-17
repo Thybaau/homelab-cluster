@@ -26,6 +26,13 @@ spec:
                     values:
                       - "true"
       serviceAccountName: system-upgrade
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        runAsGroup: 65534
+        fsGroup: 65534
+        seccompProfile:
+          type: RuntimeDefault
       tolerations:
         - key: CriticalAddonsOnly
           operator: Exists
