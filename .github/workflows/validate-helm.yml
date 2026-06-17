@@ -3,11 +3,6 @@ name: Validate Helm Charts
 
 on:
   pull_request:
-    paths:
-      - "helm/**"
-      - "helmfile.yaml"
-      - "argocd-apps/**"
-      - ".github/workflows/validate-helm.yml"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -17,8 +12,36 @@ permissions:
   contents: read
 
 jobs:
+  # Detect if helm-related files changed — skip validation otherwise
+  changes:
+    name: detect-changes
+    runs-on: ubuntu-latest
+    outputs:
+      helm: ${{ steps.filter.outputs.helm }}
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@002fdce3c6a235733a90a27c80493a3241e56863 # v2.12.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Check for helm changes
+        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        id: filter
+        with:
+          filters: |
+            helm:
+              - 'helm/**'
+              - 'helmfile.yaml'
+              - 'argocd-apps/**'
+              - '.github/workflows/validate-helm.yml'
+
   validate:
     name: validate
+    needs: changes
+    if: needs.changes.outputs.helm == 'true'
     runs-on: ubuntu-latest
 
     steps:
