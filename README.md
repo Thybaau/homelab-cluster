@@ -3,20 +3,23 @@
 [![Deploy k3s Cluster](https://github.com/Thybaau/homelab-cluster/actions/workflows/deploy.yml/badge.svg)](https://github.com/Thybaau/homelab-cluster/actions/workflows/deploy.yml)
 [![Security Audit](https://github.com/Thybaau/homelab-cluster/actions/workflows/security-audit.yml/badge.svg)](https://github.com/Thybaau/homelab-cluster/actions/workflows/security-audit.yml)
 
-![k3s](https://img.shields.io/badge/k3s-v1.34.4-blue?logo=k3s&logoColor=white)
+![k3s](https://img.shields.io/badge/k3s-stable_channel-blue?logo=k3s&logoColor=white)
 ![Ubuntu](https://img.shields.io/badge/Ubuntu-24.04-E95420?logo=ubuntu&logoColor=white)
 ![Ansible](https://img.shields.io/badge/Ansible-8.x-EE0000?logo=ansible&logoColor=white)
 ![Helm](https://img.shields.io/badge/Helm-v3-0F1689?logo=helm&logoColor=white)
 ![Helmfile](https://img.shields.io/badge/Helmfile-v0.163.1-0F1689?logo=helm&logoColor=white)
-![ArgoCD](https://img.shields.io/badge/ArgoCD-5.51.6-EF7B4D?logo=argo&logoColor=white)
-![Prometheus](https://img.shields.io/badge/Prometheus-72.6.2-E6522C?logo=prometheus&logoColor=white)
-![Grafana](https://img.shields.io/badge/Grafana-Loki_3.7.1-F46800?logo=grafana&logoColor=white)
-![MetalLB](https://img.shields.io/badge/MetalLB-0.14.9-blue)
+![ArgoCD](https://img.shields.io/badge/ArgoCD-9.5.21-EF7B4D?logo=argo&logoColor=white)
+![Prometheus](https://img.shields.io/badge/Prometheus-72.9.1-E6522C?logo=prometheus&logoColor=white)
+![Grafana](https://img.shields.io/badge/Grafana-Loki_13.7.2-F46800?logo=grafana&logoColor=white)
+![MetalLB](https://img.shields.io/badge/MetalLB-0.16.1-blue)
 ![Sealed Secrets](https://img.shields.io/badge/Sealed_Secrets-2.13.2-326CE5?logo=kubernetes&logoColor=white)
+![Kured](https://img.shields.io/badge/Kured-5.6.0-blue)
 
 Déploiement automatisé d'un cluster k3s sur des VMs Ubuntu 24.04 hébergées sur Proxmox, avec orchestration Ansible, gestion GitOps via ArgoCD, et services d'infrastructure déployés par Helm.
 
 Le cluster intègre une stack d'observabilité complète : métriques (Prometheus), logs centralisés (Loki + Alloy), alerting Discord (Alertmanager), dashboards custom (Grafana config-as-code), et monitoring des services (blackbox-exporter, postgres-exporter).
+
+Les mises à jour du cluster sont automatisées : k3s se met à jour via le System Upgrade Controller (channel stable), et les nœuds redémarrent automatiquement après les mises à jour OS grâce à Kured.
 
 ## Sommaire
 
@@ -75,17 +78,21 @@ Ce projet gère l'intégralité du cycle de vie d'un cluster Kubernetes k3s :
 
 | Application | Namespace | Sync Wave | Source | Description |
 |---|---|---|---|---|
-| [MetalLB](docs/metallb/) | `metallb-system` | 0 | Chart officiel + config locale | Load balancer L2 (pool `192.168.1.151-170`) |
-| [Sealed Secrets](docs/sealed-secrets/) | `sealed-secrets` | 0 | Chart Bitnami | Chiffrement des secrets pour GitOps |
+| Traefik TLS | `kube-system` | -2 | Chart local | Configuration TLS pour l'ingress Traefik |
+| [MetalLB](docs/metallb/) | `metallb-system` | 0 | Chart officiel v0.16.1 + config locale | Load balancer L2 (pool `192.168.1.151-170`) |
+| [Sealed Secrets](docs/sealed-secrets/) | `sealed-secrets` | 0 | Chart Bitnami v2.13.2 | Chiffrement des secrets pour GitOps |
+| Kured | `kube-system` | 0 | Chart kubereboot v5.6.0 | Reboot automatique des nœuds après mises à jour OS |
+| System Upgrade Controller | `system-upgrade` | 0 | Chart local | Mises à jour automatiques de k3s (channel stable) |
 | [Homepage](docs/homepage/) | `homepage` | 1 | Chart local | Dashboard homelab |
-| [Monitoring Stack](docs/prometheus-stack/) | `monitoring` | 1 | kube-prometheus-stack + local | Prometheus, Grafana, Alertmanager, dashboards |
+| [Monitoring Stack](docs/prometheus-stack/) | `monitoring` | 1 | kube-prometheus-stack v72.9.1 + local | Prometheus, Grafana, Alertmanager, dashboards |
 | [Valhafin](docs/valhafin/) | `valhafin` | 1 | Chart local | App de gestion de portefeuille |
-| [Cloudflare](docs/cloudflare/) | `networking` | 1 | Chart local | Tunnel Cloudflare |
-| Loki | `monitoring` | 2 | Chart grafana-community v13.1.3 | Backend de stockage de logs (mode Monolithic) |
-| Alloy | `monitoring` | 3 | Chart grafana v1.7.0 | Collecteur de logs DaemonSet (filesystem → Loki) |
-| blackbox-exporter | `monitoring` | 4 | Chart prometheus-community v11.9.1 | Probes HTTP disponibilité services |
+| Loki | `monitoring` | 2 | Chart grafana-community v13.7.2 | Backend de stockage de logs (mode Monolithic) |
+| [Cloudflare](docs/cloudflare/) | `networking` | 3 | Chart local | Tunnel Cloudflare |
+| Alloy | `monitoring` | 3 | Chart grafana v1.9.0 | Collecteur de logs DaemonSet (filesystem → Loki) |
+| blackbox-exporter | `monitoring` | 4 | Chart prometheus-community v11.11.0 | Probes HTTP disponibilité services |
 | postgres-exporter | `monitoring` | 4 | Chart prometheus-community v7.5.2 | Métriques PostgreSQL |
-| [AdGuard Home](docs/adguard-home/) | `networking` | 5 | Chart gabe565 | DNS local + ad-blocking |
+| [AdGuard Home](docs/adguard-home/) | `networking` | 5 | Chart gabe565 v0.3.25 | DNS local + ad-blocking |
+| [Home Assistant](docs/home-assistant/) | `home-assistant` | 5 | Chart pajikos v0.3.66 | Domotique et automation |
 
 ## Structure du projet
 
@@ -107,22 +114,30 @@ Ce projet gère l'intégralité du cycle de vie d'un cluster Kubernetes k3s :
 │   ├── alloy-app.yml           # Collecteur de logs DaemonSet
 │   ├── blackbox-exporter-app.yml # Probes HTTP services
 │   ├── cloudflare-app.yml      # Cloudflare Tunnel
+│   ├── home-assistant-app.yml  # Domotique et automation
 │   ├── homepage-app.yml        # Dashboard homelab
+│   ├── kured-app.yml           # Reboot automatique post-update
 │   ├── loki-app.yml            # Backend de stockage de logs
 │   ├── metallb-app.yml         # Load balancer L2
 │   ├── postgres-exporter-app.yml # Métriques PostgreSQL
 │   ├── prometheus-stack-app.yml# Monitoring (Prometheus + Grafana + Alertmanager)
 │   ├── sealed-secrets-app.yml  # Gestion des secrets chiffrés
+│   ├── system-upgrade-controller-app.yml # Mises à jour k3s automatiques
+│   ├── traefik-tls-app.yml     # Configuration TLS Traefik
 │   └── valhafin-app.yml        # Application financière
 ├── helm/                       # Charts Helm custom
 │   ├── alloy/                  # Collecteur de logs (pipeline River, DaemonSet)
 │   ├── blackbox-exporter/      # Probes HTTP (valhafin, homepage)
 │   ├── cloudflare/             # Cloudflared tunnel
+│   ├── home-assistant/         # Domotique (Home Assistant)
 │   ├── homepage/               # Dashboard homepage.dev
+│   ├── kured/                  # Reboot automatique post-update OS
 │   ├── loki/                   # Backend logs (Monolithic, PVC 10Gi, rétention 7j)
 │   ├── metallb/                # Config MetalLB (IP pool + L2)
 │   ├── postgres-exporter/      # Métriques PostgreSQL + SealedSecret
 │   ├── prometheus-stack/       # Dashboards JSON, SealedSecrets, PodMonitor Traefik
+│   ├── system-upgrade-controller/ # SUC + Plans de mise à jour k3s
+│   ├── traefik-tls/            # Certificats TLS pour l'ingress Traefik
 │   └── valhafin/               # App complète (backend + frontend + DB)
 ├── helmfile.yaml               # Infrastructure de base (ArgoCD, Cert-Manager)
 ├── root-app.yml                # ArgoCD root Application (app-of-apps)
@@ -173,7 +188,7 @@ export KUBECONFIG=~/.kube/k3s-config
 Le cluster intègre une stack d'observabilité complet, entièrement déployée via ArgoCD :
 
 ### Métriques & Alerting
-- **Prometheus** (kube-prometheus-stack v72.6.2) : collecte des métriques cluster, node-exporter, kube-state-metrics
+- **Prometheus** (kube-prometheus-stack v72.9.1) : collecte des métriques cluster, node-exporter, kube-state-metrics
 - **Alertmanager → Discord** : 8 règles d'alerting routées vers 2 canaux Discord (critiques 🚨 / warnings ⚠️)
 - **blackbox-exporter** : probes HTTP sur les services exposés (valhafin, homepage)
 - **postgres-exporter** : métriques PostgreSQL (connexions, taille base, requêtes)
