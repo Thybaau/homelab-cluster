@@ -17,6 +17,7 @@ on:
       - main
     paths:
       - "ansible/**"
+      - "helmfile.yaml"
       - ".github/workflows/deploy.yml"
 
 jobs:
