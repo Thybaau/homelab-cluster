@@ -3,7 +3,7 @@
 [![Deploy k3s Cluster](https://github.com/Thybaau/homelab-cluster/actions/workflows/deploy.yml/badge.svg)](https://github.com/Thybaau/homelab-cluster/actions/workflows/deploy.yml)
 [![Security Audit](https://github.com/Thybaau/homelab-cluster/actions/workflows/security-audit.yml/badge.svg)](https://github.com/Thybaau/homelab-cluster/actions/workflows/security-audit.yml)
 
-![k3s](https://img.shields.io/badge/k3s-stable_channel-blue?logo=k3s&logoColor=white)
+![k3s](https://img.shields.io/badge/k3s-v1.35.5-blue?logo=k3s&logoColor=white)
 ![Ubuntu](https://img.shields.io/badge/Ubuntu-24.04-E95420?logo=ubuntu&logoColor=white)
 ![Ansible](https://img.shields.io/badge/Ansible-8.x-EE0000?logo=ansible&logoColor=white)
 ![Helm](https://img.shields.io/badge/Helm-v3-0F1689?logo=helm&logoColor=white)
