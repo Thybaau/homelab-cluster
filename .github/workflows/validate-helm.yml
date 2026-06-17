@@ -1,0 +1,148 @@
+---
+name: Validate Helm Charts
+
+on:
+  pull_request:
+    paths:
+      - "helm/**"
+      - "helmfile.yaml"
+      - "argocd-apps/**"
+      - ".github/workflows/validate-helm.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@002fdce3c6a235733a90a27c80493a3241e56863 # v2.12.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up Helm
+        uses: azure/setup-helm@b9e51907a09c216f16ebe8536097933489208112 # v4.3.0
+        with:
+          version: "v3.16.0"
+
+      - name: Install kubeconform
+        run: |
+          set -euo pipefail
+          KUBECONFORM_VERSION="v0.6.7"
+          curl -sSL "https://github.com/yannh/kubeconform/releases/download/${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz" | tar xz
+          sudo mv kubeconform /usr/local/bin/
+          kubeconform -v
+
+      - name: Install pluto
+        run: |
+          set -euo pipefail
+          PLUTO_VERSION="5.21.0"
+          curl -sSL "https://github.com/FairwindsOps/pluto/releases/download/v${PLUTO_VERSION}/pluto_${PLUTO_VERSION}_linux_amd64.tar.gz" | tar xz
+          sudo mv pluto /usr/local/bin/
+          pluto version
+
+      - name: Validate Helm charts
+        run: |
+          set -uo pipefail
+          FAILED=0
+
+          for chart in helm/*/; do
+            # Skip if not a valid Helm chart
+            if [ ! -f "${chart}Chart.yaml" ]; then
+              continue
+            fi
+
+            echo ""
+            echo "══════════════════════════════════════════"
+            echo "  Validating: $chart"
+            echo "══════════════════════════════════════════"
+
+            # Skip charts without templates/ (multi-source ArgoCD overrides)
+            if [ ! -d "${chart}templates" ]; then
+              echo "⏭️  SKIPPED: no templates/ directory (multi-source chart)"
+              continue
+            fi
+
+            # Build dependencies if Chart.yaml declares them
+            if grep -q "^dependencies:" "${chart}Chart.yaml" 2>/dev/null; then
+              echo "→ helm dependency build..."
+              if ! helm dependency build "$chart"; then
+                echo "❌ FAILED: helm dependency build $chart"
+                FAILED=1
+                continue
+              fi
+            fi
+
+            # Step 1: Helm lint
+            echo "→ helm lint..."
+            if ! helm lint "$chart"; then
+              echo "❌ FAILED: helm lint $chart"
+              FAILED=1
+              continue
+            fi
+
+            # Step 2: Helm template (capture output, check exit code)
+            echo "→ helm template + kubeconform..."
+            RENDERED=$(mktemp)
+            HELM_STDERR=$(mktemp)
+            if ! helm template test "$chart" > "$RENDERED" 2>"$HELM_STDERR"; then
+              echo "❌ FAILED: helm template $chart"
+              cat "$HELM_STDERR"
+              rm -f "$RENDERED" "$HELM_STDERR"
+              FAILED=1
+              continue
+            fi
+            rm -f "$HELM_STDERR"
+
+            if [ ! -s "$RENDERED" ]; then
+              echo "⚠️  WARNING: helm template produced empty output for $chart"
+              rm -f "$RENDERED"
+              echo "✅ PASSED: $chart (empty output — nothing to validate)"
+              continue
+            fi
+
+            # Kubeconform validation
+            if ! kubeconform \
+              -kubernetes-version 1.31.0 \
+              -strict \
+              -summary \
+              -ignore-missing-schemas \
+              -skip CustomResourceDefinition,SealedSecret < "$RENDERED"; then
+              echo "❌ FAILED: kubeconform $chart"
+              rm -f "$RENDERED"
+              FAILED=1
+              continue
+            fi
+
+            # Step 3: Pluto deprecated APIs (informational — does not block)
+            echo "→ pluto detect..."
+            if ! pluto detect -t k8s=v1.32.0 - < "$RENDERED" 2>/dev/null; then
+              echo "⚠️  WARNING: deprecated APIs found in $chart (non-blocking)"
+            fi
+
+            rm -f "$RENDERED"
+            echo "✅ PASSED: $chart"
+          done
+
+          if [ $FAILED -ne 0 ]; then
+            echo ""
+            echo "══════════════════════════════════════════"
+            echo "  ❌ One or more charts failed validation"
+            echo "══════════════════════════════════════════"
+            exit 1
+          fi
+
+          echo ""
+          echo "══════════════════════════════════════════"
+          echo "  ✅ All charts passed validation"
+          echo "══════════════════════════════════════════"
