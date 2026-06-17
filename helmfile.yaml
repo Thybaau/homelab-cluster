@@ -12,7 +12,7 @@ releases:
   - name: argocd
     namespace: argocd
     chart: argo/argo-cd
-    version: 5.51.6
+    version: 5.55.0
     installed: true
     createNamespace: true
     wait: true
