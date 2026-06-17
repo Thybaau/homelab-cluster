@@ -7,6 +7,8 @@ extends: default
 ignore: |
   # Helm templates contain Go templating syntax, not valid YAML
   helm/*/templates/
+  # CRDs are auto-generated upstream files, not editable
+  helm/*/crds/
   # Auto-generated sealed-secrets backup files
   scripts/sealed-secrets-keys-backup-*.yaml
 
