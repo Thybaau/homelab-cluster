@@ -99,7 +99,7 @@
         valuesContent: |
           service:
             annotations:
-              metallb.universe.tf/loadBalancerIPs: "{{ traefik_metallb_ip }}"
+              metallb.io/loadBalancerIPs: "{{ traefik_metallb_ip }}"
           ports:
             websecure:
               port: 8443

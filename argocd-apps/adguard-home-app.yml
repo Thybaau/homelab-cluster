@@ -58,8 +58,9 @@ spec:
           dns-tcp:
             enabled: true
             type: LoadBalancer
+            loadBalancerIP: "192.168.1.152"
             annotations:
-              metallb.universe.tf/loadBalancerIPs: "192.168.1.152"
+              metallb.io/allow-shared-ip: adguard-home
             ports:
               dns-tcp:
                 enabled: true
@@ -68,8 +69,9 @@ spec:
           dns-udp:
             enabled: true
             type: LoadBalancer
+            loadBalancerIP: "192.168.1.152"
             annotations:
-              metallb.universe.tf/loadBalancerIPs: "192.168.1.152"
+              metallb.io/allow-shared-ip: adguard-home
             ports:
               dns-udp:
                 enabled: true
