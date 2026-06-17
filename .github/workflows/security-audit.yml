@@ -55,7 +55,7 @@ jobs:
 
       - name: Trivy filesystem scan (dependencies + IaC)
         id: trivy-fs
-        uses: aquasecurity/trivy-action@bfa4b33a029b9aa80ddb784b45574c30e072c59e # v0.36.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: "fs"
           scan-ref: "."
@@ -65,7 +65,7 @@ jobs:
         continue-on-error: true
 
       - name: Trivy filesystem SARIF export
-        uses: aquasecurity/trivy-action@bfa4b33a029b9aa80ddb784b45574c30e072c59e # v0.36.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         if: always()
         with:
           scan-type: "fs"
@@ -76,7 +76,7 @@ jobs:
 
       - name: Trivy config scan (Helm + K8s misconfigurations)
         id: trivy-config
-        uses: aquasecurity/trivy-action@bfa4b33a029b9aa80ddb784b45574c30e072c59e # v0.36.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: "config"
           scan-ref: "."
@@ -87,7 +87,7 @@ jobs:
         continue-on-error: true
 
       - name: Trivy config SARIF export
-        uses: aquasecurity/trivy-action@bfa4b33a029b9aa80ddb784b45574c30e072c59e # v0.36.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         if: always()
         with:
           scan-type: "config"
