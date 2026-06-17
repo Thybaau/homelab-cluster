@@ -1,0 +1,170 @@
+// renovate.json5 - Configuration Renovate pour homelab-cluster
+// Doc: https://docs.renovatebot.com/configuration-options/
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+
+  // === MANAGERS ===
+
+  // Manager ArgoCD - scanner les manifests Application (multi-source avec targetRevision)
+  "argocd": {
+    "fileMatch": ["argocd-apps/.+\\.ya?ml$"]
+  },
+
+  // === SCHEDULING GLOBAL ===
+  // Pas de PRs pendant les heures de bureau - reduit le bruit
+  "schedule": ["after 8pm and before 8am every weekday", "every weekend"],
+
+  // === LIMITES ===
+  "prHourlyLimit": 5,
+  "prConcurrentLimit": 10,
+
+  // === LABELS ===
+  "labels": ["renovate"],
+
+  // === DASHBOARD ===
+  "dependencyDashboard": true,
+
+  // === PACKAGE RULES ===
+  "packageRules": [
+    // --- PATCH UPDATES - Automerge automatique ---
+    {
+      "description": "Automerge patch updates pour les images Docker (apps)",
+      "matchManagers": ["helm-values"],
+      "matchUpdateTypes": ["patch"],
+      "automerge": true,
+      "automergeType": "pr",
+      "minimumReleaseAge": "3 days"
+    },
+
+    // --- PATCH UPDATES - GitHub Actions automerge ---
+    {
+      "description": "Automerge minor/patch updates pour les GitHub Actions",
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["minor", "patch", "digest"],
+      "automerge": true,
+      "automergeType": "pr",
+      "minimumReleaseAge": "3 days"
+    },
+
+    // --- PATCH UPDATES - ArgoCD apps (charts upstream) automerge ---
+    {
+      "description": "Automerge patch updates pour les charts Helm upstream (ArgoCD multi-source)",
+      "matchManagers": ["argocd"],
+      "matchUpdateTypes": ["patch"],
+      "automerge": true,
+      "automergeType": "pr",
+      "minimumReleaseAge": "3 days"
+    },
+
+    // --- MINOR UPDATES - Automerge le week-end ---
+    {
+      "description": "Automerge minor updates le week-end (images Docker)",
+      "matchManagers": ["helm-values"],
+      "matchUpdateTypes": ["minor"],
+      "automerge": true,
+      "automergeType": "pr",
+      "schedule": ["every weekend"],
+      "minimumReleaseAge": "7 days"
+    },
+
+    // --- MINOR UPDATES - Charts upstream le week-end ---
+    {
+      "description": "Automerge minor updates le week-end (charts upstream ArgoCD)",
+      "matchManagers": ["argocd"],
+      "matchUpdateTypes": ["minor"],
+      "automerge": true,
+      "automergeType": "pr",
+      "schedule": ["every weekend"],
+      "minimumReleaseAge": "7 days"
+    },
+
+    // --- MAJOR UPDATES - Pas d automerge ---
+    {
+      "description": "Major updates - review manuelle requise",
+      "matchUpdateTypes": ["major"],
+      "automerge": false,
+      "labels": ["renovate", "major-update", "review-needed"]
+    },
+
+    // --- INFRASTRUCTURE CRITIQUE (helmfile) - Jamais d automerge ---
+    {
+      "description": "Infrastructure critique (ArgoCD, cert-manager via helmfile) - review manuelle",
+      "matchManagers": ["helmfile"],
+      "automerge": false,
+      "labels": ["renovate", "infrastructure", "review-needed"]
+    },
+
+    // --- COMPOSANTS SENSIBLES - Jamais d automerge, delai supplementaire ---
+    {
+      "description": "Composants sensibles - jamais d automerge, delai 14 jours",
+      "matchFileNames": [
+        "helm/sealed-secrets/**",
+        "helm/metallb/**",
+        "helm/traefik-tls/**"
+      ],
+      "automerge": false,
+      "labels": ["renovate", "critical-infra", "review-needed"],
+      "minimumReleaseAge": "14 days"
+    },
+
+    // --- GROUPING - Stack monitoring ensemble ---
+    {
+      "description": "Groupe les updates monitoring ensemble",
+      "matchFileNames": [
+        "helm/prometheus-stack/**",
+        "helm/loki/**",
+        "helm/alloy/**",
+        "helm/blackbox-exporter/**",
+        "helm/postgres-exporter/**"
+      ],
+      "groupName": "monitoring-stack"
+    },
+
+    // --- GROUPING - ArgoCD apps monitoring charts ensemble ---
+    {
+      "description": "Groupe les charts monitoring upstream (ArgoCD apps)",
+      "matchFileNames": [
+        "argocd-apps/prometheus-stack-app.yml",
+        "argocd-apps/loki-app.yml",
+        "argocd-apps/alloy-app.yml",
+        "argocd-apps/blackbox-exporter-app.yml",
+        "argocd-apps/postgres-exporter-app.yml"
+      ],
+      "groupName": "monitoring-stack-charts"
+    },
+
+    // --- VALHAFIN - Pas d automerge (images privees, release couplee) ---
+    {
+      "description": "Valhafin images privees - pas d automerge",
+      "matchFileNames": ["helm/valhafin/**"],
+      "matchPackagePatterns": ["ghcr.io/thybaau/valhafin/.*"],
+      "automerge": false
+    },
+
+    // --- POSTGRES - Major version bloquee (migration de donnees requise) ---
+    {
+      "description": "PostgreSQL - bloquer les major updates (migration requise)",
+      "matchPackageNames": ["postgres"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    },
+
+    // --- PIP REQUIREMENTS - Pas d automerge sur major ---
+    {
+      "description": "Python dependencies (Ansible tooling) - pas d automerge sur major",
+      "matchManagers": ["pip_requirements"],
+      "matchUpdateTypes": ["major"],
+      "automerge": false,
+      "labels": ["renovate", "tooling", "review-needed"]
+    },
+    {
+      "description": "Python dependencies - automerge minor/patch",
+      "matchManagers": ["pip_requirements"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true,
+      "automergeType": "pr",
+      "minimumReleaseAge": "3 days"
+    }
+  ]
+}
