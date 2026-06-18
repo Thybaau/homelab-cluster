@@ -157,6 +157,16 @@ config:
               url: http://monitoring-stack-grafana.monitoring.svc.cluster.local
               username: admin
               password: "{{HOMEPAGE_VAR_GRAFANA_PASSWORD}}"
+    - Cloudflare:
+        - Cloudflare Tunnel:
+            icon: cloudflare.png
+            href: https://one.dash.cloudflare.com/6226b1ff3a046ada22261bc31625fb45/networks/tunnels
+            description: Tunnel Cloudflare Zero Trust
+            widget:
+              type: cloudflared
+              accountid: 6226b1ff3a046ada22261bc31625fb45
+              tunnelid: 7c0f893a-1d76-48dc-a3fb-b5cfe10b4fc8
+              key: "{{HOMEPAGE_VAR_CLOUDFLARE_TUNNEL_KEY}}"
     - Network:
         - AdGuard Home:
             icon: adguard-home.png

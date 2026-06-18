@@ -105,6 +105,11 @@ spec:
             secretKeyRef:
               name: homepage-homeassistant
               key: HOMEPAGE_VAR_HOMEASSISTANT_KEY
+        - name: HOMEPAGE_VAR_CLOUDFLARE_TUNNEL_KEY
+          valueFrom:
+            secretKeyRef:
+              name: homepage-cloudflare
+              key: HOMEPAGE_VAR_CLOUDFLARE_TUNNEL_KEY
         ports:
         - name: http
           containerPort: 3000
