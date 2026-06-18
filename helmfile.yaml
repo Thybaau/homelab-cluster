@@ -39,8 +39,8 @@ releases:
             policy.csv: |
               p, role:homepage-read-only, applications, get, */*, allow
               g, homepage, role:homepage-read-only
-      # Notifications — Discord webhook pour alertes sync
-      - notifications:
+        # Notifications — Discord webhook pour alertes sync
+        notifications:
           secret:
             # Le secret argocd-notifications-secret est géré par le chart argocd-config (SealedSecret)
             create: false
@@ -86,7 +86,7 @@ releases:
                       "embeds": [{
                         "title": "⚠️ {{ .app.metadata.name }}",
                         "description": "Santé dégradée ({{ .app.status.health.status }})",
-                        "color": 16776960,
+                        "color": 16753920,
                         "footer": {"text": "ArgoCD • {{ .app.spec.destination.namespace }}"}
                       }]
                     }
