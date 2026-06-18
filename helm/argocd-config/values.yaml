@@ -1,0 +1,12 @@
+---
+# ArgoCD Configuration Secrets
+# Ce chart contient les SealedSecrets pour le namespace argocd.
+# Le secret argocd-notifications-secret est géré ici (pas par le chart ArgoCD helmfile).
+#
+# Pour sceller un nouveau secret :
+#   echo -n "https://discord.com/api/webhooks/..." | \
+#     kubectl create secret generic argocd-notifications-secret \
+#       --namespace argocd \
+#       --from-file=discord-webhook-url=/dev/stdin \
+#       --dry-run=client -o yaml | \
+#     kubeseal --format yaml > helm/argocd-config/templates/notifications-secret-sealedsecret.yaml

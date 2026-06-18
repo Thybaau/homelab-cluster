@@ -39,6 +39,78 @@ releases:
             policy.csv: |
               p, role:homepage-read-only, applications, get, */*, allow
               g, homepage, role:homepage-read-only
+        # Notifications — Discord webhook pour alertes sync
+        notifications:
+          secret:
+            # Le secret argocd-notifications-secret est géré par le chart argocd-config (SealedSecret)
+            create: false
+          notifiers:
+            service.webhook.discord: |
+              url: $discord-webhook-url
+              headers:
+              - name: Content-Type
+                value: application/json
+          templates:
+            template.app-sync-succeeded: |
+              webhook:
+                discord:
+                  method: POST
+                  body: |
+                    {
+                      "embeds": [{
+                        "title": "✅ {{ .app.metadata.name }}",
+                        "description": "Sync réussi → `{{ .app.status.sync.revision | trunc 7 }}`",
+                        "color": 3066993,
+                        "footer": {"text": "ArgoCD • {{ .app.spec.destination.namespace }}"}
+                      }]
+                    }
+            template.app-sync-failed: |
+              webhook:
+                discord:
+                  method: POST
+                  body: |
+                    {
+                      "embeds": [{
+                        "title": "❌ {{ .app.metadata.name }}",
+                        "description": "Sync échoué: {{ .app.status.operationState.message | trunc 150 }}",
+                        "color": 15158332,
+                        "footer": {"text": "ArgoCD • {{ .app.spec.destination.namespace }}"}
+                      }]
+                    }
+            template.app-health-degraded: |
+              webhook:
+                discord:
+                  method: POST
+                  body: |
+                    {
+                      "embeds": [{
+                        "title": "⚠️ {{ .app.metadata.name }}",
+                        "description": "Santé dégradée ({{ .app.status.health.status }})",
+                        "color": 16753920,
+                        "footer": {"text": "ArgoCD • {{ .app.spec.destination.namespace }}"}
+                      }]
+                    }
+          triggers:
+            trigger.on-sync-succeeded: |
+              - description: Application syncing has succeeded
+                send: [app-sync-succeeded]
+                when: app.status.operationState.phase in ['Succeeded']
+            trigger.on-sync-failed: |
+              - description: Application syncing has failed
+                send: [app-sync-failed]
+                when: app.status.operationState.phase in ['Error', 'Failed']
+            trigger.on-health-degraded: |
+              - description: Application has degraded
+                send: [app-health-degraded]
+                when: app.status.health.status == 'Degraded'
+          # Subscriptions par défaut — toutes les apps reçoivent ces notifications
+          subscriptions:
+            - recipients:
+                - webhook:discord
+              triggers:
+                - on-sync-succeeded
+                - on-sync-failed
+                - on-health-degraded
 
   # Cert-Manager - Certificate management
   - name: cert-manager
