@@ -28,6 +28,9 @@ serviceMonitor:
     - name: adguard-home
       url: http://adguard-home.networking.svc:3000
       interval: 60s
+    - name: homepage
+      url: https://ha.caremelle.org
+      interval: 60s
 
 # Resources
 resources:

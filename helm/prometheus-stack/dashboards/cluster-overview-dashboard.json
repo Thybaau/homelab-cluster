@@ -434,7 +434,7 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 12,
+        "w": 24,
         "x": 0,
         "y": 50
       },
@@ -496,22 +496,7 @@
         "graphMode": "none"
       }
     },
-    {
-      "id": 14,
-      "type": "text",
-      "title": "Information probes",
-      "description": "Message informatif sur la disponibilité des probes HTTP",
-      "gridPos": {
-        "h": 4,
-        "w": 12,
-        "x": 12,
-        "y": 50
-      },
-      "options": {
-        "mode": "markdown",
-        "content": "## ℹ️ Probes HTTP\n\nLes probes HTTP seront disponibles après le déploiement du blackbox-exporter (Epic 4, Story 4.1).\n\nUne fois configurées, ce panel affichera le statut up/down de chaque service exposé."
-      }
-    },
+
     {
       "id": 15,
       "type": "row",
