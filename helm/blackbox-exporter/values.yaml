@@ -22,6 +22,9 @@ serviceMonitor:
     - name: valhafin-backend
       url: http://valhafin-backend.valhafin.svc:8080/health
       interval: 60s
+    - name: homepage-external
+      url: https://homepage.caremelle.org
+      interval: 60s
     - name: homepage
       url: http://homepage.homepage.svc:3000
       interval: 60s
@@ -31,8 +34,8 @@ serviceMonitor:
     - name: home-assistant
       url: https://ha.caremelle.org
       interval: 60s
-    - name: homepage-external
-      url: https://homepage.caremelle.org
+    - name: home-assistant-local
+      url: http://home-assistant.home-assistant.svc:8123
       interval: 60s
 
 # Resources
