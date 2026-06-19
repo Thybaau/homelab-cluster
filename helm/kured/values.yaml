@@ -3,6 +3,18 @@
 # Référencé via le pattern multi-source ArgoCD
 # Docs: https://github.com/kubereboot/charts/blob/main/charts/kured/values.yaml
 
+# Notification Discord via SealedSecret (ne pas mettre le webhook en clair)
+# Le pattern $(ENV_VAR) dans extraArgs est résolu par Kubernetes au runtime
+extraArgs:
+  notify-url: "$(KURED_NOTIFY_URL)"
+
+extraEnvVars:
+  - name: KURED_NOTIFY_URL
+    valueFrom:
+      secretKeyRef:
+        name: kured-discord-webhook
+        key: notify-url
+
 configuration:
   # Jours autorisés pour les reboots (dimanche uniquement)
   rebootDays: [su]
@@ -25,6 +37,10 @@ configuration:
   drainTimeout: "5m"
   # Grace period pour les pods pendant le drain (secondes)
   drainGracePeriod: "30"
+  # Templates de messages pour les notifications Discord
+  messageTemplateDrain: "⏳ Drain du nœud %s en cours (reboot imminent)"
+  messageTemplateReboot: "🔄 Reboot du nœud %s"
+  messageTemplateUncordon: "✅ Nœud %s rebooté et uncordoned avec succès"
 
 tolerations:
   - key: node-role.kubernetes.io/control-plane

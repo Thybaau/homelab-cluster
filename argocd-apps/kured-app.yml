@@ -23,6 +23,9 @@ spec:
     - repoURL: https://github.com/Thybaau/homelab-cluster.git
       targetRevision: HEAD
       ref: values
+    - repoURL: https://github.com/Thybaau/homelab-cluster.git
+      targetRevision: HEAD
+      path: helm/kured
   destination:
     server: https://kubernetes.default.svc
     namespace: kube-system

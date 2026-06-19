@@ -244,6 +244,26 @@ spec:
                       annotations:
                         summary: "Alertmanager n'a pas réussi à envoyer des notifications ({{ $value | humanize }} échecs en 15 min)"
                         dashboard_url: "https://grafana.caremelle.org/d/cluster-overview"
+            homelab-upgrades:
+              groups:
+                - name: homelab-upgrades.rules
+                  rules:
+                    - alert: K3sNodeUpgraded
+                      expr: changes(kube_node_info[15m]) > 0
+                      for: 0m
+                      labels:
+                        severity: warning
+                      annotations:
+                        summary: "🔄 Nœud {{ $labels.node }} upgradé vers K3s {{ $labels.kubelet_version }}"
+                        description: "Le nœud {{ $labels.node }} a changé de version K3s (nouvelle version : {{ $labels.kubelet_version }})"
+                    - alert: K3sUpgradeJobFailed
+                      expr: kube_job_status_failed{namespace="system-upgrade", job_name=~"apply-.*-plan.*"} > 0
+                      for: 1m
+                      labels:
+                        severity: critical
+                      annotations:
+                        summary: "❌ Upgrade K3s échoué — Job {{ $labels.job_name }}"
+                        description: "Le Job d'upgrade {{ $labels.job_name }} a échoué dans le namespace system-upgrade"
     - repoURL: https://github.com/Thybaau/homelab-cluster.git
       targetRevision: HEAD
       path: helm/prometheus-stack
