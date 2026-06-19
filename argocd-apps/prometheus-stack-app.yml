@@ -119,6 +119,11 @@ spec:
                     matchers:
                       - alertname = InfoInhibitor
                     continue: false
+                  - receiver: discord-watchdog
+                    matchers:
+                      - alertname = Watchdog
+                    repeat_interval: 4h
+                    continue: false
                   - receiver: discord-critical
                     matchers:
                       - severity = critical
@@ -131,6 +136,16 @@ spec:
                     continue: false
               receivers:
                 - name: 'null'
+                - name: discord-watchdog
+                  slack_configs:
+                    - api_url_file: /etc/alertmanager/secrets/discord-webhook-urls/discord-watchdog-webhook-url
+                      send_resolved: true
+                      color: '{{ if eq .Status "firing" }}good{{ else }}danger{{ end }}'
+                      title: '{{ if eq .Status "firing" }}🐕 Watchdog OK{{ else }}🚨 Watchdog STOPPED — alerting pipeline down{{ end }}'
+                      text: |-
+                        {{ range .Alerts }}
+                        {{ if .Annotations.description }}{{ .Annotations.description }}{{ else }}{{ .Annotations.summary }}{{ end }}
+                        {{ end }}
                 - name: discord-critical
                   slack_configs:
                     - api_url_file: /etc/alertmanager/secrets/discord-webhook-urls/discord-critical-webhook-url
