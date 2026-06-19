@@ -18,6 +18,17 @@
     mode: '0644'
   register: helmfile_copy
 
+- name: Copy helmfile values files to master node
+  copy:
+    src: "{{ item }}"
+    dest: "{{ helmfile_manifest_dir }}/{{ item | basename }}"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0644'
+  with_fileglob:
+    - "{{ playbook_dir }}/../*-values.yaml"
+  register: helmfile_values_copy
+
 - name: Validate helmfile manifest syntax
   command: "{{ helmfile_install_path }} lint"
   args:
@@ -37,12 +48,12 @@
   register: helmfile_diff
   changed_when: false
   failed_when: false
-  when: helmfile_copy is changed
+  when: helmfile_copy is changed or helmfile_values_copy is changed
 
 - name: Display helmfile diff output
   debug:
     var: helmfile_diff.stdout_lines
-  when: helmfile_copy is changed and helmfile_diff.rc == 0
+  when: (helmfile_copy is changed or helmfile_values_copy is changed) and helmfile_diff.rc == 0
 
 - name: Deploy infrastructure with helmfile sync
   command: "{{ helmfile_install_path }} sync"
