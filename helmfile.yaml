@@ -4,8 +4,6 @@
 repositories:
   - name: argo
     url: https://argoproj.github.io/argo-helm
-  - name: jetstack
-    url: https://charts.jetstack.io
 
 releases:
   # ArgoCD - GitOps continuous delivery tool
@@ -41,15 +39,3 @@ releases:
               g, homepage, role:homepage-read-only
       # Notifications — config dans un fichier séparé (évite conflit templating helmfile/Go)
       - argocd-notifications-values.yaml
-
-  # Cert-Manager - Certificate management
-  - name: cert-manager
-    namespace: cert-manager
-    chart: jetstack/cert-manager
-    version: v1.13.3
-    installed: false
-    createNamespace: true
-    wait: true
-    timeout: 300
-    values:
-      - installCRDs: true
