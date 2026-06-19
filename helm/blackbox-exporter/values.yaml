@@ -31,6 +31,9 @@ serviceMonitor:
     - name: home-assistant
       url: https://ha.caremelle.org
       interval: 60s
+    - name: homepage-external
+      url: https://homepage.caremelle.org
+      interval: 60s
 
 # Resources
 resources:
