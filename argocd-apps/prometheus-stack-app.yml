@@ -140,12 +140,8 @@ spec:
                   slack_configs:
                     - api_url_file: /etc/alertmanager/secrets/discord-webhook-urls/discord-watchdog-webhook-url
                       send_resolved: true
-                      color: '{{ if eq .Status "firing" }}good{{ else }}danger{{ end }}'
                       title: '{{ if eq .Status "firing" }}🐕 Watchdog OK{{ else }}🚨 Watchdog STOPPED — alerting pipeline down{{ end }}'
-                      text: |-
-                        {{ range .Alerts }}
-                        {{ if .Annotations.description }}{{ .Annotations.description }}{{ else }}{{ .Annotations.summary }}{{ end }}
-                        {{ end }}
+                      text: 'Alerting pipeline is {{ .Status }}. {{ len .Alerts }} alert(s) in group.'
                 - name: discord-critical
                   slack_configs:
                     - api_url_file: /etc/alertmanager/secrets/discord-webhook-urls/discord-critical-webhook-url
