@@ -1,6 +1,7 @@
 ---
 # ArgoCD Notifications configuration
-# Ce fichier est séparé de helmfile.yaml car les templates Go ArgoCD
+# Utilise le service webhook avec Discord.
+# Le fichier est séparé de helmfile.yaml car les templates Go ArgoCD
 # ({{ .app.metadata.name }}) entrent en conflit avec le templating helmfile.
 notifications:
   secret:
@@ -18,40 +19,19 @@ notifications:
         discord:
           method: POST
           body: |
-            {
-              "embeds": [{
-                "title": "✅ {{ .app.metadata.name }}",
-                "description": "Sync réussi → `{{ .app.status.sync.revision | trunc 7 }}`",
-                "color": 3066993,
-                "footer": {"text": "ArgoCD • {{ .app.spec.destination.namespace }}"}
-              }]
-            }
+            {"embeds": [{"title": "✅ {{.app.metadata.name}}", "description": "Sync réussi → {{.app.status.sync.revision}}", "color": 3066993}]}
     template.app-sync-failed: |
       webhook:
         discord:
           method: POST
           body: |
-            {
-              "embeds": [{
-                "title": "❌ {{ .app.metadata.name }}",
-                "description": "Sync échoué: {{ .app.status.operationState.message | trunc 150 }}",
-                "color": 15158332,
-                "footer": {"text": "ArgoCD • {{ .app.spec.destination.namespace }}"}
-              }]
-            }
+            {"embeds": [{"title": "❌ {{.app.metadata.name}}", "description": "Sync échoué: {{.app.status.operationState.message}}", "color": 15158332}]}
     template.app-health-degraded: |
       webhook:
         discord:
           method: POST
           body: |
-            {
-              "embeds": [{
-                "title": "⚠️ {{ .app.metadata.name }}",
-                "description": "Santé dégradée ({{ .app.status.health.status }})",
-                "color": 16776960,
-                "footer": {"text": "ArgoCD • {{ .app.spec.destination.namespace }}"}
-              }]
-            }
+            {"embeds": [{"title": "⚠️ {{.app.metadata.name}}", "description": "Santé dégradée ({{.app.status.health.status}})", "color": 16776960}]}
   triggers:
     trigger.on-sync-succeeded: |
       - description: Application syncing has succeeded
@@ -65,10 +45,10 @@ notifications:
       - description: Application has degraded
         send: [app-health-degraded]
         when: app.status.health.status == 'Degraded'
-  # Subscriptions par défaut — toutes les apps reçoivent ces notifications
+  # Le recipient pour un webhook est juste le nom (pas "webhook:discord")
   subscriptions:
     - recipients:
-        - webhook:discord
+        - discord
       triggers:
         - on-sync-succeeded
         - on-sync-failed
