@@ -1,0 +1,64 @@
+---
+# Configuration globale
+global:
+  namespace: monitoring
+
+# Configuration de l'application
+app:
+  image:
+    repository: deziss/du_exporter
+    tag: "latest"
+    pullPolicy: IfNotPresent
+
+  # Port d'écoute de l'exporter
+  port: 9995
+
+  # Chemins à analyser avec leur profondeur respective
+  # Format: path=level (relatif au hostPath monté sur /host)
+  multiPaths:
+    /host/var/lib/rancher/k3s/storage: 2
+    /host/var/lib/rancher/k3s/agent: 2
+    /host/var/lib/rancher/k3s/server: 1
+    /host/var/lib/containerd: 1
+    /host/var/log: 2
+    /host/var/cache: 1
+    /host/tmp: 1
+    /host/home: 1
+    /host/snap: 1
+
+  # Dossiers à ignorer lors de l'analyse
+  ignoreDirs:
+    - /proc
+    - /dev
+    - /sys
+    - /run
+
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+
+  # Security context au niveau du pod
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 65534
+    runAsGroup: 65534
+    fsGroup: 65534
+    seccompProfile:
+      type: RuntimeDefault
+
+  # Security context au niveau du conteneur
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop: ["ALL"]
+
+# Configuration du ServiceMonitor Prometheus
+serviceMonitor:
+  enabled: true
+  scrapeInterval: 5m
+  scrapeTimeout: 60s
