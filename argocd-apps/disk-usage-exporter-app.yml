@@ -1,0 +1,34 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: disk-usage-exporter
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: disk-usage-exporter
+    app.kubernetes.io/component: monitoring
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Thybaau/homelab-cluster.git
+    targetRevision: HEAD
+    path: helm/disk-usage-exporter
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

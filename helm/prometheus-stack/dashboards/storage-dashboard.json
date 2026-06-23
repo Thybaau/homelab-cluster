@@ -336,6 +336,115 @@
         "displayMode": "gradient",
         "showUnfilled": true
       }
+    },
+    {
+      "id": 9,
+      "type": "row",
+      "title": "Utilisation par dossier (disk_usage_exporter)",
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 28 },
+      "collapsed": false
+    },
+    {
+      "id": 10,
+      "type": "bargauge",
+      "title": "Top dossiers par taille (Go)",
+      "description": "Les 20 plus gros dossiers détectés par disk_usage_exporter sur tous les nœuds — permet d'identifier précisément ce qui consomme l'espace disque",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 29 },
+      "targets": [
+        {
+          "expr": "topk(20, node_disk_usage_bytes) / 1024 / 1024 / 1024",
+          "legendFormat": "{{instance}} — {{path}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decgbytes",
+          "noValue": "Aucune métrique disk_usage_exporter disponible — vérifier que l'exporter est déployé",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 5 },
+              { "color": "orange", "value": 10 },
+              { "color": "red", "value": 20 }
+            ]
+          },
+          "color": { "mode": "thresholds" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true,
+        "minVizWidth": 0,
+        "minVizHeight": 15
+      }
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "Évolution stockage par dossier",
+      "description": "Tendance de l'utilisation disque par dossier sur la période sélectionnée — utile pour détecter les dossiers qui grossissent rapidement",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 41 },
+      "targets": [
+        {
+          "expr": "topk(10, node_disk_usage_bytes) / 1024 / 1024 / 1024",
+          "legendFormat": "{{instance}} — {{path}}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decgbytes",
+          "noValue": "Aucune métrique disk_usage_exporter disponible",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "gradientMode": "scheme",
+            "showPoints": "never",
+            "stacking": { "mode": "none" },
+            "axisLabel": "Taille (Go)"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 10 },
+              { "color": "red", "value": 20 }
+            ]
+          },
+          "color": { "mode": "palette-classic" }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["lastNotNull", "max"]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
     }
   ]
 }

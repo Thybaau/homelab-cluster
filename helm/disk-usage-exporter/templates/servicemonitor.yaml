@@ -1,0 +1,22 @@
+{{- if .Values.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "disk-usage-exporter.fullname" . }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "disk-usage-exporter.labels" . | nindent 4 }}
+    release: monitoring-stack
+spec:
+  selector:
+    matchLabels:
+      {{- include "disk-usage-exporter.selectorLabels" . | nindent 6 }}
+  namespaceSelector:
+    matchNames:
+      - {{ .Values.global.namespace }}
+  endpoints:
+  - port: metrics
+    interval: {{ .Values.serviceMonitor.scrapeInterval }}
+    scrapeTimeout: {{ .Values.serviceMonitor.scrapeTimeout }}
+    path: /metrics
+{{- end }}

@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "disk-usage-exporter.fullname" . }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "disk-usage-exporter.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "disk-usage-exporter.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "disk-usage-exporter.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.app.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+      - name: disk-usage-exporter
+        {{- with .Values.app.securityContext }}
+        securityContext:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        image: "{{ .Values.app.image.repository }}:{{ .Values.app.image.tag }}"
+        imagePullPolicy: {{ .Values.app.image.pullPolicy }}
+        args:
+          - "--bind-address=0.0.0.0:{{ .Values.app.port }}"
+          {{- if .Values.app.multiPaths }}
+          - "--multi-paths={{- $paths := list -}}{{- range $path, $level := .Values.app.multiPaths -}}{{- $paths = append $paths (printf "%s=%d" $path (int $level)) -}}{{- end -}}{{ join "," $paths }}"
+          {{- end }}
+          {{- with .Values.app.ignoreDirs }}
+          - "--ignore-dirs={{ join "," . }}"
+          {{- end }}
+        ports:
+        - name: metrics
+          containerPort: {{ .Values.app.port }}
+          protocol: TCP
+        startupProbe:
+          httpGet:
+            path: /metrics
+            port: metrics
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 120
+          failureThreshold: 30
+        livenessProbe:
+          httpGet:
+            path: /metrics
+            port: metrics
+          periodSeconds: 60
+          timeoutSeconds: 30
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /metrics
+            port: metrics
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        resources:
+          requests:
+            cpu: {{ .Values.app.resources.requests.cpu }}
+            memory: {{ .Values.app.resources.requests.memory }}
+          limits:
+            cpu: {{ .Values.app.resources.limits.cpu }}
+            memory: {{ .Values.app.resources.limits.memory }}
+        volumeMounts:
+        - name: host-root
+          mountPath: /host
+          readOnly: true
+      volumes:
+      - name: host-root
+        hostPath:
+          path: /
+          type: Directory
+      tolerations:
+      - operator: Exists
