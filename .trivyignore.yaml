@@ -1,0 +1,69 @@
+---
+# Trivy ignore file for homelab-cluster (YAML format)
+# Allows scoped exceptions per path
+
+misconfigurations:
+  # --- Global exceptions (apply to all files) ---
+
+  # KSV-0125: "untrusted registry" — flags all non-docker.io/library images
+  # Our images from ghcr.io, cloudflare/, etc. are legitimate
+  - id: KSV-0125
+    statement: "Our images from ghcr.io, cloudflare/, deziss/ etc. are legitimate"
+
+  # KSV-0037: "should not be set with kube-system namespace"
+  # Traefik is installed by k3s in kube-system by default
+  - id: KSV-0037
+    statement: "Traefik is installed by k3s in kube-system by default, PodMonitor/SealedSecret must match"
+
+  # KSV-01010: "ConfigMap stores sensitive contents"
+  # Homepage dashboard widget config uses keys like "key", "username" as field names
+  - id: KSV-01010
+    statement: "Homepage widget config uses key/username as field names, not real secrets"
+
+  # KSV-0117: "port < 1024"
+  # Standard for nginx/frontend containers serving on port 80
+  - id: KSV-0117
+    statement: "Standard nginx/frontend containers serving on port 80 behind reverse proxy"
+
+  # KSV-0109: "ConfigMap stores secrets"
+  # Homepage config uses HOMEPAGE_VAR_* env variable references to SealedSecrets
+  - id: KSV-0109
+    statement: "Homepage config uses HOMEPAGE_VAR_* env refs to SealedSecrets, not actual passwords"
+
+  # KSV-0111: "User with admin access" (ClusterRoleBinding to cluster-admin)
+  # System Upgrade Controller requires cluster-admin — official Rancher design
+  - id: KSV-0111
+    statement: "System Upgrade Controller requires cluster-admin per official Rancher design"
+
+  # KSV-0023: "HostPath Volumes" forbidden by pod security standard
+  # System Upgrade Controller needs read-only access to host CA certificates
+  - id: KSV-0023
+    statement: "System Upgrade Controller needs host CA certs for TLS to update.k3s.io"
+
+  # --- Scoped exceptions (disk-usage-exporter only) ---
+
+  # KSV-0012: "runAsNonRoot should be true"
+  - id: KSV-0012
+    paths:
+      - "helm/disk-usage-exporter/**"
+      - "helm/valhafin-frontend/**"
+    statement: "disk-usage-exporter runs as root for DAC_READ_SEARCH; valhafin-frontend for nginx port 80"
+
+  # KSV-0022: "capabilities.add should not be set"
+  - id: KSV-0022
+    paths:
+      - "helm/disk-usage-exporter/**"
+      - "helm/valhafin-frontend/**"
+    statement: "disk-usage-exporter needs DAC_READ_SEARCH; valhafin-frontend needs NET_BIND_SERVICE"
+
+  # KSV-0121: "hostPath volume mounted at root"
+  - id: KSV-0121
+    paths:
+      - "helm/disk-usage-exporter/**"
+    statement: "DaemonSet needs full host filesystem read-only for per-directory disk usage calculation"
+
+  # KSV-0106: "container capabilities must only include NET_BIND_SERVICE"
+  - id: KSV-0106
+    paths:
+      - "helm/disk-usage-exporter/**"
+    statement: "DAC_READ_SEARCH is the minimal capability to read 0700 root-owned directories"
