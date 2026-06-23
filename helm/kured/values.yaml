@@ -28,10 +28,13 @@ configuration:
   period: "1h0m0s"
   # Nombre de nœuds rebootés simultanément
   concurrency: 1
-  # Intégration Prometheus — bloque les reboots si alertes critiques actives
+  # Intégration Prometheus — bloque les reboots UNIQUEMENT si alertes critiques actives
   prometheusUrl: "http://monitoring-stack-kube-prom-prometheus.monitoring.svc.cluster.local:9090"
-  # Exclure les alertes informatives qui sont toujours firing
-  alertFilterRegexp: "^(Watchdog|InfoInhibitor)$"
+  # Logique inversée avec alertFilterMatchOnly: seules les alertes matchant cette regexp bloquent le reboot
+  # Cela signifie : bloquer UNIQUEMENT si une alerte severity=critical fire (NodeNotReady, StorageCritical, etc.)
+  # Les alertes warning (StorageWarning, ServiceDown) ne bloquent plus
+  alertFilterRegexp: "^(StorageCritical|NodeNotReady|PodCrashLooping|K3sUpgradeJobFailed|AlertmanagerFailedNotifications)$"
+  alertFilterMatchOnly: true
   alertFiringOnly: true
   # Timeout pour le drain du nœud avant reboot
   drainTimeout: "5m"
