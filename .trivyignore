@@ -43,3 +43,9 @@ KSV-0111
 # to the K3s update channel (https://update.k3s.io). This is the official
 # deployment pattern from Rancher.
 KSV-0023
+
+# KSV-0121: "hostPath volume mounted at root" — sensitive host path
+# disk-usage-exporter DaemonSet needs read-only access to the full host filesystem
+# to calculate per-directory disk usage. The volume is mounted readOnly with
+# the container running as non-root (UID 65534) with only DAC_READ_SEARCH capability.
+KSV-0121
