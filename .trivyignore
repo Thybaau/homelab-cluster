@@ -49,3 +49,9 @@ KSV-0023
 # to calculate per-directory disk usage. The volume is mounted readOnly with
 # the container running as non-root (UID 65534) with only DAC_READ_SEARCH capability.
 KSV-0121
+
+# KSV-0106: "container capabilities must only include NET_BIND_SERVICE"
+# disk-usage-exporter needs DAC_READ_SEARCH to read host directories regardless
+# of file permissions (many k3s/containerd dirs are 0700 root-owned).
+# This is the minimal capability required — no privilege escalation, no full root.
+KSV-0106
