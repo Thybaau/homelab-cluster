@@ -46,14 +46,14 @@ misconfigurations:
   - id: KSV-0012
     paths:
       - "helm/disk-usage-exporter/**"
-      - "helm/valhafin-frontend/**"
+      - "helm/valhafin/**"
     statement: "disk-usage-exporter runs as root for DAC_READ_SEARCH; valhafin-frontend for nginx port 80"
 
   # KSV-0022: "capabilities.add should not be set"
   - id: KSV-0022
     paths:
       - "helm/disk-usage-exporter/**"
-      - "helm/valhafin-frontend/**"
+      - "helm/valhafin/**"
     statement: "disk-usage-exporter needs DAC_READ_SEARCH; valhafin-frontend needs NET_BIND_SERVICE"
 
   # KSV-0121: "hostPath volume mounted at root"
