@@ -7,7 +7,7 @@ global:
 app:
   image:
     repository: deziss/du_exporter
-    tag: "latest"
+    tag: "v0.6.0"
     pullPolicy: IfNotPresent
 
   # Port d'écoute de l'exporter
@@ -55,6 +55,7 @@ app:
     allowPrivilegeEscalation: false
     readOnlyRootFilesystem: true
     capabilities:
+      add: ["DAC_READ_SEARCH"]
       drop: ["ALL"]
 
 # Configuration du ServiceMonitor Prometheus
