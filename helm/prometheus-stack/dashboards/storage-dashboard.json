@@ -356,7 +356,7 @@
       "gridPos": { "h": 12, "w": 24, "x": 0, "y": 29 },
       "targets": [
         {
-          "expr": "topk(20, node_disk_usage_bytes * on(pod) group_left(node) kube_pod_info{namespace=\"monitoring\", created_by_kind=\"DaemonSet\"}) / 1024 / 1024 / 1024",
+          "expr": "topk(20, (node_disk_usage_bytes * on(pod) group_left(node) kube_pod_info{namespace=\"monitoring\", created_by_kind=\"DaemonSet\"}) > 419430400) / 1024 / 1024 / 1024",
           "legendFormat": "{{node}} — {{path}}",
           "refId": "A"
         }
