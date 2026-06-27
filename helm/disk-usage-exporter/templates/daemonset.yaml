@@ -50,16 +50,16 @@ spec:
           httpGet:
             path: /metrics
             port: metrics
-          periodSeconds: 60
-          timeoutSeconds: 30
+          periodSeconds: 120
+          timeoutSeconds: 90
           failureThreshold: 3
         readinessProbe:
           httpGet:
             path: /metrics
             port: metrics
-          initialDelaySeconds: 10
-          periodSeconds: 30
-          timeoutSeconds: 10
+          initialDelaySeconds: 30
+          periodSeconds: 60
+          timeoutSeconds: 60
           failureThreshold: 3
         resources:
           requests:
