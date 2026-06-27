@@ -66,7 +66,6 @@ spec:
             cpu: {{ .Values.app.resources.requests.cpu }}
             memory: {{ .Values.app.resources.requests.memory }}
           limits:
-            cpu: {{ .Values.app.resources.limits.cpu }}
             memory: {{ .Values.app.resources.limits.memory }}
         volumeMounts:
         - name: host-root
