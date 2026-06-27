@@ -186,7 +186,7 @@
       "id": 6,
       "type": "table",
       "title": "Inventaire des PVCs",
-      "description": "Liste des Persistent Volume Claims avec leur capacité demandée et le nœud hébergeant le volume. Note : le local-path provisioner ne permet pas de mesurer l'utilisation réelle par PVC.",
+      "description": "Liste des Persistent Volume Claims avec leur capacité demandée et l'utilisation réelle mesurée par disk_usage_exporter",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -201,9 +201,9 @@
           "instant": true
         },
         {
-          "expr": "kubelet_volume_stats_used_bytes{job=\"kubelet\"} * 0 + 1",
+          "expr": "label_replace(label_replace(node_disk_usage_bytes{path=~\"/host/var/lib/rancher/k3s/storage/pvc-.*\"} * on(pod) group_left(node) kube_pod_info{namespace=\"monitoring\", created_by_kind=\"DaemonSet\"}, \"persistentvolumeclaim\", \"$1\", \"path\", \"/host/var/lib/rancher/k3s/storage/pvc-[^_]+_[^_]+_(.*)\"), \"namespace\", \"$1\", \"path\", \"/host/var/lib/rancher/k3s/storage/pvc-[^_]+_([^_]+)_.*\")",
           "legendFormat": "",
-          "refId": "B",
+          "refId": "C",
           "format": "table",
           "instant": true
         }
@@ -222,13 +222,20 @@
               { "id": "unit", "value": "decbytes" },
               { "id": "displayName", "value": "Capacité demandée" }
             ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Value #C" },
+            "properties": [
+              { "id": "unit", "value": "decbytes" },
+              { "id": "displayName", "value": "Utilisation réelle" }
+            ]
           }
         ]
       },
       "options": {
         "showHeader": true,
         "sortBy": [
-          { "displayName": "Capacité demandée", "desc": true }
+          { "displayName": "Utilisation réelle", "desc": true }
         ]
       },
       "transformations": [
@@ -263,24 +270,30 @@
               "metrics_path 1": true,
               "metrics_path 2": true,
               "pod": true,
+              "pod 1": true,
               "service": true,
               "service 1": true,
               "service 2": true,
               "exported_namespace": true,
+              "namespace 1": true,
               "namespace 2": true,
-              "Value #B": true
+              "path": true,
+              "node 1": true,
+              "uid": true
             },
             "indexByName": {
               "persistentvolumeclaim": 0,
               "namespace": 1,
               "node": 2,
-              "Value #A": 3
+              "Value #A": 3,
+              "Value #C": 4
             },
             "renameByName": {
               "namespace": "Namespace",
               "persistentvolumeclaim": "PVC",
               "node": "Nœud",
-              "Value #A": "Capacité demandée"
+              "Value #A": "Capacité demandée",
+              "Value #C": "Utilisation réelle"
             }
           }
         }
