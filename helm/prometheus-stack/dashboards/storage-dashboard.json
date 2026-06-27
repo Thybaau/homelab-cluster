@@ -284,9 +284,9 @@
             "indexByName": {
               "persistentvolumeclaim": 0,
               "namespace": 1,
-              "node": 2,
-              "Value #A": 3,
-              "Value #C": 4
+              "Value #A": 2,
+              "Value #C": 3,
+              "node": 4
             },
             "renameByName": {
               "namespace": "Namespace",
