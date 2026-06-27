@@ -390,61 +390,6 @@
         "minVizWidth": 0,
         "minVizHeight": 15
       }
-    },
-    {
-      "id": 11,
-      "type": "timeseries",
-      "title": "Évolution stockage par dossier",
-      "description": "Tendance de l'utilisation disque par dossier sur la période sélectionnée — utile pour détecter les dossiers qui grossissent rapidement",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 41 },
-      "targets": [
-        {
-          "expr": "topk(10, node_disk_usage_bytes * on(pod) group_left(node) kube_pod_info{namespace=\"monitoring\", created_by_kind=\"DaemonSet\"}) / 1024 / 1024 / 1024",
-          "legendFormat": "{{node}} — {{path}}",
-          "refId": "A"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "decgbytes",
-          "noValue": "Aucune métrique disk_usage_exporter disponible",
-          "custom": {
-            "drawStyle": "line",
-            "lineInterpolation": "smooth",
-            "lineWidth": 2,
-            "fillOpacity": 10,
-            "gradientMode": "scheme",
-            "showPoints": "never",
-            "stacking": { "mode": "none" },
-            "axisLabel": "Taille (Go)"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "orange", "value": 10 },
-              { "color": "red", "value": 20 }
-            ]
-          },
-          "color": { "mode": "palette-classic" }
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "table",
-          "placement": "bottom",
-          "calcs": ["lastNotNull", "max"]
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      }
     }
   ]
 }
