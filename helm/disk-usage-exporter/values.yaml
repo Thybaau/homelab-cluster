@@ -15,16 +15,12 @@ app:
 
   # Chemins à analyser avec leur profondeur respective
   # Format: path=level (relatif au hostPath monté sur /host)
+  # Seuls les chemins réellement volumineux et actionnables sont surveillés
   multiPaths:
-    /host/var/lib/rancher/k3s/storage: 2
-    /host/var/lib/rancher/k3s/agent: 2
-    /host/var/lib/rancher/k3s/server: 1
-    /host/var/lib/containerd: 1
-    /host/var/log: 2
-    /host/var/cache: 1
-    /host/tmp: 1
-    /host/home: 1
-    /host/snap: 1
+    /host/var/lib/rancher/k3s/agent/containerd: 1  # ~14 GB — images/layers
+    /host/var/lib/rancher/k3s/storage: 1            # ~4 GB — PVCs
+    /host/var/log: 1                                # ~800 MB — journal/pods
+    /host/var/lib/rancher/k3s/data: 1               # ~700 MB — binaires K3s
 
   # Dossiers à ignorer lors de l'analyse
   ignoreDirs:
@@ -36,10 +32,10 @@ app:
   resources:
     requests:
       cpu: 25m
-      memory: 64Mi
+      memory: 128Mi
     limits:
       cpu: 200m
-      memory: 128Mi
+      memory: 256Mi
 
   # Security context au niveau du pod
   podSecurityContext:
