@@ -34,6 +34,7 @@ app:
       cpu: 25m
       memory: 128Mi
     limits:
+      cpu: 500m
       memory: 512Mi
 
   # Security context au niveau du pod
