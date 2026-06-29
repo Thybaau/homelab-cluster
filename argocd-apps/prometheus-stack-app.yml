@@ -20,8 +20,9 @@ spec:
       helm:
         values: |
           crds:
+            enabled: true
             upgradeJob:
-              enabled: true
+              enabled: false
           prometheus:
             prometheusSpec:
               retention: 7d
