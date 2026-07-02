@@ -1,0 +1,155 @@
+---
+name: Discord PR Notifications
+
+on:
+  pull_request_target:
+    types: [opened, closed, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  notify-renovate:
+    name: notify-renovate
+    if: github.event.pull_request.user.login == 'renovate[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        with:
+          egress-policy: audit
+
+      - name: Extract version info from PR title
+        id: version
+        run: |
+          set -euo pipefail
+          TITLE="${{ github.event.pull_request.title }}"
+
+          # Pattern: "Update <package> to <version>" or "Update <package> to v<version>"
+          # Also handles: "Update <package> digest to <sha>"
+          # Group patterns: "Update monitoring-stack" etc.
+          PACKAGE=""
+          VERSION_NEW=""
+          VERSION_OLD=""
+          UPDATE_TYPE=""
+
+          # Try to extract package and new version
+          # Handles: "Update dependency X to vY.Z.W"
+          #          "Update X to vY.Z.W"
+          #          "Update X digest to sha256:abc"
+          if echo "$TITLE" | grep -qiE "update .+ to "; then
+            # Extract package name (between "Update" and "to")
+            PACKAGE=$(echo "$TITLE" | sed -nE 's/^[Uu]pdate (dependency )?(.+) to .+$/\2/p')
+            # Extract new version (after last "to ")
+            VERSION_NEW=$(echo "$TITLE" | sed -nE 's/^.+ to (v?[^ ]+)$/\1/p')
+          fi
+
+          # Try to detect update type from labels
+          LABELS='${{ toJSON(github.event.pull_request.labels.*.name) }}'
+          if echo "$LABELS" | grep -q "major-update"; then
+            UPDATE_TYPE="⚠️ major"
+          elif echo "$TITLE" | grep -qiE "digest"; then
+            UPDATE_TYPE="digest"
+          else
+            UPDATE_TYPE="minor/patch"
+          fi
+
+          # Build description
+          if [ -n "$PACKAGE" ] && [ -n "$VERSION_NEW" ]; then
+            DESCRIPTION="📦 **${PACKAGE}** → \`${VERSION_NEW}\`"
+          elif [ -n "$PACKAGE" ]; then
+            DESCRIPTION="📦 **${PACKAGE}**"
+          else
+            DESCRIPTION="$TITLE"
+          fi
+
+          echo "description=${DESCRIPTION}" >> "$GITHUB_OUTPUT"
+          echo "update_type=${UPDATE_TYPE}" >> "$GITHUB_OUTPUT"
+          echo "package=${PACKAGE}" >> "$GITHUB_OUTPUT"
+          echo "version_new=${VERSION_NEW}" >> "$GITHUB_OUTPUT"
+
+      - name: Determine embed color and emoji
+        id: style
+        run: |
+          set -euo pipefail
+          ACTION="${{ github.event.action }}"
+          MERGED="${{ github.event.pull_request.merged }}"
+
+          if [ "$ACTION" = "closed" ] && [ "$MERGED" = "true" ]; then
+            echo "color=5763719" >> "$GITHUB_OUTPUT"
+            echo "emoji=✅" >> "$GITHUB_OUTPUT"
+            echo "status=Mergée" >> "$GITHUB_OUTPUT"
+          elif [ "$ACTION" = "closed" ]; then
+            echo "color=15548997" >> "$GITHUB_OUTPUT"
+            echo "emoji=❌" >> "$GITHUB_OUTPUT"
+            echo "status=Fermée" >> "$GITHUB_OUTPUT"
+          elif [ "$ACTION" = "reopened" ]; then
+            echo "color=16776960" >> "$GITHUB_OUTPUT"
+            echo "emoji=🔄" >> "$GITHUB_OUTPUT"
+            echo "status=Réouverte" >> "$GITHUB_OUTPUT"
+          else
+            echo "color=3447003" >> "$GITHUB_OUTPUT"
+            echo "emoji=🔄" >> "$GITHUB_OUTPUT"
+            echo "status=Nouvelle" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Send to Renovate channel
+        uses: tsickert/discord-webhook@b217a69502f52803de774ded2b1ab7c282e99645 # v7.0.0
+        with:
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK_RENOVATE }}
+          embed-title: "${{ steps.style.outputs.emoji }} ${{ github.event.pull_request.title }}"
+          embed-description: |
+            ${{ steps.version.outputs.description }}
+
+            **Repo:** `${{ github.event.repository.name }}`
+            **Type:** ${{ steps.version.outputs.update_type }}
+            **Statut:** ${{ steps.style.outputs.status }}
+            **PR:** [#${{ github.event.pull_request.number }}](${{ github.event.pull_request.html_url }})
+          embed-color: "${{ steps.style.outputs.color }}"
+
+  notify-dev:
+    name: notify-dev
+    if: github.event.pull_request.user.login != 'renovate[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        with:
+          egress-policy: audit
+
+      - name: Determine embed color and emoji
+        id: style
+        run: |
+          set -euo pipefail
+          ACTION="${{ github.event.action }}"
+          MERGED="${{ github.event.pull_request.merged }}"
+
+          if [ "$ACTION" = "closed" ] && [ "$MERGED" = "true" ]; then
+            echo "color=5763719" >> "$GITHUB_OUTPUT"
+            echo "emoji=🎉" >> "$GITHUB_OUTPUT"
+            echo "status=Mergée" >> "$GITHUB_OUTPUT"
+          elif [ "$ACTION" = "closed" ]; then
+            echo "color=15548997" >> "$GITHUB_OUTPUT"
+            echo "emoji=❌" >> "$GITHUB_OUTPUT"
+            echo "status=Fermée" >> "$GITHUB_OUTPUT"
+          elif [ "$ACTION" = "reopened" ]; then
+            echo "color=16776960" >> "$GITHUB_OUTPUT"
+            echo "emoji=🔄" >> "$GITHUB_OUTPUT"
+            echo "status=Réouverte" >> "$GITHUB_OUTPUT"
+          else
+            echo "color=5763719" >> "$GITHUB_OUTPUT"
+            echo "emoji=🚀" >> "$GITHUB_OUTPUT"
+            echo "status=Nouvelle" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Send to Dev channel
+        uses: tsickert/discord-webhook@b217a69502f52803de774ded2b1ab7c282e99645 # v7.0.0
+        with:
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK_DEV }}
+          embed-title: "${{ steps.style.outputs.emoji }} ${{ github.event.pull_request.title }}"
+          embed-description: |
+            **Auteur:** ${{ github.event.pull_request.user.login }}
+            **Repo:** `${{ github.event.repository.name }}`
+            **Statut:** ${{ steps.style.outputs.status }}
+            **PR:** [#${{ github.event.pull_request.number }}](${{ github.event.pull_request.html_url }})
+          embed-color: "${{ steps.style.outputs.color }}"
