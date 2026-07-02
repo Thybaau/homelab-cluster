@@ -6,7 +6,9 @@
   customManagers: [
     {
       customType: 'regex',
-      fileMatch: ['ansible/group_vars/all\\.yml$'],
+      managerFilePatterns: [
+        '/ansible/group_vars/all\\.yml$/',
+      ],
       matchStrings: [
         '#\\s*renovate:\\s*datasource=(?<datasource>[^\\s]+)\\s+depName=(?<depName>[^\\s]+)\\n[\\w_]+:\\s*(?<currentValue>v[^\\s]+)',
       ],
@@ -171,9 +173,15 @@
     },
     {
       description: 'CLI tools (kubectl, helm, helmfile) - automerge patch',
-      matchFileNames: ['ansible/group_vars/all.yml'],
-      matchManagers: ['custom.regex'],
-      matchUpdateTypes: ['patch'],
+      matchFileNames: [
+        'ansible/group_vars/all.yml',
+      ],
+      matchManagers: [
+        'custom.regex',
+      ],
+      matchUpdateTypes: [
+        'patch',
+      ],
       automerge: true,
       automergeType: 'pr',
       minimumReleaseAge: '3 days',
@@ -181,12 +189,20 @@
     },
     {
       description: 'CLI tools - automerge minor le week-end',
-      matchFileNames: ['ansible/group_vars/all.yml'],
-      matchManagers: ['custom.regex'],
-      matchUpdateTypes: ['minor'],
+      matchFileNames: [
+        'ansible/group_vars/all.yml',
+      ],
+      matchManagers: [
+        'custom.regex',
+      ],
+      matchUpdateTypes: [
+        'minor',
+      ],
       automerge: true,
       automergeType: 'pr',
-      schedule: ['every weekend'],
+      schedule: [
+        'every weekend',
+      ],
       minimumReleaseAge: '7 days',
       groupName: 'cli-tools',
     },
