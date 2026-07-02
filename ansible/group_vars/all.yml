@@ -5,9 +5,12 @@
 # K3s utilise le channel "stable" (même source que le System Upgrade Controller)
 # Cela garantit que Ansible et SUC installent/ciblent toujours la même version.
 k3s_channel: stable
-kubectl_version: stable
-helm_version: v3
-helmfile_version: v0.163.1
+# renovate: datasource=github-releases depName=kubernetes/kubernetes
+kubectl_version: v1.36.2
+# renovate: datasource=github-releases depName=helm/helm
+helm_version: v3.21.2
+# renovate: datasource=github-releases depName=helmfile/helmfile
+helmfile_version: v1.6.0
 
 # Network Configuration
 k3s_master_ip: 192.168.1.102
@@ -75,8 +78,6 @@ firewall_ports_udp:
 
 # Helmfile Configuration
 helmfile_download_url: "https://github.com/helmfile/helmfile/releases/download/{{ helmfile_version }}/helmfile_{{ helmfile_version | regex_replace('^v', '') }}_linux_amd64.tar.gz"
-# SHA256 checksum from official release (without 'sha256:' prefix for Ansible)
-helmfile_checksum: "a8f9351cbca8f1181e8787350160d4a87c362274ed26286579031815408bb5cb"
 helmfile_install_path: /usr/local/bin/helmfile
 
 # Reports

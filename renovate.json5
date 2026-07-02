@@ -3,6 +3,16 @@
   extends: [
     'config:recommended',
   ],
+  customManagers: [
+    {
+      customType: 'regex',
+      fileMatch: ['ansible/group_vars/all\\.yml$'],
+      matchStrings: [
+        '#\\s*renovate:\\s*datasource=(?<datasource>[^\\s]+)\\s+depName=(?<depName>[^\\s]+)\\n[\\w_]+:\\s*(?<currentValue>v[^\\s]+)',
+      ],
+      versioningOverride: 'semver',
+    },
+  ],
   argocd: {
     managerFilePatterns: [
       '/argocd-apps/.+\\.ya?ml$/',
@@ -158,6 +168,27 @@
       matchPackageNames: [
         '/ghcr.io/thybaau/valhafin/.*/',
       ],
+    },
+    {
+      description: 'CLI tools (kubectl, helm, helmfile) - automerge patch',
+      matchFileNames: ['ansible/group_vars/all.yml'],
+      matchManagers: ['custom.regex'],
+      matchUpdateTypes: ['patch'],
+      automerge: true,
+      automergeType: 'pr',
+      minimumReleaseAge: '3 days',
+      groupName: 'cli-tools',
+    },
+    {
+      description: 'CLI tools - automerge minor le week-end',
+      matchFileNames: ['ansible/group_vars/all.yml'],
+      matchManagers: ['custom.regex'],
+      matchUpdateTypes: ['minor'],
+      automerge: true,
+      automergeType: 'pr',
+      schedule: ['every weekend'],
+      minimumReleaseAge: '7 days',
+      groupName: 'cli-tools',
     },
     {
       description: 'PostgreSQL - bloquer les major updates (migration requise)',

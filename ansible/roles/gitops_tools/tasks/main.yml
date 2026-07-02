@@ -3,23 +3,25 @@
 
 # ===== kubectl Installation =====
 
-- name: Check if kubectl is already installed
-  stat:
-    path: "{{ kubectl_install_path }}"
-  register: kubectl_exists
-
-- name: Get latest kubectl version
-  shell: curl -L -s {{ kubectl_download_url }}/stable.txt
-  register: kubectl_version_output
-  when: not kubectl_exists.stat.exists
+- name: Get installed kubectl version
+  command: "{{ kubectl_install_path }} version --client --output=json"
+  register: kubectl_current
   changed_when: false
+  failed_when: false
+
+- name: Determine if kubectl needs update
+  set_fact:
+    kubectl_needs_update: >-
+      {{ kubectl_current.rc != 0 or
+         kubectl_version != ((kubectl_current.stdout | from_json).clientVersion.gitVersion | default('')) }}
 
 - name: Download kubectl binary
   get_url:
-    url: "{{ kubectl_download_url }}/{{ kubectl_version_output.stdout }}/bin/linux/amd64/kubectl"
+    url: "{{ kubectl_download_url }}/{{ kubectl_version }}/bin/linux/amd64/kubectl"
     dest: "{{ kubectl_install_path }}"
     mode: '0755'
-  when: not kubectl_exists.stat.exists
+    force: true
+  when: kubectl_needs_update
 
 - name: Verify kubectl installation
   command: "{{ kubectl_install_path }} version --client"
@@ -71,30 +73,25 @@
 
 # ===== Helm Installation =====
 
-- name: Check if helm is already installed
-  stat:
-    path: "{{ helm_install_path }}"
-  register: helm_exists
+- name: Get installed helm version
+  command: "{{ helm_install_path }} version --template '{{ '{{' }}.Version{{ '}}' }}'"
+  register: helm_current
+  changed_when: false
+  failed_when: false
 
-- name: Download helm installation script
-  get_url:
-    url: "{{ helm_install_script_url }}"
-    dest: /tmp/get-helm-3.sh
-    mode: '0755'
-  when: not helm_exists.stat.exists
+- name: Determine if helm needs update
+  set_fact:
+    helm_needs_update: >-
+      {{ helm_current.rc != 0 or
+         helm_version != helm_current.stdout | default('') }}
 
-- name: Install helm
-  shell: /tmp/get-helm-3.sh
+- name: Download and install helm
+  shell: |
+    curl -fsSL {{ helm_install_script_url }} | bash -s -- --version {{ helm_version }}
   environment:
     HELM_INSTALL_DIR: /usr/local/bin
-  when: not helm_exists.stat.exists
+  when: helm_needs_update
   changed_when: true
-
-- name: Remove helm installation script
-  file:
-    path: /tmp/get-helm-3.sh
-    state: absent
-  when: not helm_exists.stat.exists
 
 - name: Verify helm installation
   command: "{{ helm_install_path }} version"

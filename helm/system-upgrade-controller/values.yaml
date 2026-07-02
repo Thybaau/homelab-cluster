@@ -6,6 +6,10 @@ controller:
     tag: "v0.19.2"
     pullPolicy: IfNotPresent
 
+  kubectlImage:
+    repository: rancher/kubectl
+    tag: "v1.31.0"
+
   resources:
     requests:
       cpu: 50m
