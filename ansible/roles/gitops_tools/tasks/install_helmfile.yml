@@ -21,7 +21,6 @@
   get_url:
     url: "{{ helmfile_download_url }}"
     dest: "/tmp/helmfile_{{ helmfile_version }}.tar.gz"
-    checksum: "sha256:{{ helmfile_checksum }}"
     mode: '0644'
   when: helmfile_needs_install
   register: helmfile_download
