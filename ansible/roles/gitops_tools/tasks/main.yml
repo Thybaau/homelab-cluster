@@ -13,7 +13,7 @@
   set_fact:
     kubectl_needs_update: >-
       {{ kubectl_current.rc != 0 or
-         kubectl_version not in (kubectl_current.stdout | from_json).clientVersion.gitVersion | default('') }}
+         kubectl_version != ((kubectl_current.stdout | from_json).clientVersion.gitVersion | default('')) }}
 
 - name: Download kubectl binary
   get_url:
