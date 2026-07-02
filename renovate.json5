@@ -10,7 +10,7 @@
       matchStrings: [
         '#\\s*renovate:\\s*datasource=(?<datasource>[^\\s]+)\\s+depName=(?<depName>[^\\s]+)\\n[\\w_]+:\\s*(?<currentValue>v[^\\s]+)',
       ],
-      versioning: 'semver',
+      versioningTemplate: 'semver',
     },
   ],
   argocd: {
