@@ -96,13 +96,13 @@ jobs:
           echo "📊 Vérification des nœuds..."
           ansible k3s_master -i ansible/inventory.ini \
             -m shell \
-            -a "kubectl get nodes -o wide" \
+            -a "KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl get nodes -o wide" \
             -b
           echo ""
           echo "🔧 Vérification des pods système..."
           ansible k3s_master -i ansible/inventory.ini \
             -m shell \
-            -a "kubectl get pods -A" \
+            -a "KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl get pods -A" \
             -b
           echo ""
           echo "✓ Vérification terminée"
