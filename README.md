@@ -264,6 +264,7 @@ Runner : **ubuntu-latest**. Le rapport d'audit est uploadé en artifact (rétent
 Voir le dossier [`docs/`](docs/) pour la documentation détaillée :
 
 - [Architecture](docs/architecture.md) — Vue d'ensemble de l'architecture du cluster
+- [Mises à jour automatiques](docs/automatic-updates.md) — Renovate, System Upgrade Controller, Kured, CI/CD Ansible
 - [Guide Helmfile](docs/helmfile-upgrade.md) — Mise à jour de Helmfile
 - [Sealed Secrets Valhafin](docs/valhafin-sealed-secrets.md) — Gestion des secrets Valhafin
 - Documentation par application dans `docs/<app>/`
