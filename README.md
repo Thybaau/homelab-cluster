@@ -3,18 +3,18 @@
 [![Deploy k3s Cluster](https://github.com/Thybaau/homelab-cluster/actions/workflows/deploy.yml/badge.svg)](https://github.com/Thybaau/homelab-cluster/actions/workflows/deploy.yml)
 [![Security Audit](https://github.com/Thybaau/homelab-cluster/actions/workflows/security-audit.yml/badge.svg)](https://github.com/Thybaau/homelab-cluster/actions/workflows/security-audit.yml)
 
-![k3s](https://img.shields.io/badge/k3s-v1.35.5-blue?logo=k3s&logoColor=white)
+![k3s](https://img.shields.io/badge/k3s-v1.36.2-blue?logo=k3s&logoColor=white)
 ![Ubuntu](https://img.shields.io/badge/Ubuntu-24.04-E95420?logo=ubuntu&logoColor=white)
 ![Ansible](https://img.shields.io/badge/Ansible-8.x-EE0000?logo=ansible&logoColor=white)
-![Helm](https://img.shields.io/badge/Helm-v3-0F1689?logo=helm&logoColor=white)
-![Helmfile](https://img.shields.io/badge/Helmfile-v0.163.1-0F1689?logo=helm&logoColor=white)
-![ArgoCD](https://img.shields.io/badge/ArgoCD-v3.4.3-EF7B4D?logo=argo&logoColor=white)
-![Prometheus](https://img.shields.io/badge/Prometheus-v3.2-E6522C?logo=prometheus&logoColor=white)
-![Grafana](https://img.shields.io/badge/Grafana-12.0-F46800?logo=grafana&logoColor=white)
-![Loki](https://img.shields.io/badge/Loki-3.7-F46800?logo=grafana&logoColor=white)
+![Helm](https://img.shields.io/badge/Helm-v4.2.2-0F1689?logo=helm&logoColor=white)
+![Helmfile](https://img.shields.io/badge/Helmfile-v1.6.0-0F1689?logo=helm&logoColor=white)
+![ArgoCD](https://img.shields.io/badge/ArgoCD-v3.4.4-EF7B4D?logo=argo&logoColor=white)
+![Prometheus](https://img.shields.io/badge/Prometheus-v3.12.0-E6522C?logo=prometheus&logoColor=white)
+![Grafana](https://img.shields.io/badge/Grafana-13.1.0-F46800?logo=grafana&logoColor=white)
+![Loki](https://img.shields.io/badge/Loki-3.7.3-F46800?logo=grafana&logoColor=white)
 ![MetalLB](https://img.shields.io/badge/MetalLB-0.16.1-blue)
-![Sealed Secrets](https://img.shields.io/badge/Sealed_Secrets-2.13.2-326CE5?logo=kubernetes&logoColor=white)
-![Kured](https://img.shields.io/badge/Kured-5.6.0-blue)
+![Sealed Secrets](https://img.shields.io/badge/Sealed_Secrets-2.19.0-326CE5?logo=kubernetes&logoColor=white)
+![Kured](https://img.shields.io/badge/Kured-6.0.0-blue)
 
 Déploiement automatisé d'un cluster k3s sur des VMs Ubuntu 24.04 hébergées sur Proxmox, avec orchestration Ansible, gestion GitOps via ArgoCD, et services d'infrastructure déployés par Helm.
 
