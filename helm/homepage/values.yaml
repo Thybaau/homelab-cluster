@@ -214,6 +214,19 @@ config:
             icon: mdi-cake
             href: https://patisseries.caremelle.org
             description: Site de pâtisseries
+    - GitHub:
+        - homelab-cluster:
+            icon: github.png
+            href: https://github.com/Thybaau/homelab-cluster
+            description: Configuration Kubernetes du homelab
+        - homelab-infra-iac:
+            icon: github.png
+            href: https://github.com/Thybaau/homelab-infra-iac
+            description: Infrastructure des VM du homelab
+        - valhafin:
+            icon: github.png
+            href: https://github.com/Thybaau/valhafin
+            description: App gestion de comptes de finance
 
   # Widgets personnalisés (ajoutés à widgets.yaml)
   customWidgets: []
