@@ -227,6 +227,11 @@ config:
             icon: github.png
             href: https://github.com/Thybaau/valhafin
             description: App gestion de comptes de finance
+    - AWS:
+        - AWS:
+            icon: aws
+            href: https://810585352236-l6vlemfz.eu-west-3.console.aws.amazon.com/console/home?region=eu-west-3
+            description: Compte AWS Perso
 
   # Widgets personnalisés (ajoutés à widgets.yaml)
   customWidgets: []
