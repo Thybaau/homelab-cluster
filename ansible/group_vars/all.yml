@@ -10,7 +10,7 @@ kubectl_version: v1.36.2
 # renovate: datasource=github-releases depName=helm/helm
 helm_version: v4.2.2
 # renovate: datasource=github-releases depName=helmfile/helmfile
-helmfile_version: v1.6.0
+helmfile_version: v1.7.0
 
 # Network Configuration
 k3s_master_ip: 192.168.1.102
