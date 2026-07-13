@@ -65,6 +65,7 @@ firewall_ports_tcp:
   - 3000   # AdGuard Home Web UI
   - 9100   # Node Exporter (Prometheus metrics)
   - 7946   # MetalLB
+  - 8123   # Home-Assistant (hostNetwork)
 
 firewall_ports_udp:
   - 8472   # Flannel VXLAN
