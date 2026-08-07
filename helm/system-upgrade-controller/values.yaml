@@ -36,3 +36,15 @@ plans:
   agent:
     # Nombre d'agent nodes upgradés simultanément
     concurrency: 1
+
+# Nettoyage périodique des anciens répertoires K3s data (~230 Mo chacun)
+# Tourne via nsenter sur le host, pas de problème de chroot
+cleanup:
+  # Cron schedule: une fois par semaine le dimanche à 4h
+  schedule: "0 4 * * 0"
+  # Image légère avec nsenter disponible
+  image: busybox:1.37
+  # Liste des nœuds à nettoyer
+  nodes:
+    - k3s-master
+    - k3s-worker-01
