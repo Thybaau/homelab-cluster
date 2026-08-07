@@ -21,25 +21,3 @@ spec:
   channel: {{ .Values.plans.channel }}
   upgrade:
     image: {{ .Values.plans.upgradeImage }}
-    command: ["sh", "-c"]
-    args:
-      - |
-        # Run the standard K3s upgrade
-        /bin/upgrade.sh
-
-        # Cleanup orphaned K3s data directories
-        # Keep only 'current', 'previous', 'cni' and '.lock'
-        DATA_DIR="/host/var/lib/rancher/k3s/data"
-        if [ -d "$DATA_DIR" ]; then
-          # Use basename of readlink target (not -f, which fails across chroot boundaries)
-          CURRENT=$(readlink "$DATA_DIR/current" 2>/dev/null | xargs basename 2>/dev/null)
-          PREVIOUS=$(readlink "$DATA_DIR/previous" 2>/dev/null | xargs basename 2>/dev/null)
-          echo "Protecting current=$CURRENT previous=$PREVIOUS"
-          for dir in "$DATA_DIR"/*/; do
-            name=$(basename "$dir")
-            if [ "$name" != "cni" ] && [ "$name" != "$CURRENT" ] && [ "$name" != "$PREVIOUS" ] && [ -n "$CURRENT" ]; then
-              echo "Removing orphaned K3s data: $name"
-              rm -rf "$dir"
-            fi
-          done
-        fi
