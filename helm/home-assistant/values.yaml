@@ -48,6 +48,7 @@ configuration:
   trusted_proxies:
     - 10.42.0.0/16
     - 10.43.0.0/16
+    - 192.168.1.0/24
 
 # InitContainer - Installation automatique de HACS au premier boot
 # Le volume de persistance est nommé d'après le fullname du chart (= "home-assistant")
