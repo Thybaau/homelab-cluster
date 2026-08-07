@@ -4,7 +4,9 @@
 # /var/lib/rancher/k3s/data/. This job removes any that are NOT referenced
 # by the 'current' or 'previous' symlinks.
 #
-# Runs via nsenter on the host so readlink works correctly (no chroot issues).
+# Uses a hostPath volume mount — no nsenter, no privilege escalation beyond
+# the mounted path. readlink works because symlinks in K3s data dir use
+# relative targets after extraction.
 {{- range .Values.cleanup.nodes }}
 ---
 apiVersion: batch/v1
@@ -27,35 +29,20 @@ spec:
       template:
         spec:
           nodeName: {{ . }}
-          hostPID: true
           restartPolicy: Never
           serviceAccountName: system-upgrade
           containers:
             - name: cleanup
               image: {{ $.Values.cleanup.image }}
-              securityContext:
-                privileged: true
               command:
-                - nsenter
-                - "--target"
-                - "1"
-                - "--mount"
-                - "--uts"
-                - "--ipc"
-                - "--net"
-                - "--pid"
-                - "--"
                 - /bin/sh
                 - -c
                 - |
                   set -e
-                  DATA_DIR="/var/lib/rancher/k3s/data"
+                  DATA_DIR="/host-data"
 
-                  if [ ! -d "$DATA_DIR" ]; then
-                    echo "No K3s data directory found, skipping."
-                    exit 0
-                  fi
-
+                  # Symlinks in K3s data dir use absolute paths on the host.
+                  # We only need the basename (hash) to compare directory names.
                   CURRENT=$(readlink "$DATA_DIR/current" 2>/dev/null | xargs basename 2>/dev/null || true)
                   PREVIOUS=$(readlink "$DATA_DIR/previous" 2>/dev/null | xargs basename 2>/dev/null || true)
 
@@ -70,6 +57,7 @@ spec:
                   for dir in "$DATA_DIR"/*/; do
                     [ -d "$dir" ] || continue
                     name=$(basename "$dir")
+                    # Never touch cni, current target, or previous target
                     if [ "$name" = "cni" ] || [ "$name" = "$CURRENT" ] || [ "$name" = "$PREVIOUS" ]; then
                       continue
                     fi
@@ -79,6 +67,9 @@ spec:
                   done
 
                   echo "Done. Removed $CLEANED orphaned director(ies)."
+              volumeMounts:
+                - name: k3s-data
+                  mountPath: /host-data
               resources:
                 requests:
                   cpu: 10m
@@ -86,4 +77,9 @@ spec:
                 limits:
                   cpu: 100m
                   memory: 32Mi
+          volumes:
+            - name: k3s-data
+              hostPath:
+                path: /var/lib/rancher/k3s/data
+                type: Directory
 {{- end }}
