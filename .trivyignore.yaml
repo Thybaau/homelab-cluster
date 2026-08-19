@@ -47,7 +47,8 @@ misconfigurations:
     paths:
       - "helm/disk-usage-exporter/**"
       - "helm/valhafin/**"
-    statement: "disk-usage-exporter runs as root for DAC_READ_SEARCH; valhafin-frontend for nginx port 80"
+      - "helm/system-upgrade-controller/**"
+    statement: "disk-usage-exporter runs as root for DAC_READ_SEARCH; valhafin-frontend for nginx port 80; SUC cleanup job must run as root to delete root-owned K3s data dirs"
 
   # KSV-0022: "capabilities.add should not be set"
   - id: KSV-0022

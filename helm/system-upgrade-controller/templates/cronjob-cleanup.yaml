@@ -31,9 +31,20 @@ spec:
           nodeName: {{ . }}
           restartPolicy: Never
           serviceAccountName: system-upgrade
+          securityContext:
+            runAsUser: 0
+            runAsNonRoot: false
+            seccompProfile:
+              type: RuntimeDefault
           containers:
             - name: cleanup
               image: {{ $.Values.cleanup.image }}
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop:
+                    - ALL
               command:
                 - /bin/sh
                 - -c
