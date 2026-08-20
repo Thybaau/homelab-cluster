@@ -43,7 +43,7 @@ cleanup:
   # Cron schedule: une fois par semaine le dimanche à 4h
   schedule: "0 4 * * 0"
   # Image légère avec nsenter disponible
-  image: busybox:1.37
+  image: busybox:1.38
   # Liste des nœuds à nettoyer
   nodes:
     - k3s-master
