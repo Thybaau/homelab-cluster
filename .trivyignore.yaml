@@ -40,6 +40,22 @@ misconfigurations:
   - id: KSV-0023
     statement: "System Upgrade Controller needs host CA certs for TLS to update.k3s.io"
 
+  # KSV-0048: "ClusterRole should not have write access to workload resources"
+  # JAROD needs patch on deployments for rollout restart (annotation restartedAt)
+  # Action gated by Discord approval workflow before execution
+  - id: KSV-0048
+    paths:
+      - "helm/jarod-rbac/**"
+    statement: "JAROD needs patch on deployments for rollout restart, gated by Discord approval"
+
+  # KSV-0049: "ClusterRole should not have write access to configmaps"
+  # JAROD needs patch/update on configmaps for runtime config changes
+  # Action gated by Discord approval workflow before execution
+  - id: KSV-0049
+    paths:
+      - "helm/jarod-rbac/**"
+    statement: "JAROD needs patch/update on configmaps for runtime config, gated by Discord approval"
+
   # --- Scoped exceptions (disk-usage-exporter only) ---
 
   # KSV-0012: "runAsNonRoot should be true"

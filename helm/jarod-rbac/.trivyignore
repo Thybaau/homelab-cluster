@@ -1,5 +1,0 @@
-# Permissions intentionnelles pour JAROD — approuvées via Discord avant exécution
-# patch deployments : rollout restart (annotation restartedAt)
-KSV-0048
-# patch/update configmaps : modification de config sans redéploiement
-KSV-0049
