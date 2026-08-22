@@ -1,0 +1,14 @@
+---
+apiVersion: v2
+name: jarod-rbac
+description: Chart Helm pour les permissions RBAC de JAROD (ServiceAccount, ClusterRole Phase 1)
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - jarod
+  - rbac
+  - serviceaccount
+maintainers:
+  - name: Homelab Team
+    email: contact@homelab.local

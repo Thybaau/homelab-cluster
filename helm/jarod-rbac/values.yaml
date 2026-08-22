@@ -1,0 +1,18 @@
+---
+global:
+  namespace: kube-system
+
+serviceAccount:
+  enabled: true
+  name: jarod
+
+clusterRole:
+  name: jarod-cluster-access
+
+clusterRoleBinding:
+  name: jarod-cluster-access-binding
+
+# Secret pour token long-lived (kubeconfig externe)
+tokenSecret:
+  enabled: true
+  name: jarod-sa-token

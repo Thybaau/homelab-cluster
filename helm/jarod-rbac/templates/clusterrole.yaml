@@ -1,0 +1,65 @@
+{{- if .Values.serviceAccount.enabled -}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ .Values.clusterRole.name }}
+  labels:
+    {{- include "jarod-rbac.labels" . | nindent 4 }}
+rules:
+  # === Lecture complète (core API group "") ===
+  - apiGroups: [""]
+    resources:
+      - pods
+      - services
+      - configmaps
+      - persistentvolumeclaims
+      - events
+      - nodes
+    verbs:
+      - get
+      - list
+      - watch
+
+  # === Lecture logs (subresource) ===
+  - apiGroups: [""]
+    resources:
+      - pods/log
+    verbs:
+      - get
+
+  # === Lecture deployments, statefulsets, daemonsets (apps) ===
+  - apiGroups: ["apps"]
+    resources:
+      - deployments
+      - statefulsets
+      - daemonsets
+    verbs:
+      - get
+      - list
+      - watch
+
+  # === Scale (subresource apps) — requiert approbation Discord ===
+  - apiGroups: ["apps"]
+    resources:
+      - deployments/scale
+      - statefulsets/scale
+    verbs:
+      - get
+      - patch
+      - update
+
+  # === Rollout restart (patch annotation sur deployments) — requiert approbation Discord ===
+  - apiGroups: ["apps"]
+    resources:
+      - deployments
+    verbs:
+      - patch
+
+  # === Edit configmaps — requiert approbation Discord ===
+  - apiGroups: [""]
+    resources:
+      - configmaps
+    verbs:
+      - patch
+      - update
+{{- end }}
