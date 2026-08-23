@@ -9,3 +9,4 @@ spec:
   headers:
     customRequestHeaders:
       Host: "{{ .Values.externalService.ip }}:{{ .Values.externalService.port }}"
+      Origin: "http://{{ .Values.externalService.ip }}:{{ .Values.externalService.port }}"
