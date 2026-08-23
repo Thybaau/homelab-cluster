@@ -1,15 +1,35 @@
-apiVersion: discovery.k8s.io/v1
-kind: EndpointSlice
-metadata:
-  name: {{ include "hermes-dashboard.fullname" . }}
-  namespace: {{ .Values.global.namespace }}
-  labels:
-    {{- include "hermes-dashboard.labels" . | nindent 4 }}
-    kubernetes.io/service-name: {{ include "hermes-dashboard.fullname" . }}
-addressType: IPv4
-ports:
-  - port: {{ .Values.externalService.port }}
-    protocol: {{ .Values.externalService.protocol }}
-endpoints:
-  - addresses:
-      - {{ .Values.externalService.ip | quote }}
+{{/*
+  EndpointSlice géré MANUELLEMENT (hors ArgoCD).
+
+  POURQUOI :
+  ArgoCD exclut globalement les ressources Endpoints et EndpointSlice
+  (resource.exclusions dans argocd-cm) pour éviter le bruit des events
+  sur les EndpointSlice auto-générés par K8s. Notre cas est un EndpointSlice
+  manuel pointant vers une IP externe (VM JAROD 192.168.1.150:9119).
+
+  COMMENT APPLIQUER / RECRÉER :
+    kubectl apply -n hermes -f - <<'EOF'
+    apiVersion: discovery.k8s.io/v1
+    kind: EndpointSlice
+    metadata:
+      name: hermes-dashboard
+      namespace: hermes
+      labels:
+        kubernetes.io/service-name: hermes-dashboard
+        app.kubernetes.io/name: hermes-dashboard
+        app.kubernetes.io/managed-by: manual
+    endpoints:
+      - addresses:
+          - "192.168.1.150"
+    addressType: IPv4
+    ports:
+      - port: 9119
+        protocol: TCP
+    EOF
+
+  QUAND RECRÉER :
+  - Si le namespace hermes est supprimé et recréé
+  - Si l'IP de la VM JAROD change (modifier l'adresse ci-dessus)
+
+  Ref: https://kubernetes.io/docs/concepts/services-networking/endpoint-slices/
+*/}}
