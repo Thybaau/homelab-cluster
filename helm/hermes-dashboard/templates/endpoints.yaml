@@ -1,35 +1,84 @@
 {{/*
-  EndpointSlice géré MANUELLEMENT (hors ArgoCD).
+  ==========================================================================
+  EndpointSlice géré MANUELLEMENT (hors ArgoCD)
+  ==========================================================================
 
-  POURQUOI :
+  CONTEXTE :
+  Le dashboard Hermes tourne sur la VM JAROD (192.168.1.150:9119), hors du
+  cluster K8s. Pour router le trafic depuis le cluster vers cette IP externe,
+  on utilise un Service sans selector couplé à un Endpoints v1 manuel.
+
+  POURQUOI HORS ARGOCD :
   ArgoCD exclut globalement les ressources Endpoints et EndpointSlice
-  (resource.exclusions dans argocd-cm) pour éviter le bruit des events
-  sur les EndpointSlice auto-générés par K8s. Notre cas est un EndpointSlice
-  manuel pointant vers une IP externe (VM JAROD 192.168.1.150:9119).
+  (resource.exclusions dans argocd-cm ConfigMap) pour éviter la pollution
+  par les events des EndpointSlice auto-générés par K8s. Notre cas légitime
+  d'Endpoints manuel est donc exclu aussi. Plutôt que de modifier la config
+  ArgoCD globale (ce qui augmenterait le nombre d'events watchés), on gère
+  cet Endpoints en dehors du chart.
 
-  COMMENT APPLIQUER / RECRÉER :
+  POURQUOI ENDPOINTS V1 (et pas EndpointSlice) :
+  Traefik (via K3s) utilise encore l'API Endpoints v1 pour la découverte
+  des backends. Les EndpointSlice (discovery.k8s.io/v1) ne sont pas lus
+  par le provider Ingress de Traefik. L'API Endpoints est deprecated depuis
+  K8s 1.33 (warning affiché) mais reste fonctionnelle.
+
+  IMPORTANT — le port DOIT avoir `name: http` pour correspondre au port
+  nommé du Service (sinon K8s ne les associe pas).
+
+  COMMANDE POUR APPLIQUER / RECRÉER :
+
     kubectl apply -n hermes -f - <<'EOF'
-    apiVersion: discovery.k8s.io/v1
-    kind: EndpointSlice
+    apiVersion: v1
+    kind: Endpoints
     metadata:
       name: hermes-dashboard
       namespace: hermes
       labels:
-        kubernetes.io/service-name: hermes-dashboard
         app.kubernetes.io/name: hermes-dashboard
         app.kubernetes.io/managed-by: manual
-    endpoints:
+    subsets:
       - addresses:
-          - "192.168.1.150"
-    addressType: IPv4
-    ports:
-      - port: 9119
-        protocol: TCP
+          - ip: 192.168.1.150
+        ports:
+          - name: http
+            port: 9119
+            protocol: TCP
     EOF
 
   QUAND RECRÉER :
-  - Si le namespace hermes est supprimé et recréé
+  - Si le namespace hermes est supprimé et recréé par ArgoCD
   - Si l'IP de la VM JAROD change (modifier l'adresse ci-dessus)
+  - Après un `kubectl delete endpoints hermes-dashboard -n hermes`
 
-  Ref: https://kubernetes.io/docs/concepts/services-networking/endpoint-slices/
+  VÉRIFICATION :
+    kubectl get endpoints hermes-dashboard -n hermes
+    # Doit afficher : ENDPOINTS 192.168.1.150:9119
+
+  MIGRATION FUTURE :
+  Quand Traefik supportera nativement EndpointSlice pour le provider
+  Ingress, migrer vers discovery.k8s.io/v1 EndpointSlice et supprimer
+  l'Endpoints v1.
+
+  ==========================================================================
+  MIDDLEWARE HOST REWRITE
+  ==========================================================================
+
+  Le dashboard Hermes a une protection anti-DNS-rebinding : il refuse les
+  requêtes dont le header Host ne correspond pas à l'adresse de bind du
+  serveur (192.168.1.150:9119). Hermes ne propose pas de whitelist de hosts.
+
+  Solution : un Middleware Traefik (hermes-dashboard-host-rewrite) réécrit
+  le header Host vers "192.168.1.150:9119" avant d'envoyer la requête au
+  backend. Cela satisfait la vérification côté Hermes tout en conservant
+  la protection (le serveur reste bindé sur l'IP LAN, pas sur 0.0.0.0).
+
+  ==========================================================================
+  RÉÉCRITURE DNS
+  ==========================================================================
+
+  hermes.caremelle.org doit pointer vers 192.168.1.151 (worker node K3s)
+  dans AdGuard Home (Filtres → Réécritures DNS). Même pattern que les
+  autres apps (homepage, ha, grafana, etc.)
+
+  ==========================================================================
 */}}
