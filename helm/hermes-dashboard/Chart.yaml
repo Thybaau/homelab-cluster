@@ -1,0 +1,14 @@
+---
+apiVersion: v2
+name: hermes-dashboard
+description: Exposition du dashboard Hermes Agent via Traefik (Service headless + Endpoints + Ingress)
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - jarod
+  - hermes
+  - dashboard
+maintainers:
+  - name: Homelab Team
+    email: contact@homelab.local

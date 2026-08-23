@@ -1,0 +1,20 @@
+---
+global:
+  namespace: hermes
+
+# Configuration du service headless vers la VM JAROD
+externalService:
+  # IP de la VM JAROD (jamais hardcoder dans les templates)
+  ip: "192.168.1.150"
+  port: 9119
+  protocol: TCP
+
+# Configuration Ingress
+ingress:
+  enabled: true
+  className: traefik
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+  host: hermes.caremelle.org
+  path: /
+  pathType: Prefix

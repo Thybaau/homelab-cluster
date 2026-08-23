@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "hermes-dashboard.fullname" . }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "hermes-dashboard.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.externalService.port }}
+      targetPort: {{ .Values.externalService.port }}
+      protocol: {{ .Values.externalService.protocol }}
+      name: http
