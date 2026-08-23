@@ -15,6 +15,7 @@ ingress:
   className: traefik
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.middlewares: hermes-hermes-dashboard-host-rewrite@kubernetescrd
   host: hermes.caremelle.org
   path: /
   pathType: Prefix
