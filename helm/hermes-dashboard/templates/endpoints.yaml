@@ -1,14 +1,15 @@
-apiVersion: v1
-kind: Endpoints
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
 metadata:
-  # CRITIQUE : le nom DOIT être identique au nom du Service
   name: {{ include "hermes-dashboard.fullname" . }}
   namespace: {{ .Values.global.namespace }}
   labels:
     {{- include "hermes-dashboard.labels" . | nindent 4 }}
-subsets:
+    kubernetes.io/service-name: {{ include "hermes-dashboard.fullname" . }}
+addressType: IPv4
+ports:
+  - port: {{ .Values.externalService.port }}
+    protocol: {{ .Values.externalService.protocol }}
+endpoints:
   - addresses:
-      - ip: {{ .Values.externalService.ip }}
-    ports:
-      - port: {{ .Values.externalService.port }}
-        protocol: {{ .Values.externalService.protocol }}
+      - {{ .Values.externalService.ip | quote }}
