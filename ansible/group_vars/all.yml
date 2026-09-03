@@ -6,7 +6,7 @@
 # Cela garantit que Ansible et SUC installent/ciblent toujours la même version.
 k3s_channel: stable
 # renovate: datasource=github-releases depName=kubernetes/kubernetes
-kubectl_version: v1.36.4
+kubectl_version: v1.37.0
 # renovate: datasource=github-releases depName=helm/helm
 helm_version: v4.2.4
 # renovate: datasource=github-releases depName=helmfile/helmfile
