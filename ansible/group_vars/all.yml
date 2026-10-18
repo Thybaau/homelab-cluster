@@ -13,9 +13,9 @@ helm_version: v4.3.1
 helmfile_version: v1.8.1
 
 # Network Configuration
-k3s_master_ip: 192.168.1.102
+k3s_master_ip: 192.168.0.102
 k3s_api_port: 6443
-traefik_metallb_ip: 192.168.1.151
+traefik_metallb_ip: 192.168.0.151
 
 # Paths
 k3s_config_dir: /etc/rancher/k3s

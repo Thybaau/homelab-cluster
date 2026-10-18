@@ -80,7 +80,7 @@ Ce projet gère l'intégralité du cycle de vie d'un cluster Kubernetes k3s :
 | Application | Namespace | Sync Wave | Source | Description |
 |---|---|---|---|---|
 | Traefik TLS | `kube-system` | -2 | Chart local | Configuration TLS pour l'ingress Traefik |
-| [MetalLB](docs/metallb/) | `metallb-system` | 0 | Chart officiel v0.16.1 + config locale | Load balancer L2 (pool `192.168.1.151-170`) |
+| [MetalLB](docs/metallb/) | `metallb-system` | 0 | Chart officiel v0.16.1 + config locale | Load balancer L2 (pool `192.168.0.151-170`) |
 | [Sealed Secrets](docs/sealed-secrets/) | `sealed-secrets` | 0 | Chart Bitnami v2.13.2 | Chiffrement des secrets pour GitOps |
 | Kured | `kube-system` | 0 | Chart kubereboot v5.6.0 | Reboot automatique des nœuds après mises à jour OS |
 | System Upgrade Controller | `system-upgrade` | 0 | Chart local | Mises à jour automatiques de k3s (channel stable) |
@@ -168,18 +168,18 @@ ansible-playbook -i inventory.ini playbook.yml --tags verify    # Vérifier le c
 ### Récupérer le kubeconfig
 
 ```bash
-ssh k3s@192.168.1.102 "sudo cat /etc/rancher/k3s/k3s.yaml" | \
-  sed 's/127.0.0.1/192.168.1.102/g' > ~/.kube/k3s-config
+ssh k3s@192.168.0.102 "sudo cat /etc/rancher/k3s/k3s.yaml" | \
+  sed 's/127.0.0.1/192.168.0.102/g' > ~/.kube/k3s-config
 chmod 600 ~/.kube/k3s-config
 export KUBECONFIG=~/.kube/k3s-config
 ```
 
 ## Réseau
 
-- Master API : `192.168.1.102:6443`
-- MetalLB IP pool : `192.168.1.151-170`
-- Traefik (Ingress) : `192.168.1.151`
-- AdGuard DNS : `192.168.1.152`
+- Master API : `192.168.0.102:6443`
+- MetalLB IP pool : `192.168.0.151-170`
+- Traefik (Ingress) : `192.168.0.151`
+- AdGuard DNS : `192.168.0.152`
 - Domaines locaux : `*.home` (via AdGuard DNS rewrites)
 - Domaines publics : `*.caremelle.org` (via Cloudflare Tunnel)
 - NetworkPolicies : default-deny ingress sur `valhafin`, `homepage`, `networking` (voir [architecture](docs/architecture.md#sécurité-réseau-networkpolicies))

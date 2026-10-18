@@ -37,17 +37,17 @@ spec:
           filtering:
             rewrites:
               - domain: "adguard.caremelle.org"
-                answer: "192.168.1.151"
+                answer: "192.168.0.151"
               - domain: "homepage.caremelle.org"
-                answer: "192.168.1.151"
+                answer: "192.168.0.151"
               - domain: "valhafin.caremelle.org"
-                answer: "192.168.1.151"
+                answer: "192.168.0.151"
               - domain: "grafana.caremelle.org"
-                answer: "192.168.1.151"
+                answer: "192.168.0.151"
               - domain: "argocd.caremelle.org"
-                answer: "192.168.1.151"
+                answer: "192.168.0.151"
               - domain: "ha.caremelle.org"
-                answer: "192.168.1.151"
+                answer: "192.168.0.151"
 
         service:
           main:
@@ -58,7 +58,7 @@ spec:
           dns-tcp:
             enabled: true
             type: LoadBalancer
-            loadBalancerIP: "192.168.1.152"
+            loadBalancerIP: "192.168.0.152"
             annotations:
               metallb.io/allow-shared-ip: adguard-home
             ports:
@@ -69,7 +69,7 @@ spec:
           dns-udp:
             enabled: true
             type: LoadBalancer
-            loadBalancerIP: "192.168.1.152"
+            loadBalancerIP: "192.168.0.152"
             annotations:
               metallb.io/allow-shared-ip: adguard-home
             ports:

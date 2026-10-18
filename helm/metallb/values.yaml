@@ -1,4 +1,4 @@
 ---
 # MetalLB configuration
 # IP address pool range for LoadBalancer services
-ipRange: "192.168.1.151-192.168.1.170"
+ipRange: "192.168.0.151-192.168.0.170"

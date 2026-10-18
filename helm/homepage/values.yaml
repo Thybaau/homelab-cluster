@@ -77,7 +77,7 @@ app:
 
   # Host aliases pour résolution DNS interne (services hostNetwork)
   hostAliases:
-    - ip: "192.168.1.151"
+    - ip: "192.168.0.151"
       hostnames:
         - ha.caremelle.org
 
@@ -133,7 +133,7 @@ config:
   # Widget Proxmox
   proxmox:
     enabled: true
-    url: "https://192.168.1.200:8006"
+    url: "https://192.168.0.200:8006"
     # Les credentials sont injectés via le SealedSecret homepage-proxmox
 
   # Widget ArgoCD

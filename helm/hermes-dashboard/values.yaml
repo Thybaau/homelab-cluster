@@ -5,7 +5,7 @@ global:
 # Configuration du service headless vers la VM JAROD
 externalService:
   # IP de la VM JAROD (jamais hardcoder dans les templates)
-  ip: "192.168.1.150"
+  ip: "192.168.0.150"
   port: 9119
   protocol: TCP
 
