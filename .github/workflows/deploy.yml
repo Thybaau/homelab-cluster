@@ -54,7 +54,7 @@ jobs:
 
           # Add SSH config for k3s hosts
           cat >> ~/.ssh/config <<EOF
-          Host 192.168.1.* k3s-*
+          Host 192.168.0.* k3s-*
             User k3s
             IdentityFile ~/.ssh/k3s_deploy_key
             StrictHostKeyChecking no
@@ -116,13 +116,13 @@ jobs:
           echo ""
           echo "📥 Pour récupérer le kubeconfig depuis votre machine locale:"
           echo ""
-          echo "   ssh k3s@192.168.1.102 \"sudo cat /etc/rancher/k3s/k3s.yaml\" | \\"
-          echo "     sed 's/127.0.0.1/192.168.1.102/g' > ~/.kube/k3s-config"
+          echo "   ssh k3s@192.168.0.102 \"sudo cat /etc/rancher/k3s/k3s.yaml\" | \\"
+          echo "     sed 's/127.0.0.1/192.168.0.102/g' > ~/.kube/k3s-config"
           echo "   chmod 600 ~/.kube/k3s-config"
           echo ""
           echo "📥 Pour récupérer le token (si besoin d'ajouter des workers):"
           echo ""
-          echo "   ssh k3s@192.168.1.102 \"sudo cat /var/lib/rancher/k3s/server/node-token\""
+          echo "   ssh k3s@192.168.0.102 \"sudo cat /var/lib/rancher/k3s/server/node-token\""
           echo ""
           echo "🚀 Pour utiliser le cluster:"
           echo ""
