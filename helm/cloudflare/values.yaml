@@ -9,7 +9,7 @@ app:
 
   image:
     repository: cloudflare/cloudflared
-    tag: "2026.10.4"
+    tag: "2026.10.5"
     pullPolicy: IfNotPresent
 
   resources:
