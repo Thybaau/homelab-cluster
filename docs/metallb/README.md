@@ -13,7 +13,7 @@ MetalLB permet d'utiliser des services Kubernetes de type `LoadBalancer` dans un
 | Chart | `metallb/metallb` v0.14.9 (officiel) + config locale |
 | Namespace | `metallb-system` |
 | Sync wave | 0 (déployé en premier) |
-| Pool IP | `192.168.1.151 - 192.168.1.170` |
+| Pool IP | `192.168.0.151 - 192.168.0.170` |
 | Mode | L2 (Layer 2 / ARP) |
 
 ## Architecture
@@ -24,15 +24,15 @@ L'application ArgoCD utilise deux sources :
 
 ## Ressources déployées par le chart local
 
-- `IPAddressPool` — définit la plage d'IPs disponibles (`192.168.1.151-170`)
+- `IPAddressPool` — définit la plage d'IPs disponibles (`192.168.0.151-170`)
 - `L2Advertisement` — active l'annonce ARP pour cette pool
 
 ## IPs attribuées
 
 | IP | Service |
 |---|---|
-| `192.168.1.151` | Traefik (Ingress Controller) |
-| `192.168.1.152` | AdGuard Home (DNS) |
+| `192.168.0.151` | Traefik (Ingress Controller) |
+| `192.168.0.152` | AdGuard Home (DNS) |
 
 ## Fichiers
 

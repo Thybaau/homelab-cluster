@@ -15,7 +15,7 @@ ou dans votre serveur DNS local pour pointer vers l'IP de votre cluster.
 
 Pour activer le widget Proxmox et afficher les statistiques de votre hyperviseur :
 
-1. Créer un utilisateur API dans Proxmox (https://192.168.1.200:8006)
+1. Créer un utilisateur API dans Proxmox (https://192.168.0.200:8006)
    - Datacenter > Permissions > Users > Add
    - Créez un token API pour cet utilisateur
 

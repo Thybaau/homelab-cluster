@@ -22,7 +22,7 @@ Le widget Proxmox permet de monitorer votre hyperviseur directement depuis homep
 
 ### Créer un token API Proxmox
 
-1. Connectez-vous à l'interface Proxmox (https://192.168.1.200:8006)
+1. Connectez-vous à l'interface Proxmox (https://192.168.0.200:8006)
 2. Allez dans **Datacenter** → **Permissions** → **API Tokens**
 3. Cliquez sur **Add** et créez un token :
    - **User** : `root@pam` (ou un utilisateur dédié)
@@ -50,7 +50,7 @@ kubectl create secret generic homepage-proxmox \
 config:
   proxmox:
     enabled: true
-    url: "https://192.168.1.200:8006"
+    url: "https://192.168.0.200:8006"
     # Les credentials sont injectés automatiquement via le SealedSecret
 ```
 
@@ -87,7 +87,7 @@ kubectl logs -n homepage -l app.kubernetes.io/name=homepage | grep -i proxmox
 
 # Tester la connectivité depuis le pod
 kubectl exec -it -n homepage deployment/homepage -- \
-  curl -k https://192.168.1.200:8006/api2/json/version
+  curl -k https://192.168.0.200:8006/api2/json/version
 
 # Vérifier les credentials dans le ConfigMap
 kubectl get configmap homepage-config -n homepage -o yaml | grep -A 10 proxmox
@@ -301,7 +301,7 @@ config:
 config:
   proxmox:
     enabled: true
-    url: "https://192.168.1.200:8006"
+    url: "https://192.168.0.200:8006"
     username: "root@pam!homepage"
     password: "votre-token"
 
@@ -310,7 +310,7 @@ config:
       services:
         - name: "Proxmox"
           icon: "proxmox.png"
-          href: "https://192.168.1.200:8006"
+          href: "https://192.168.0.200:8006"
           description: "Hyperviseur"
 
     - name: "Monitoring"

@@ -9,7 +9,7 @@ Le cluster k3s est déployé sur des VMs Proxmox provisionnées par Terraform ([
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
 │                         Proxmox VE 9.1.5                            │
-│                        (192.168.1.200:8006)                         │
+│                        (192.168.0.200:8006)                         │
 │                                                                     │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐              │
 │  │ k3s-master   │  │k3s-worker-01 │  │k3s-worker-0N │              │
@@ -19,7 +19,7 @@ Le cluster k3s est déployé sur des VMs Proxmox provisionnées par Terraform ([
 │  │ API :6443    │  │              │  │              │              │
 │  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘              │
 │         └─────────────────┴─────────────────┘                       │
-│                    Réseau 192.168.1.0/24                             │
+│                    Réseau 192.168.0.0/24                             │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -95,8 +95,8 @@ Internet
          ▼
 ┌──────────────────┐     ┌──────────────────┐
 │    Traefik       │◄────│    MetalLB        │
-│  (Ingress)       │     │  192.168.1.151    │
-│  192.168.1.151   │     │  (L2 mode)        │
+│  (Ingress)       │     │  192.168.0.151    │
+│  192.168.0.151   │     │  (L2 mode)        │
 │  HTTPS (443)     │     └──────────────────┘
 │  HTTP→HTTPS redir│
 └────────┬─────────┘
@@ -112,7 +112,7 @@ Internet
 
 ┌──────────────────┐
 │  AdGuard Home    │  DNS local
-│  192.168.1.152   │  *.caremelle.org → 192.168.1.151
+│  192.168.0.152   │  *.caremelle.org → 192.168.0.151
 │  (LoadBalancer)  │  Upstream: Quad9 + Cloudflare DoH
 └──────────────────┘
 ```
@@ -129,18 +129,18 @@ Traefik sert un certificat wildcard Cloudflare Origin CA (`*.caremelle.org`) via
 
 | Plage | Usage |
 |---|---|
-| `192.168.1.102` | Master k3s (API server) |
-| `192.168.1.103+` | Workers k3s |
-| `192.168.1.151` | Traefik (Ingress via MetalLB) |
-| `192.168.1.152` | AdGuard Home DNS (via MetalLB) |
-| `192.168.1.151-170` | Pool MetalLB disponible |
-| `192.168.1.200` | Proxmox VE |
+| `192.168.0.102` | Master k3s (API server) |
+| `192.168.0.103+` | Workers k3s |
+| `192.168.0.151` | Traefik (Ingress via MetalLB) |
+| `192.168.0.152` | AdGuard Home DNS (via MetalLB) |
+| `192.168.0.151-170` | Pool MetalLB disponible |
+| `192.168.0.200` | Proxmox VE |
 
 ### Domaines
 
 | Domaine | Résolution | Cible |
 |---|---|---|
-| `*.caremelle.org` (local) | AdGuard DNS rewrites | `192.168.1.151` (Traefik, HTTPS) |
+| `*.caremelle.org` (local) | AdGuard DNS rewrites | `192.168.0.151` (Traefik, HTTPS) |
 | `*.caremelle.org` (internet) | Cloudflare Tunnel | Services internes (homepage uniquement) |
 
 ## Sécurité réseau (NetworkPolicies)

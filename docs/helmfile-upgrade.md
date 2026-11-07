@@ -61,7 +61,7 @@ ansible-playbook -i inventory.ini playbook.yml --tags gitops
 Connectez-vous au nœud master et vérifiez la version installée :
 
 ```bash
-ssh k3s@192.168.1.102 "helmfile version"
+ssh k3s@192.168.0.102 "helmfile version"
 ```
 
 ## Exemple complet
@@ -85,7 +85,7 @@ cd ansible
 ansible-playbook -i inventory.ini playbook.yml --tags gitops
 
 # 4. Vérifier
-ssh k3s@192.168.1.102 "helmfile version"
+ssh k3s@192.168.0.102 "helmfile version"
 ```
 
 ## Notes importantes

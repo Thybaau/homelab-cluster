@@ -124,7 +124,7 @@ Ajoutez une entrée dans votre fichier `/etc/hosts` :
 
 ```bash
 # Obtenir l'IP du cluster (remplacez par votre IP)
-CLUSTER_IP="192.168.1.100"
+CLUSTER_IP="192.168.0.151"
 
 # Ajouter l'entrée (nécessite sudo)
 echo "$CLUSTER_IP homepage.local" | sudo tee -a /etc/hosts
@@ -135,7 +135,7 @@ echo "$CLUSTER_IP homepage.local" | sudo tee -a /etc/hosts
 Si vous utilisez un serveur DNS local, ajoutez un enregistrement A :
 
 ```
-homepage.local. IN A 192.168.1.100
+homepage.local. IN A 192.168.0.151
 ```
 
 ### Option 3 : Accès direct via port-forward (temporaire)

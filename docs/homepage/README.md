@@ -27,8 +27,8 @@ Homepage fournit une page d'accueil centralisée pour le homelab avec des widget
 
 | Widget | Source | Credentials |
 |---|---|---|
-| Proxmox | `https://192.168.1.200:8006` | SealedSecret `homepage-proxmox` |
-| ArgoCD | `http://192.168.1.102:30080` | SealedSecret `homepage-argocd` |
+| Proxmox | `https://192.168.0.200:8006` | SealedSecret `homepage-proxmox` |
+| ArgoCD | `http://192.168.0.102:30080` | SealedSecret `homepage-argocd` |
 | Grafana | Service interne cluster | Variable `HOMEPAGE_VAR_GRAFANA_PASSWORD` |
 | AdGuard Home | Service interne cluster | — |
 | Tailscale | API Tailscale | Variable `HOMEPAGE_VAR_TAILSCALE_KEY` |
