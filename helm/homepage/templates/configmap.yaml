@@ -11,10 +11,19 @@ data:
     theme: {{ .Values.config.settings.theme }}
     color: {{ .Values.config.settings.color }}
     headerStyle: {{ .Values.config.settings.headerStyle }}
+    useEqualHeights: true
     layout:
-      - Services:
-          style: row
-          columns: 3
+      Infrastructure:
+        style: row
+        columns: 4
+      Network:
+        style: column
+      Maison:
+        style: column
+      Apps:
+        style: column
+      GitHub:
+        style: column
 
   services.yaml: |
     - Infrastructure:
@@ -23,22 +32,26 @@ data:
             icon: proxmox.png
             href: {{ .Values.config.proxmox.url }}
             description: Hyperviseur de virtualisation
+            siteMonitor: {{ .Values.config.proxmox.url }}
             widget:
               type: proxmox
               url: {{ .Values.config.proxmox.url }}
               username: {{`{{HOMEPAGE_VAR_PROXMOX_USER}}`}}
               password: {{`{{HOMEPAGE_VAR_PROXMOX_PASS}}`}}
         {{- end }}
-    - GitOps:
         {{- if .Values.config.argocd.enabled }}
         - ArgoCD:
             icon: argo-cd.png
             href: {{ .Values.config.argocd.href }}
             description: GitOps continuous delivery
+            siteMonitor: {{ .Values.config.argocd.url }}
             widget:
               type: argocd
               url: {{ .Values.config.argocd.url }}
               key: {{`{{HOMEPAGE_VAR_ARGOCD_TOKEN}}`}}
+        {{- end }}
+        {{- with .Values.config.groupExtras.infrastructure }}
+        {{- toYaml . | nindent 8 }}
         {{- end }}
     {{- if .Values.config.customServices }}
     {{- toYaml .Values.config.customServices | nindent 4 }}

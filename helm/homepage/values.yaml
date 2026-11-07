@@ -80,6 +80,8 @@ app:
     - ip: "192.168.0.151"
       hostnames:
         - ha.caremelle.org
+        - valhafin.caremelle.org
+        - hermes.caremelle.org
 
 # Configuration du service
 service:
@@ -143,21 +145,42 @@ config:
     href: "https://argocd.caremelle.org"
     # Le token est injecté via le SealedSecret homepage-argocd
 
-  # Services personnalisés (ajoutés à services.yaml)
-  # Ordre : Monitoring, Network, Home Assistant, Applications
+  # Cartes ajoutées au groupe Infrastructure (après Proxmox et ArgoCD, générés par le template)
+  groupExtras:
+    infrastructure:
+      - Grafana:
+          icon: grafana.png
+          href: https://grafana.caremelle.org
+          description: Cluster monitoring et dashboards
+          siteMonitor: http://monitoring-stack-grafana.monitoring.svc.cluster.local
+          widget:
+            type: grafana
+            version: 2
+            url: http://monitoring-stack-grafana.monitoring.svc.cluster.local
+            username: admin
+            password: "{{HOMEPAGE_VAR_GRAFANA_PASSWORD}}"
+      - AWS:
+          icon: aws
+          href: https://810585352236-l6vlemfz.eu-west-3.console.aws.amazon.com/console/home?region=eu-west-3
+          description: Compte AWS Perso
+
+  # Groupes suivants (ajoutés à services.yaml après Infrastructure)
+  # Ordre : Network, Maison, Apps, GitHub (4 colonnes sous la ligne Infrastructure)
   customServices:
-    - Monitoring:
-        - Grafana:
-            icon: grafana.png
-            href: https://grafana.caremelle.org
-            description: Cluster monitoring et dashboards
+    - Network:
+        - Routeur TP-Link:
+            icon: tp-link.png
+            href: http://192.168.0.1
+            description: Interface d'administration du routeur
+            siteMonitor: http://192.168.0.1
+        - AdGuard Home:
+            icon: adguard-home.png
+            href: https://adguard.caremelle.org
+            description: DNS et blocage de publicités
+            siteMonitor: http://adguard-home.networking.svc.cluster.local:3000
             widget:
-              type: grafana
-              version: 2
-              url: http://monitoring-stack-grafana.monitoring.svc.cluster.local
-              username: admin
-              password: "{{HOMEPAGE_VAR_GRAFANA_PASSWORD}}"
-    - Cloudflare:
+              type: adguard
+              url: http://adguard-home.networking.svc.cluster.local:3000
         - Cloudflare Tunnel:
             icon: cloudflare.png
             href: https://one.dash.cloudflare.com/6226b1ff3a046ada22261bc31625fb45/networks/tunnels
@@ -167,53 +190,42 @@ config:
               accountid: 6226b1ff3a046ada22261bc31625fb45
               tunnelid: 7c0f893a-1d76-48dc-a3fb-b5cfe10b4fc8
               key: "{{HOMEPAGE_VAR_CLOUDFLARE_TUNNEL_KEY}}"
-    - Network:
-        - AdGuard Home:
-            icon: adguard-home.png
-            href: https://adguard.caremelle.org
-            description: DNS et blocage de publicités
-            widget:
-              type: adguard
-              url: http://adguard-home.networking.svc.cluster.local:3000
         - Tailscale:
             icon: tailscale.png
             href: https://login.tailscale.com/admin/machines
             description: VPN
-            widgets:
-              - type: tailscale
-                label: Proxmox Server
-                deviceid: nvDedqhweU11CNTRL
-                key: "{{HOMEPAGE_VAR_TAILSCALE_KEY}}"
-                fields: ["address", "last_seen", "expires"]
-              - type: tailscale
-                label: Macbook
-                deviceid: nAABgZk8me11CNTRL
-                key: "{{HOMEPAGE_VAR_TAILSCALE_KEY}}"
-                fields: ["address", "last_seen", "expires"]
-              - type: tailscale
-                label: PC Gaming
-                deviceid: nouBQ4Qe3i11CNTRL
-                key: "{{HOMEPAGE_VAR_TAILSCALE_KEY}}"
-                fields: ["address", "last_seen", "expires"]
-    - Home Assistant:
+            widget:
+              type: tailscale
+              deviceid: nvDedqhweU11CNTRL
+              key: "{{HOMEPAGE_VAR_TAILSCALE_KEY}}"
+              fields: ["address", "last_seen", "expires"]
+    - Maison:
         - Home Assistant:
             icon: home-assistant.png
             href: https://ha.caremelle.org
             description: Domotique et automatisation
+            siteMonitor: https://ha.caremelle.org
             widget:
               type: homeassistant
               url: https://ha.caremelle.org
               key: "{{HOMEPAGE_VAR_HOMEASSISTANT_KEY}}"
               fields: ["people_home", "lights_on", "switches_on"]
-    - Applications:
+        - J.A.R.O.D.:
+            icon: mdi-robot
+            href: https://hermes.caremelle.org
+            description: Dashboard de l'agent IA
+            siteMonitor: https://hermes.caremelle.org
+    - Apps:
         - Valhafin:
             icon: mdi-finance
             href: https://valhafin.caremelle.org
             description: Gestion comptes de finance
+            siteMonitor: https://valhafin.caremelle.org
         - Pâtisseries Caremelle:
             icon: mdi-cake
             href: https://patisseries.caremelle.org
             description: Site de pâtisseries
+            siteMonitor: https://patisseries.caremelle.org
     - GitHub:
         - homelab-cluster:
             icon: github.png
@@ -227,11 +239,6 @@ config:
             icon: github.png
             href: https://github.com/Thybaau/valhafin
             description: App gestion de comptes de finance
-    - AWS:
-        - AWS:
-            icon: aws
-            href: https://810585352236-l6vlemfz.eu-west-3.console.aws.amazon.com/console/home?region=eu-west-3
-            description: Compte AWS Perso
 
   # Widgets personnalisés (ajoutés à widgets.yaml)
   customWidgets: []
