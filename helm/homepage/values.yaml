@@ -132,6 +132,16 @@ config:
     color: slate
     headerStyle: boxed
 
+  # Fond d'écran (fichier dans helm/homepage/files/, servi depuis /app/public/images)
+  # Doit rester < 1 MiB (limite d'un ConfigMap)
+  background:
+    enabled: true
+    file: vinland.jpg
+    blur: sm
+    brightness: 50
+    opacity: 100
+    cardBlur: md
+
   # Widget Proxmox
   proxmox:
     enabled: true

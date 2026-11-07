@@ -1,0 +1,11 @@
+{{- if .Values.config.background.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "homepage.fullname" . }}-background
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "homepage.labels" . | nindent 4 }}
+binaryData:
+  {{ .Values.config.background.file }}: {{ .Files.Get (printf "files/%s" .Values.config.background.file) | b64enc }}
+{{- end }}

@@ -140,6 +140,12 @@ spec:
         volumeMounts:
         - name: config
           mountPath: /app/config
+        {{- if .Values.config.background.enabled }}
+        - name: background
+          mountPath: /app/public/images/{{ .Values.config.background.file }}
+          subPath: {{ .Values.config.background.file }}
+          readOnly: true
+        {{- end }}
       volumes:
       - name: config
         {{- if .Values.persistence.enabled }}
@@ -151,3 +157,8 @@ spec:
         configMap:
           name: {{ include "homepage.fullname" . }}-config
         {{- end }}
+      {{- if .Values.config.background.enabled }}
+      - name: background
+        configMap:
+          name: {{ include "homepage.fullname" . }}-background
+      {{- end }}

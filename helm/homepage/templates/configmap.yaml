@@ -12,6 +12,14 @@ data:
     color: {{ .Values.config.settings.color }}
     headerStyle: {{ .Values.config.settings.headerStyle }}
     useEqualHeights: true
+    {{- if .Values.config.background.enabled }}
+    background:
+      image: /images/{{ .Values.config.background.file }}
+      blur: {{ .Values.config.background.blur }}
+      brightness: {{ .Values.config.background.brightness }}
+      opacity: {{ .Values.config.background.opacity }}
+    cardBlur: {{ .Values.config.background.cardBlur }}
+    {{- end }}
     layout:
       Infrastructure:
         style: row
