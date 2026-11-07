@@ -7,6 +7,8 @@ global:
 backend:
   enabled: true
   replicaCount: 1  # Pour un usage personnel, 1 replica est suffisant. Augmenter pour la haute disponibilité.
+  # Anciens ReplicaSets conservés pour rollback (défaut K8s : 10)
+  revisionHistoryLimit: 2
 
   image:
     repository: ghcr.io/thybaau/valhafin/backend
@@ -74,6 +76,8 @@ backend:
 frontend:
   enabled: true
   replicaCount: 1  # Pour un usage personnel, 1 replica est suffisant. Augmenter pour la haute disponibilité.
+  # Anciens ReplicaSets conservés pour rollback (défaut K8s : 10)
+  revisionHistoryLimit: 2
 
   image:
     repository: ghcr.io/thybaau/valhafin/frontend

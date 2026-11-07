@@ -9,6 +9,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "1"
 spec:
+  revisionHistoryLimit: {{ .Values.backend.revisionHistoryLimit | default 2 }}
   replicas: {{ .Values.backend.replicaCount }}
   strategy:
     type: {{ .Values.backend.strategy.type }}

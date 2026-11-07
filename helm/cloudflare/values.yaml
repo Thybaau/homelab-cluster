@@ -6,6 +6,8 @@ global:
 # Configuration de l'application
 app:
   replicaCount: 1
+  # Anciens ReplicaSets conservés pour rollback (défaut K8s : 10)
+  revisionHistoryLimit: 2
 
   image:
     repository: cloudflare/cloudflared

@@ -8,6 +8,7 @@ metadata:
     app.kubernetes.io/name: system-upgrade-controller
     app.kubernetes.io/managed-by: Helm
 spec:
+  revisionHistoryLimit: 2
   selector:
     matchLabels:
       app.kubernetes.io/name: system-upgrade-controller
