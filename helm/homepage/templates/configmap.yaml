@@ -16,14 +16,9 @@ data:
       Infrastructure:
         style: row
         columns: 4
-      Network:
-        style: column
-      Maison:
-        style: column
-      Apps:
-        style: column
-      GitHub:
-        style: column
+      Services:
+        style: row
+        columns: 4
 
   services.yaml: |
     - Infrastructure:

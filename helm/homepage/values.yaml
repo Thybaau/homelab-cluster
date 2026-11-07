@@ -165,80 +165,81 @@ config:
           description: Compte AWS Perso
 
   # Groupes suivants (ajoutés à services.yaml après Infrastructure)
-  # Ordre : Network, Maison, Apps, GitHub (4 colonnes sous la ligne Infrastructure)
+  # Groupe parent « Services » : sous-groupes Network, Maison, Apps, GitHub (4 colonnes sous la ligne Infrastructure)
   customServices:
-    - Network:
-        - Routeur TP-Link:
-            icon: tp-link.png
-            href: http://192.168.0.1
-            description: Interface d'administration du routeur
-            siteMonitor: http://192.168.0.1
-        - AdGuard Home:
-            icon: adguard-home.png
-            href: https://adguard.caremelle.org
-            description: DNS et blocage de publicités
-            siteMonitor: http://adguard-home.networking.svc.cluster.local:3000
-            widget:
-              type: adguard
-              url: http://adguard-home.networking.svc.cluster.local:3000
-        - Cloudflare Tunnel:
-            icon: cloudflare.png
-            href: https://one.dash.cloudflare.com/6226b1ff3a046ada22261bc31625fb45/networks/tunnels
-            description: Tunnel Cloudflare Zero Trust
-            widget:
-              type: cloudflared
-              accountid: 6226b1ff3a046ada22261bc31625fb45
-              tunnelid: 7c0f893a-1d76-48dc-a3fb-b5cfe10b4fc8
-              key: "{{HOMEPAGE_VAR_CLOUDFLARE_TUNNEL_KEY}}"
-        - Tailscale:
-            icon: tailscale.png
-            href: https://login.tailscale.com/admin/machines
-            description: VPN
-            widget:
-              type: tailscale
-              deviceid: nvDedqhweU11CNTRL
-              key: "{{HOMEPAGE_VAR_TAILSCALE_KEY}}"
-              fields: ["address", "last_seen", "expires"]
-    - Maison:
-        - Home Assistant:
-            icon: home-assistant.png
-            href: https://ha.caremelle.org
-            description: Domotique et automatisation
-            siteMonitor: https://ha.caremelle.org
-            widget:
-              type: homeassistant
-              url: https://ha.caremelle.org
-              key: "{{HOMEPAGE_VAR_HOMEASSISTANT_KEY}}"
-              fields: ["people_home", "lights_on", "switches_on"]
-        - J.A.R.O.D.:
-            icon: mdi-robot
-            href: https://hermes.caremelle.org
-            description: Dashboard de l'agent IA
-            siteMonitor: https://hermes.caremelle.org
-    - Apps:
-        - Valhafin:
-            icon: mdi-finance
-            href: https://valhafin.caremelle.org
-            description: Gestion comptes de finance
-            siteMonitor: https://valhafin.caremelle.org
-        - Pâtisseries Caremelle:
-            icon: mdi-cake
-            href: https://patisseries.caremelle.org
-            description: Site de pâtisseries
-            siteMonitor: https://patisseries.caremelle.org
-    - GitHub:
-        - homelab-cluster:
-            icon: github.png
-            href: https://github.com/Thybaau/homelab-cluster
-            description: Configuration Kubernetes du homelab
-        - homelab-infra-iac:
-            icon: github.png
-            href: https://github.com/Thybaau/homelab-infra-iac
-            description: Infrastructure des VM du homelab
-        - valhafin:
-            icon: github.png
-            href: https://github.com/Thybaau/valhafin
-            description: App gestion de comptes de finance
+    - Services:
+        - Network:
+            - Routeur TP-Link:
+                icon: tp-link.png
+                href: http://192.168.0.1
+                description: Interface d'administration du routeur
+                siteMonitor: http://192.168.0.1
+            - AdGuard Home:
+                icon: adguard-home.png
+                href: https://adguard.caremelle.org
+                description: DNS et blocage de publicités
+                siteMonitor: http://adguard-home.networking.svc.cluster.local:3000
+                widget:
+                  type: adguard
+                  url: http://adguard-home.networking.svc.cluster.local:3000
+            - Cloudflare Tunnel:
+                icon: cloudflare.png
+                href: https://one.dash.cloudflare.com/6226b1ff3a046ada22261bc31625fb45/networks/tunnels
+                description: Tunnel Cloudflare Zero Trust
+                widget:
+                  type: cloudflared
+                  accountid: 6226b1ff3a046ada22261bc31625fb45
+                  tunnelid: 7c0f893a-1d76-48dc-a3fb-b5cfe10b4fc8
+                  key: "{{HOMEPAGE_VAR_CLOUDFLARE_TUNNEL_KEY}}"
+            - Tailscale:
+                icon: tailscale.png
+                href: https://login.tailscale.com/admin/machines
+                description: VPN
+                widget:
+                  type: tailscale
+                  deviceid: nvDedqhweU11CNTRL
+                  key: "{{HOMEPAGE_VAR_TAILSCALE_KEY}}"
+                  fields: ["address", "last_seen", "expires"]
+        - Maison:
+            - Home Assistant:
+                icon: home-assistant.png
+                href: https://ha.caremelle.org
+                description: Domotique et automatisation
+                siteMonitor: https://ha.caremelle.org
+                widget:
+                  type: homeassistant
+                  url: https://ha.caremelle.org
+                  key: "{{HOMEPAGE_VAR_HOMEASSISTANT_KEY}}"
+                  fields: ["people_home", "lights_on", "switches_on"]
+            - J.A.R.O.D.:
+                icon: mdi-robot
+                href: https://hermes.caremelle.org
+                description: Dashboard de l'agent IA
+                siteMonitor: https://hermes.caremelle.org
+        - Apps:
+            - Valhafin:
+                icon: mdi-finance
+                href: https://valhafin.caremelle.org
+                description: Gestion comptes de finance
+                siteMonitor: https://valhafin.caremelle.org
+            - Pâtisseries Caremelle:
+                icon: mdi-cake
+                href: https://patisseries.caremelle.org
+                description: Site de pâtisseries
+                siteMonitor: https://patisseries.caremelle.org
+        - GitHub:
+            - homelab-cluster:
+                icon: github.png
+                href: https://github.com/Thybaau/homelab-cluster
+                description: Configuration Kubernetes du homelab
+            - homelab-infra-iac:
+                icon: github.png
+                href: https://github.com/Thybaau/homelab-infra-iac
+                description: Infrastructure des VM du homelab
+            - valhafin:
+                icon: github.png
+                href: https://github.com/Thybaau/valhafin
+                description: App gestion de comptes de finance
 
   # Widgets personnalisés (ajoutés à widgets.yaml)
   customWidgets: []
