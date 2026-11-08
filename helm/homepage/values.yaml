@@ -203,15 +203,6 @@ config:
                   accountid: 6226b1ff3a046ada22261bc31625fb45
                   tunnelid: 7c0f893a-1d76-48dc-a3fb-b5cfe10b4fc8
                   key: "{{HOMEPAGE_VAR_CLOUDFLARE_TUNNEL_KEY}}"
-            - Tailscale:
-                icon: tailscale.png
-                href: https://login.tailscale.com/admin/machines
-                description: VPN
-                widget:
-                  type: tailscale
-                  deviceid: nvDedqhweU11CNTRL
-                  key: "{{HOMEPAGE_VAR_TAILSCALE_KEY}}"
-                  fields: ["address", "last_seen", "expires"]
         - Maison:
             - Home Assistant:
                 icon: home-assistant.png
@@ -228,6 +219,15 @@ config:
                 href: https://hermes.caremelle.org
                 description: Dashboard de l'agent IA
                 siteMonitor: https://hermes.caremelle.org
+            - Tailscale:
+                icon: tailscale.png
+                href: https://login.tailscale.com/admin/machines
+                description: VPN
+                widget:
+                  type: tailscale
+                  deviceid: nvDedqhweU11CNTRL
+                  key: "{{HOMEPAGE_VAR_TAILSCALE_KEY}}"
+                  fields: ["address", "last_seen", "expires"]
         - Apps:
             - Valhafin:
                 icon: mdi-finance
