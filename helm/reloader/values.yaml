@@ -1,0 +1,30 @@
+---
+# Values pour le chart upstream stakater/reloader (2.2.19)
+# Référencé via le pattern multi-source ArgoCD
+# Docs: https://github.com/stakater/Reloader
+#
+# Reloader surveille les ConfigMaps/Secrets et redémarre (rolling update) les
+# Deployments/StatefulSets/DaemonSets qui les utilisent quand leur contenu change.
+
+reloader:
+  # Surveille tous les workloads sans annotation individuelle.
+  # Pour exclure un workload : annotation reloader.stakater.com/auto: "false"
+  autoReloadAll: true
+  # Ne pas toucher aux composants système et à ArgoCD lui-même
+  ignoreNamespaces: "kube-system,argocd"
+  readOnlyRootFileSystem: true
+
+  deployment:
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop:
+          - ALL
+    resources:
+      requests:
+        cpu: 10m
+        memory: 64Mi
+      limits:
+        cpu: 100m
+        memory: 128Mi
