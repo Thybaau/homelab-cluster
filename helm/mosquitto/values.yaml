@@ -1,0 +1,37 @@
+---
+# Mosquitto - broker MQTT (Zigbee2MQTT <-> Home Assistant)
+# Namespace : home-assistant (commun avec HA et Zigbee2MQTT)
+
+namespace: home-assistant
+
+image:
+  repository: eclipse-mosquitto
+  tag: 2.0.22
+  pullPolicy: IfNotPresent
+
+# Persistance (messages retained, état des abonnements)
+persistence:
+  size: 1Gi
+  storageClass: local-path
+
+resources:
+  requests:
+    cpu: 10m
+    memory: 32Mi
+  limits:
+    memory: 128Mi
+
+# Secret scellé contenant le fichier `passwd` (mots de passe hachés).
+# Utilisateurs : zigbee2mqtt, homeassistant
+# Régénération : voir helm/mosquitto/README.md
+sealedSecret:
+  name: mosquitto-auth
+  encryptedData:
+    passwd: AgBSrAgQGD7JmwwY9aDa1k+wdF0Wot/qprfw36UxHtDxYnjSTG6oqFQZ/wD8PG0okwo3w4i0SUPw7N/kYKHX6tLrdgFtZZEX/Ii5oMcbaBn87ep+Y6ZkaKO3WAyPZpA8HQyFFuxfpZ1vrmc7RVKa7PR4KoRTUNfoKlWXA1HGDp2S3E0RCmbfDEifn7w6yO4IQdd3z1nbOn0grky5S8pbclof7m35nehLhnOJhc6LMJmCNEOA8rPjdPEdua5m76B5nXJ13gZHQnFcT3w3m0gaPvGE9mKlayqHPRzSw+s0Kmff5PNLKhB/K2diqnTLZUs9P6arv/paNCnma78BLApjnOADmipDo9QdzMiQxCfUbywXDk2GquK7ItTAmGN42WCmKPqr3soE0pMi09MwYxeFkq/Gwe0i7Id+lk+mMyQoiYigcrMtfJB49EXbdQNYTKA11mvpzZ3Pn3etNji8pjarzmyWwCsAr2ynpofHneWrw/TzS4UaNQA3nT0z85F1cY9HaKvSObNf4LJj1sY6PSpoCvY38riJW8+P33k2Xx46uMhVgvrxkiA/sTjfsgffiiFfG9NvyHAp9Ilj0UVBwZtE7tfE0CkHJkUTERy1bUfUtD1c+gHT2bTh/uy8Un9jdhVTrS7NRT/4zzLMbmyN6Ml+N+HQSwYoOwfnYeHM4Y4YslN8L0/sWu8iq3Ul6qtzZ0IbKwBdJjC8jBmY4uVaOymlsEU6VO6eqvKEEsFdTZGxtVQelQt/8NOqgK6yK+Fa0//EXT5BLykgucjJ7W1eXbQJyXUKuh8Jx0lCXI7Kp48saeICtNbzc+rP2n2T+bxMqgfll1qbnpGBXWQGfObTMih/Sa1SKylUTadnmSjPmwSddYbIUVDKE6+oF6gAIWzBrTFwkwB+HQ86gzkAwWsYZrVsPENq/6C7sv4Yv8yrBbh81hV5Y+EUmU147o9hzGdn7eOpCiB8D31ICDzG3lcOniefRJBU7yoABoQ7G4uQ373AiAk/gNDuaMfjf9N6TmaSflXM+umhQMKU51dj2SCf3CA=
+
+# Sources autorisées à joindre le broker sur 1883, en plus des pods du namespace.
+# Home Assistant tourne en hostNetwork : son trafic arrive avec l'IP du nœud.
+networkPolicy:
+  allowedNodeIPs:
+    - 192.168.0.102/32
+    - 192.168.0.103/32

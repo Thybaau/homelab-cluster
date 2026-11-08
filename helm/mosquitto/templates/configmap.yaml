@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mosquitto-config
+  namespace: {{ .Values.namespace }}
+  labels:
+    app.kubernetes.io/name: mosquitto
+    app.kubernetes.io/component: mqtt-broker
+data:
+  mosquitto.conf: |
+    listener 1883
+    # Authentification obligatoire : aucun accès anonyme
+    allow_anonymous false
+    password_file /mosquitto/config/passwd
+
+    persistence true
+    persistence_location /mosquitto/data/
+
+    # Logs vers stdout (collectés par Alloy/Loki)
+    log_dest stdout
+    log_type error
+    log_type warning
+    log_type notice
