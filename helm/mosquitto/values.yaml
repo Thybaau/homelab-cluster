@@ -33,5 +33,13 @@ sealedSecret:
 # Home Assistant tourne en hostNetwork : son trafic arrive avec l'IP du nœud.
 networkPolicy:
   allowedNodeIPs:
+    # IPs LAN des nœuds
     - 192.168.0.102/32
     - 192.168.0.103/32
+    # Interface flannel.1 de chaque nœud (podCIDR .0) : source vue par le broker
+    # quand un pod hostNetwork (HA sur le worker) joint un pod d'un autre nœud
+    - 10.42.0.0/32
+    - 10.42.1.0/32
+    # Passerelle cni0 de chaque nœud (podCIDR .1) : trafic hostNetwork du même nœud
+    - 10.42.0.1/32
+    - 10.42.1.1/32
