@@ -4,6 +4,9 @@
 # Run all: pre-commit run --all-files
 # Update:  pre-commit autoupdate
 
+default_language_version:
+  golang: 1.24.11  # gitleaks exige Go >= 1.24 (le Go système est trop ancien)
+
 repos:
   # === Generic hooks (fast, < 1s) ===
   - repo: https://github.com/pre-commit/pre-commit-hooks
