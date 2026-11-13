@@ -55,7 +55,7 @@ repos:
     hooks:
       - id: helm-lint
         name: Helm Lint
-        entry: bash -c 'for chart in helm/*/; do helm lint "$chart" || exit 1; done'
+        entry: bash -c 'for chart in helm/*/; do [ -f "$chart/Chart.yaml" ] || continue; helm lint "$chart" || exit 1; done'
         language: system
         files: ^helm/
         pass_filenames: false
