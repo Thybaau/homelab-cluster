@@ -1,0 +1,48 @@
+---
+# Zigbee2MQTT : coordinateur SLZB-MR1U joint en TCP (voir docs/zigbee2mqtt/README.md).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: zigbee2mqtt
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: zigbee2mqtt
+    app.kubernetes.io/component: zigbee
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    - repoURL: https://charts.zigbee2mqtt.io
+      targetRevision: "2.14.3"
+      chart: zigbee2mqtt
+      helm:
+        valueFiles:
+          - $values/helm/zigbee2mqtt/values.yaml
+    - repoURL: https://github.com/Thybaau/homelab-cluster.git
+      targetRevision: HEAD
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: home-assistant
+  ignoreDifferences:
+    - group: apps
+      kind: StatefulSet
+      jsonPointers:
+        - /spec/volumeClaimTemplates
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - RespectIgnoreDifferences=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

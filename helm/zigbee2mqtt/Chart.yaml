@@ -1,0 +1,10 @@
+apiVersion: v2
+name: zigbee2mqtt
+description: Values pour le chart officiel zigbee2mqtt - Déployé via ArgoCD multi-sources
+type: application
+version: 0.1.0
+appVersion: "2.14.3"
+keywords:
+  - zigbee2mqtt
+  - zigbee
+  - domotique

@@ -1,0 +1,124 @@
+---
+# Zigbee2MQTT - values pour le chart officiel (https://charts.zigbee2mqtt.io)
+# Déployé via ArgoCD multi-sources (voir argocd-apps/zigbee2mqtt-app.yml)
+# Coordinateur : SMLIGHT SLZB-MR1U en TCP (pas de passthrough USB, pas de privileged)
+
+# Le chart prend appVersion (2.14.3) comme tag d'image : suivi via targetRevision.
+
+service:
+  # Défaut du chart = LoadBalancer (prendrait une IP MetalLB) : ClusterIP + Traefik
+  type: ClusterIP
+  port: 8080
+
+statefulset:
+  replicas: 1
+  # Ne pas fixer de nœud : le dongle est joint en TCP.
+  # Le PVC local-path collera le pod au nœud choisi au premier démarrage.
+  nodeSelector: {}
+
+  storage:
+    enabled: true
+    size: 1Gi
+    storageClassName: local-path
+
+  # secret.yaml monté depuis le SealedSecret ci-dessous (clé MQTT, network_key, token UI)
+  secrets:
+    name: zigbee2mqtt-secret
+
+  # Le défaut du chart (600Mi de requête) est trop pour le worker (4 Go)
+  resources:
+    requests:
+      cpu: 50m
+      memory: 200Mi
+    limits:
+      memory: 400Mi
+
+  # Pas de privileged ni SYS_ADMIN (inutiles avec un coordinateur TCP)
+  podSecurityContext:
+    seccompProfile:
+      type: RuntimeDefault
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+  securityContext:
+    privileged: false
+    allowPrivilegeEscalation: false
+    capabilities:
+      add: null
+      drop: [ALL]
+
+# L'init container yq écrit configuration.yaml : même utilisateur que Z2M
+secretesMigratorContainer:
+  securityContext:
+    runAsUser: 1000
+    runAsGroup: 1000
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: [ALL]
+
+zigbee2mqtt:
+  timezone: Europe/Paris
+  permit_join: false
+
+  homeassistant:
+    enabled: true
+    discovery_topic: homeassistant
+    status_topic: hass/status
+
+  mqtt:
+    server: mqtt://mosquitto.home-assistant.svc.cluster.local:1883
+    user: '!secret mqtt_user'
+    password: '!secret mqtt_password'
+    version: 5
+
+  serial:
+    # SLZB-MR1U (192.168.0.35, réservation DHCP) : radio 2 = CC2652P7 en Zigbee Coordinator,
+    # socket TCP 7638, firmware Z-Stack. La radio 1 (EFR32MG21, port 6638) est dédiée à Thread.
+    port: tcp://192.168.0.35:7638
+    adapter: zstack
+    disable_led: false
+
+  frontend:
+    enabled: true
+    port: 8080
+    auth_token: '!secret auth_token'
+
+  advanced:
+    # Canal Zigbee : le changer impose de ré-appairer tous les appareils.
+    # 25 = hors des canaux Wi-Fi 1/6/11.
+    channel: 25
+    network_key: '!secret network_key'
+    log_output:
+      - console
+    log_level: info
+
+ingress:
+  enabled: true
+  ingressClassName: traefik
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+  hosts:
+    - host: z2m.caremelle.org
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+extraResources:
+  - apiVersion: bitnami.com/v1alpha1
+    kind: SealedSecret
+    metadata:
+      name: zigbee2mqtt-secret
+      namespace: home-assistant
+      annotations:
+        argocd.argoproj.io/sync-wave: "-1"
+    spec:
+      encryptedData:
+        secret.yaml: AgB46Dh0mkinQfcosDKKauIaif2DDVq9kHBy8XSc70m/NXz2WrvE37DXozp8TMEET+K6VEFlWQzG4DPhVXQH2qBe9Z+xdBVCq5m6AmlTa8JZCw/9axYyx0s3bUhaA4o9izYr2WF3ZGmFeGVjqEGrriojVp84/pFJ1Bld/sxxuI0IgJ313RF6rvXx+nBitL04I4VGq11kxPljH25Q1z9DmhAo93e+ZecuuwoIoWs6tVe2lPSEy4H7AU/u5tSSsjnnFgQYGwQcAlSojXBnkEPXfz1o+vKXjkfYO7k4Nd8iiPWeO5tRDm16c360e3bJmAozkWYpoBv8UIpO0DAUSy4Bj7QBv4kIPEbv+NEeaROauaV2VIyJYsCByk5rrdGqWuZRwoLOZ5oRkJyCtsLGByiBHo0XykNkC4vyI5KgMv4NxeAJPWrepMGcUQlVq9lKWJsZF4SgJdq/crpZWzvvSg7iD9Dpfz3Qpo0OodE0Hk3KczJ3nhAerMgSv0ZMtOEmrGSknKBx21FuKxZwTzB+80dSSpSUpm++ZKWX5ZakO4JAsdo9dsnMMYW+8ah0gAEQLSwHKY4KR7mkdzcJcmRH6IXtFxGMSHJwoewWHOSggvTbQ3jPr0m2WoeVKNHH6Ujd3VKlQNsaO+lRHYVrtD1QJIN9EtKs3EFVtk4xHWBij7xxPW3dVJ/uPSJcOuoRI/5RrVjGNVZGmfV4k2l1ClDe4zGSORAYTWgRcIa2jWojada2pV2cEaG9PSsXBkymWMMYTV1YwbwGde7nZcV4g+8HZzZbKfuOIRlEELrncfG/NsgnpKcJ6mzBkIS69S31I3/EdLuD5G85v1DvUtZ02L533ApUcbAgfgWt6NQ3AYVQvlDQ+ej2WU5Nljd2ekJhaB/onOPqAVMexFmB97zDaIk917kG1PF156jVGpteDwEtao4cAidSnFE6DieYEfuCRSoAdg==
+      template:
+        type: Opaque
+        metadata:
+          name: zigbee2mqtt-secret
+          namespace: home-assistant

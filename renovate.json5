@@ -244,5 +244,19 @@
       automergeType: 'pr',
       minimumReleaseAge: '3 days',
     },
+    {
+      description: 'Zigbee2MQTT - review manuelle (un redémarrage coupe temporairement le réseau Zigbee)',
+      matchManagers: [
+        'argocd',
+      ],
+      matchPackageNames: [
+        'zigbee2mqtt',
+      ],
+      automerge: false,
+      labels: [
+        'renovate',
+        'review-needed',
+      ],
+    },
   ],
 }
