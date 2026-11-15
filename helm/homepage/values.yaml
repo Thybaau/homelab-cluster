@@ -84,6 +84,7 @@ app:
         - ha.caremelle.org
         - valhafin.caremelle.org
         - hermes.caremelle.org
+        - z2m.caremelle.org
 
 # Configuration du service
 service:
