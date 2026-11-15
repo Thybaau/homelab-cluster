@@ -214,11 +214,16 @@ config:
                   url: https://ha.caremelle.org
                   key: "{{HOMEPAGE_VAR_HOMEASSISTANT_KEY}}"
                   fields: ["people_home", "lights_on", "switches_on"]
-            - J.A.R.O.D.:
-                icon: mdi-robot
-                href: https://hermes.caremelle.org
-                description: Dashboard de l'agent IA
-                siteMonitor: https://hermes.caremelle.org
+            - Zigbee2MQTT:
+                icon: zigbee2mqtt.png
+                href: https://z2m.caremelle.org
+                description: Passerelle Zigbee vers MQTT
+                siteMonitor: https://z2m.caremelle.org
+            - Dongle Zigbee/Thread:
+                icon: mdi-zigbee
+                href: http://192.168.0.35
+                description: SLZB-MR1U interface
+                siteMonitor: http://192.168.0.35
             - Tailscale:
                 icon: tailscale.png
                 href: https://login.tailscale.com/admin/machines
@@ -229,6 +234,11 @@ config:
                   key: "{{HOMEPAGE_VAR_TAILSCALE_KEY}}"
                   fields: ["address", "last_seen", "expires"]
         - Apps:
+            - J.A.R.O.D.:
+                icon: mdi-robot
+                href: https://hermes.caremelle.org
+                description: Dashboard de l'agent IA
+                siteMonitor: https://hermes.caremelle.org
             - Valhafin:
                 icon: mdi-finance
                 href: https://valhafin.caremelle.org
