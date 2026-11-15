@@ -65,7 +65,13 @@ zigbee2mqtt:
   homeassistant:
     enabled: true
     discovery_topic: homeassistant
-    status_topic: hass/status
+    # Topic de « birth » de HA (défaut HA) : Z2M republie l'état des appareils quand HA redémarre
+    status_topic: homeassistant/status
+
+  # Disponibilité : HA marque un appareil indisponible s'il ne parle plus
+  # (actifs/routeurs : 10 min, appareils sur pile : 25 h, défauts du chart)
+  availability:
+    enabled: true
 
   mqtt:
     server: mqtt://mosquitto.home-assistant.svc.cluster.local:1883
@@ -89,6 +95,9 @@ zigbee2mqtt:
     # Canal Zigbee : le changer impose de ré-appairer tous les appareils.
     # 25 = hors des canaux Wi-Fi 1/6/11.
     channel: 25
+    # Horodatage de la dernière trame reçue, visible dans l'UI Z2M et dans HA
+    last_seen: ISO_8601
+    transmit_power: 20
     network_key: '!secret network_key'
     log_output:
       - console
