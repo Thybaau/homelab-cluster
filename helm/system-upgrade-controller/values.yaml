@@ -3,7 +3,7 @@
 controller:
   image:
     repository: rancher/system-upgrade-controller
-    tag: "v0.21.0"
+    tag: "v0.21.1"
     pullPolicy: IfNotPresent
 
   kubectlImage:
