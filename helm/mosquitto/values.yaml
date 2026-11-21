@@ -6,7 +6,7 @@ namespace: home-assistant
 
 image:
   repository: eclipse-mosquitto
-  tag: 2.0.22
+  tag: 2.0.23
   pullPolicy: IfNotPresent
 
 # Persistance (messages retained, état des abonnements)
