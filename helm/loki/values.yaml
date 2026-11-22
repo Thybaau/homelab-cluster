@@ -78,5 +78,3 @@ chunksCache:
   enabled: false
 resultsCache:
   enabled: false
-minio:
-  enabled: false
