@@ -1,9 +1,9 @@
 # Python Requirements for k3s Ansible Deployment
 # Install with: pip install -r requirements-python.txt
 
-# Ansible core
+# Ansible (ansible-core est tiré par le paquet "ansible" : ne pas le surcharger,
+# ansible-core 2.22+ exige Python >= 3.13 alors que le runner a Python 3.12)
 ansible>=14.6.0,<14.7.0
-ansible-core>=2.22.0,<2.23.0
 
 # Kubernetes Python client (for kubernetes.core collection)
 kubernetes>=27.0.0
